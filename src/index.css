@@ -6,44 +6,44 @@
 
 @layer base {
   :root {
-    --background: 215 35% 7%;
+    --background: 220 25% 8%;
     --foreground: 210 20% 92%;
 
-    --card: 215 30% 12%;
+    --card: 220 22% 13%;
     --card-foreground: 210 20% 92%;
 
-    --popover: 215 30% 12%;
+    --popover: 220 22% 13%;
     --popover-foreground: 210 20% 92%;
 
-    --primary: 200 80% 55%;
-    --primary-foreground: 215 35% 7%;
+    --primary: 210 80% 58%;
+    --primary-foreground: 220 25% 8%;
 
-    --secondary: 215 25% 18%;
+    --secondary: 220 20% 18%;
     --secondary-foreground: 210 20% 85%;
 
-    --muted: 215 25% 15%;
+    --muted: 220 20% 15%;
     --muted-foreground: 210 15% 55%;
 
-    --accent: 175 50% 25%;
-    --accent-foreground: 175 60% 75%;
+    --accent: 175 55% 35%;
+    --accent-foreground: 175 60% 80%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 215 20% 20%;
-    --input: 215 20% 20%;
-    --ring: 200 80% 55%;
+    --border: 220 18% 20%;
+    --input: 220 18% 20%;
+    --ring: 210 80% 58%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 215 35% 5%;
+    --sidebar-background: 220 25% 6%;
     --sidebar-foreground: 210 20% 80%;
-    --sidebar-primary: 200 80% 55%;
-    --sidebar-primary-foreground: 215 35% 7%;
-    --sidebar-accent: 215 25% 12%;
+    --sidebar-primary: 210 80% 58%;
+    --sidebar-primary-foreground: 220 25% 8%;
+    --sidebar-accent: 220 20% 12%;
     --sidebar-accent-foreground: 210 20% 85%;
-    --sidebar-border: 215 20% 14%;
-    --sidebar-ring: 200 80% 55%;
+    --sidebar-border: 220 18% 14%;
+    --sidebar-ring: 210 80% 58%;
 
     --success: 152 60% 45%;
     --success-foreground: 152 60% 95%;
@@ -55,16 +55,29 @@
 
     --teal: 175 60% 45%;
     --royal: 220 70% 55%;
+    --purple: 270 60% 55%;
+    --orange: 25 85% 55%;
+
+    --section-finance: 210 80% 58%;
+    --section-revenue: 152 60% 45%;
+    --section-expenses: 0 65% 50%;
+    --section-forecast: 270 60% 55%;
+    --section-invest: 43 65% 55%;
+    --section-employees: 25 85% 55%;
+    --section-strategic: 175 60% 45%;
+    --section-admin: 220 10% 25%;
+    --section-ai: 190 80% 50%;
 
     --gradient-gold: linear-gradient(135deg, hsl(43 65% 55%), hsl(38 72% 45%));
-    --gradient-card: linear-gradient(145deg, hsl(215 30% 14% / 0.8), hsl(215 30% 10% / 0.6));
-    --gradient-sidebar: linear-gradient(180deg, hsl(215 35% 7%), hsl(215 35% 4%));
-    --gradient-glass: linear-gradient(145deg, hsl(200 80% 55% / 0.05), hsl(175 60% 45% / 0.03));
+    --gradient-card: linear-gradient(145deg, hsl(220 22% 15% / 0.8), hsl(220 22% 11% / 0.6));
+    --gradient-sidebar: linear-gradient(180deg, hsl(220 25% 8%), hsl(220 25% 5%));
+    --gradient-glass: linear-gradient(145deg, hsl(210 80% 58% / 0.05), hsl(175 60% 45% / 0.03));
+    --gradient-ai: linear-gradient(135deg, hsl(190 80% 50%), hsl(210 80% 58%));
 
     --shadow-gold: 0 4px 20px -4px hsl(43 65% 55% / 0.2);
     --shadow-card: 0 4px 24px -8px hsl(0 0% 0% / 0.4);
     --shadow-elevated: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
-    --shadow-glass: 0 8px 32px -8px hsl(200 80% 55% / 0.1);
+    --shadow-glass: 0 8px 32px -8px hsl(210 80% 58% / 0.1);
 
     --font-heading: 'Cairo', sans-serif;
     --font-body: 'Tajawal', sans-serif;

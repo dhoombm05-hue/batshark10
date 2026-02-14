@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import logo from '@/assets/batshark-logo-new.png';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -137,17 +138,20 @@ export default function BatSharkAI() {
     <Layout>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Brain className="w-6 h-6 text-primary" />
+          <img src={logo} alt="BatShark AI" className="w-10 h-10 rounded-xl" />
+          <div className="p-2 rounded-lg" style={{ background: 'linear-gradient(135deg, hsl(190 80% 50% / 0.15), hsl(210 80% 58% / 0.15))' }}>
+            <Brain className="w-6 h-6 text-section-ai" />
           </div>
           <div>
-            <h1 className="text-2xl font-heading font-bold text-gradient-gold">🧠 اسأل BatShark</h1>
+            <h1 className="text-2xl font-heading font-bold" style={{ background: 'var(--gradient-ai)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BatShark AI</h1>
             <p className="text-sm text-muted-foreground">المستشار المالي الذكي — يحلل بياناتك ويقدم توصيات</p>
           </div>
         </div>
       </motion.div>
 
-      <div className="bg-gradient-card rounded-xl border border-border shadow-card flex flex-col" style={{ height: 'calc(100vh - 200px)' }}>
+      <div className="bg-gradient-card rounded-2xl border border-border shadow-card flex flex-col relative overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
+        {/* Watermark */}
+        <img src={logo} alt="" className="absolute bottom-4 left-4 w-16 h-16 opacity-[0.04] pointer-events-none" />
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
