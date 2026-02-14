@@ -5,7 +5,7 @@ import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
   Menu, X, ChevronLeft, Brain, FlaskConical
 } from 'lucide-react';
-import logo from '@/assets/batshark-logo-new.png';
+import logo from '@/assets/batshark-logo-main.png';
 
 const navItems = [
   { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard, color: 'section-finance' },
