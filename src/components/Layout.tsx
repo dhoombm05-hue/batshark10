@@ -8,14 +8,24 @@ import {
 import logo from '@/assets/batshark-logo-new.png';
 
 const navItems = [
-  { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard },
-  { path: '/projects', label: 'المشاريع', icon: FolderKanban },
-  { path: '/employees', label: 'الموظفين', icon: Users },
-  { path: '/forecasts', label: 'التوقعات', icon: TrendingUp },
-  { path: '/strategic', label: 'التحليل الاستراتيجي', icon: Shield },
-  { path: '/lab', label: 'مختبر النمذجة', icon: FlaskConical },
-  { path: '/ai', label: 'اسأل BatShark', icon: Brain },
+  { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard, color: 'section-finance' },
+  { path: '/projects', label: 'المشاريع', icon: FolderKanban, color: 'section-revenue' },
+  { path: '/employees', label: 'الموظفين', icon: Users, color: 'section-employees' },
+  { path: '/forecasts', label: 'التوقعات', icon: TrendingUp, color: 'section-forecast' },
+  { path: '/strategic', label: 'التحليل الاستراتيجي', icon: Shield, color: 'section-strategic' },
+  { path: '/lab', label: 'مختبر النمذجة', icon: FlaskConical, color: 'section-invest' },
+  { path: '/ai', label: 'اسأل BatShark', icon: Brain, color: 'section-ai' },
 ];
+
+const colorMap: Record<string, { text: string; bg: string; glow: string }> = {
+  'section-finance': { text: 'text-section-finance', bg: 'bg-section-finance/15', glow: '0 0 20px hsl(210 80% 58% / 0.2)' },
+  'section-revenue': { text: 'text-section-revenue', bg: 'bg-section-revenue/15', glow: '0 0 20px hsl(152 60% 45% / 0.2)' },
+  'section-employees': { text: 'text-section-employees', bg: 'bg-section-employees/15', glow: '0 0 20px hsl(25 85% 55% / 0.2)' },
+  'section-forecast': { text: 'text-section-forecast', bg: 'bg-section-forecast/15', glow: '0 0 20px hsl(270 60% 55% / 0.2)' },
+  'section-strategic': { text: 'text-section-strategic', bg: 'bg-section-strategic/15', glow: '0 0 20px hsl(175 60% 45% / 0.2)' },
+  'section-invest': { text: 'text-section-invest', bg: 'bg-section-invest/15', glow: '0 0 20px hsl(43 65% 55% / 0.2)' },
+  'section-ai': { text: 'text-section-ai', bg: 'bg-section-ai/15', glow: '0 0 20px hsl(190 80% 50% / 0.2)' },
+};
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -81,6 +91,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {navItems.map((item) => {
             const active = location.pathname === item.path ||
               (item.path !== '/' && location.pathname.startsWith(item.path));
+            const colors = colorMap[item.color];
             return (
               <Link
                 key={item.path}
@@ -89,12 +100,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
                   ${active
-                    ? 'bg-primary/15 text-primary shadow-gold glow-gold'
+                    ? `${colors.bg} ${colors.text}`
                     : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                   }
                 `}
+                style={active ? { boxShadow: colors.glow } : undefined}
               >
-                <item.icon className={`w-5 h-5 shrink-0 ${active ? 'text-primary' : ''}`} />
+                <item.icon className={`w-5 h-5 shrink-0 ${active ? colors.text : ''}`} />
                 {!collapsed && <span className="font-body text-sm font-medium">{item.label}</span>}
               </Link>
             );
@@ -103,8 +115,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Footer */}
         {!collapsed && (
-          <div className="p-4 border-t border-border">
-            <p className="text-[10px] text-muted-foreground text-center">
+          <div className="p-4 border-t border-border flex items-center gap-2 justify-center">
+            <img src={logo} alt="BatShark" className="w-5 h-5 rounded opacity-50" />
+            <p className="text-[10px] text-muted-foreground">
               © 2024 BatShark Economy
             </p>
           </div>
