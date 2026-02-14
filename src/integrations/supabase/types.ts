@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          change_reason: string | null
+          changed_by: string | null
+          created_at: string
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       employee_evaluations: {
         Row: {
           admin_rating: number
@@ -68,6 +104,221 @@ export type Database = {
           overall_score?: number
           projects_completed?: number
           teamwork?: number
+        }
+        Relationships: []
+      }
+      project_analysis: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          project_id: string
+          sort_order: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          project_id: string
+          sort_order?: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_analysis_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          notes: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_expenses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_monthly_data: {
+        Row: {
+          created_at: string
+          expenses: number
+          id: string
+          month: string
+          month_order: number
+          profit: number
+          project_id: string
+          revenue: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expenses?: number
+          id?: string
+          month: string
+          month_order?: number
+          profit?: number
+          project_id: string
+          revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expenses?: number
+          id?: string
+          month?: string
+          month_order?: number
+          profit?: number
+          project_id?: string
+          revenue?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_monthly_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_revenues: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          date: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_revenues_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          campaign_count: number
+          client_count: number
+          created_at: string
+          data_reliability_score: number
+          description: string | null
+          growth_rate: number
+          id: string
+          name: string
+          name_en: string | null
+          net_profit: number
+          occupancy_rate: number | null
+          slug: string
+          status: string
+          total_expenses: number
+          total_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          campaign_count?: number
+          client_count?: number
+          created_at?: string
+          data_reliability_score?: number
+          description?: string | null
+          growth_rate?: number
+          id?: string
+          name: string
+          name_en?: string | null
+          net_profit?: number
+          occupancy_rate?: number | null
+          slug: string
+          status?: string
+          total_expenses?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          campaign_count?: number
+          client_count?: number
+          created_at?: string
+          data_reliability_score?: number
+          description?: string | null
+          growth_rate?: number
+          id?: string
+          name?: string
+          name_en?: string | null
+          net_profit?: number
+          occupancy_rate?: number | null
+          slug?: string
+          status?: string
+          total_expenses?: number
+          total_revenue?: number
+          updated_at?: string
         }
         Relationships: []
       }
