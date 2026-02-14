@@ -1,10 +1,16 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, DollarSign, TrendingUp, Users, Megaphone, Activity } from 'lucide-react';
+import { ArrowRight, DollarSign, TrendingUp, Users, Megaphone, Activity, Plus, History, RotateCcw, Settings, Shield } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import Layout from '@/components/Layout';
 import StatCard from '@/components/StatCard';
-import { projects, formatCurrency, formatPercent } from '@/data/mockData';
+import EditableField from '@/components/EditableField';
+import ExpenseRow from '@/components/ExpenseRow';
+import AuditLogDialog from '@/components/AuditLogDialog';
+import { useProject, useProjectMonthlyData, useProjectExpenses, useProjectAnalysis, useAddRecord, useDeleteRecord, useUpdateField } from '@/hooks/useProjects';
+import { formatCurrency, formatPercent } from '@/data/mockData';
+import { toast } from 'sonner';
 
 const COLORS = ['hsl(43,65%,55%)', 'hsl(222,30%,35%)', 'hsl(152,60%,45%)', 'hsl(0,72%,51%)', 'hsl(200,70%,50%)', 'hsl(280,60%,55%)'];
 
@@ -24,45 +30,134 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function ProjectDetail() {
   const { id } = useParams();
-  const project = projects.find(p => p.id === id);
+  const { data: project, isLoading: loadingProject } = useProject(id || '');
+  const { data: monthlyData } = useProjectMonthlyData(project?.id || '');
+  const { data: expenses } = useProjectExpenses(project?.id || '');
+  const { data: analysis } = useProjectAnalysis(project?.id || '');
+  const addRecord = useAddRecord();
+  const deleteRecord = useDeleteRecord();
+  const updateField = useUpdateField();
+
+  const [showProjectHistory, setShowProjectHistory] = useState(false);
+  const [addingExpense, setAddingExpense] = useState(false);
+  const [newExpCategory, setNewExpCategory] = useState('');
+  const [newExpAmount, setNewExpAmount] = useState('');
+
+  if (loadingProject) {
+    return <Layout><div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div></Layout>;
+  }
   if (!project) return <Layout><p className="text-foreground">المشروع غير موجود</p></Layout>;
 
-  // Calculate break-even month
+  const handleAddExpense = () => {
+    if (!newExpCategory || !newExpAmount) return;
+    addRecord.mutate(
+      { table: 'project_expenses', data: { project_id: project.id, category: newExpCategory, amount: Number(newExpAmount) } },
+      {
+        onSuccess: () => {
+          toast.success('تمت إضافة المصروف');
+          setAddingExpense(false);
+          setNewExpCategory('');
+          setNewExpAmount('');
+        },
+      }
+    );
+  };
+
+  const handleRecalculate = () => {
+    if (!expenses || !monthlyData) return;
+    const totalExp = expenses.reduce((s, e) => s + Number(e.amount), 0);
+    const totalRev = monthlyData.reduce((s, m) => s + Number(m.revenue), 0);
+    const netProfit = totalRev - totalExp;
+
+    Promise.all([
+      new Promise<void>((res) => updateField.mutate({ table: 'projects', id: project.id, field: 'total_expenses', value: totalExp, oldValue: project.total_expenses, reason: 'إعادة احتساب تلقائي' }, { onSuccess: () => res() })),
+      new Promise<void>((res) => updateField.mutate({ table: 'projects', id: project.id, field: 'total_revenue', value: totalRev, oldValue: project.total_revenue, reason: 'إعادة احتساب تلقائي' }, { onSuccess: () => res() })),
+      new Promise<void>((res) => updateField.mutate({ table: 'projects', id: project.id, field: 'net_profit', value: netProfit, oldValue: project.net_profit, reason: 'إعادة احتساب تلقائي' }, { onSuccess: () => res() })),
+    ]).then(() => toast.success('تمت إعادة الاحتساب'));
+  };
+
+  // Break-even calculation
   let cumulative = 0;
-  const breakEvenMonth = project.monthlyData.find(m => {
-    cumulative += m.profit;
+  const breakEvenMonth = monthlyData?.find(m => {
+    cumulative += Number(m.profit);
     return cumulative > 0;
   });
 
   return (
     <Layout>
       <Link to="/projects" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-4">
-        <ArrowRight className="w-4 h-4" />
-        العودة للمشاريع
+        <ArrowRight className="w-4 h-4" /> العودة للمشاريع
       </Link>
 
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <h1 className="text-2xl font-heading font-bold text-foreground">{project.name}</h1>
-        <p className="text-sm text-muted-foreground">{project.description}</p>
+      {/* Header with edit controls */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-start justify-between">
+        <div>
+          <EditableField table="projects" recordId={project.id} field="name" value={project.name} valueClassName="text-2xl font-heading font-bold text-foreground" onHistoryClick={() => setShowProjectHistory(true)} />
+          <EditableField table="projects" recordId={project.id} field="description" value={project.description} valueClassName="text-sm text-muted-foreground" />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setShowProjectHistory(true)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-accent/10 text-accent rounded-lg hover:bg-accent/20 transition-colors">
+            <History className="w-3.5 h-3.5" /> سجل التعديلات
+          </button>
+          <button onClick={handleRecalculate} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-warning/10 text-warning rounded-lg hover:bg-warning/20 transition-colors">
+            <RotateCcw className="w-3.5 h-3.5" /> إعادة احتساب
+          </button>
+        </div>
       </motion.div>
 
-      {/* Stats */}
+      {/* Data Reliability Score */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 bg-gradient-card rounded-xl border border-border p-4 shadow-card">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-foreground flex items-center gap-2 font-heading"><Shield className="w-4 h-4 text-primary" /> مؤشر موثوقية البيانات</span>
+          <EditableField table="projects" recordId={project.id} field="data_reliability_score" value={project.data_reliability_score} type="number" formatter={(v) => `${v}%`} valueClassName={`font-bold ${project.data_reliability_score >= 80 ? 'text-success' : project.data_reliability_score >= 50 ? 'text-warning' : 'text-destructive'}`} />
+        </div>
+        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+          <motion.div
+            className={`h-full rounded-full ${project.data_reliability_score >= 80 ? 'bg-success' : project.data_reliability_score >= 50 ? 'bg-warning' : 'bg-destructive'}`}
+            initial={{ width: 0 }}
+            animate={{ width: `${project.data_reliability_score}%` }}
+            transition={{ duration: 1 }}
+          />
+        </div>
+      </motion.div>
+
+      {/* Editable Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard title="إجمالي الإيرادات" value={formatCurrency(project.totalRevenue)} icon={DollarSign} delay={0} />
-        <StatCard title="صافي الربح" value={formatCurrency(project.netProfit)} icon={TrendingUp}
-          change={formatPercent(project.growthRate)}
-          changeType={project.growthRate >= 0 ? 'positive' : 'negative'} delay={0.1} />
-        <StatCard title="العملاء" value={project.clientCount.toLocaleString('ar-SA')} icon={Users} delay={0.2} />
-        <StatCard title="الحملات" value={`${project.campaignCount} حملة`} icon={Megaphone} delay={0.3} />
+        <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
+          <span className="text-xs text-muted-foreground">إجمالي الإيرادات</span>
+          <EditableField table="projects" recordId={project.id} field="total_revenue" value={project.total_revenue} type="number" formatter={formatCurrency} valueClassName="text-lg font-bold text-foreground" onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} />
+        </div>
+        <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
+          <span className="text-xs text-muted-foreground">صافي الربح</span>
+          <EditableField table="projects" recordId={project.id} field="net_profit" value={project.net_profit} type="number" formatter={formatCurrency} valueClassName={`text-lg font-bold ${project.net_profit >= 0 ? 'text-success' : 'text-destructive'}`} onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} />
+        </div>
+        <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
+          <span className="text-xs text-muted-foreground">العملاء</span>
+          <EditableField table="projects" recordId={project.id} field="client_count" value={project.client_count} type="number" formatter={(v) => Number(v).toLocaleString('ar-SA')} valueClassName="text-lg font-bold text-foreground" />
+        </div>
+        <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
+          <span className="text-xs text-muted-foreground">نسبة النمو</span>
+          <EditableField table="projects" recordId={project.id} field="growth_rate" value={project.growth_rate} type="number" formatter={formatPercent} valueClassName={`text-lg font-bold ${project.growth_rate >= 0 ? 'text-success' : 'text-destructive'}`} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Monthly Revenue vs Expenses */}
+        {/* Monthly Chart with settings */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
           className="bg-gradient-card rounded-xl border border-border p-5 shadow-card">
-          <h3 className="text-sm font-heading text-muted-foreground mb-4">الإيرادات مقابل المصروفات</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-heading text-muted-foreground">الإيرادات مقابل المصروفات</h3>
+            <div className="flex gap-1">
+              <button className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="تعديل طريقة الحساب">
+                <Settings className="w-3.5 h-3.5" />
+              </button>
+              <button className="p-1 rounded hover:bg-warning/10 text-muted-foreground hover:text-warning transition-colors" title="إعادة توليد">
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={project.monthlyData}>
+            <BarChart data={monthlyData || []}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,18%)" />
               <XAxis dataKey="month" tick={{ fill: 'hsl(215,15%,55%)', fontSize: 10 }} />
               <YAxis tick={{ fill: 'hsl(215,15%,55%)', fontSize: 10 }} />
@@ -74,18 +169,46 @@ export default function ProjectDetail() {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Expense Breakdown */}
+        {/* Expense Breakdown - Fully Editable */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
           className="bg-gradient-card rounded-xl border border-border p-5 shadow-card">
-          <h3 className="text-sm font-heading text-muted-foreground mb-4">توزيع المصروفات</h3>
-          <ResponsiveContainer width="100%" height={260}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-heading text-muted-foreground">توزيع المصروفات</h3>
+            <button
+              onClick={() => setAddingExpense(true)}
+              className="flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+            >
+              <Plus className="w-3 h-3" /> إضافة
+            </button>
+          </div>
+
+          {addingExpense && (
+            <div className="mb-4 p-3 bg-muted/20 rounded-lg border border-border space-y-2">
+              <div className="flex gap-2">
+                <input value={newExpCategory} onChange={(e) => setNewExpCategory(e.target.value)} placeholder="التصنيف" className="flex-1 bg-background border border-border rounded px-2 py-1 text-sm text-foreground" />
+                <input type="number" value={newExpAmount} onChange={(e) => setNewExpAmount(e.target.value)} placeholder="المبلغ" className="w-32 bg-background border border-border rounded px-2 py-1 text-sm text-foreground" />
+              </div>
+              <div className="flex gap-1">
+                <button onClick={handleAddExpense} className="px-2 py-0.5 text-xs bg-success/20 text-success rounded hover:bg-success/30">إضافة</button>
+                <button onClick={() => setAddingExpense(false)} className="px-2 py-0.5 text-xs bg-destructive/20 text-destructive rounded hover:bg-destructive/30">إلغاء</button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1 mb-4">
+            {expenses?.map((exp) => (
+              <ExpenseRow key={exp.id} expense={exp} />
+            ))}
+          </div>
+
+          <ResponsiveContainer width="100%" height={180}>
             <PieChart>
-              <Pie data={project.expenseBreakdown} dataKey="amount" nameKey="category"
-                cx="50%" cy="50%" outerRadius={90} innerRadius={50}
+              <Pie data={expenses || []} dataKey="amount" nameKey="category"
+                cx="50%" cy="50%" outerRadius={70} innerRadius={40}
                 label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
                 labelLine={{ stroke: 'hsl(215,15%,55%)' }}
               >
-                {project.expenseBreakdown.map((_, i) => (
+                {expenses?.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
@@ -98,13 +221,23 @@ export default function ProjectDetail() {
       {/* Profit Trend */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
         className="bg-gradient-card rounded-xl border border-border p-5 shadow-card mb-8">
-        <h3 className="text-sm font-heading text-muted-foreground mb-4">اتجاه الأرباح الشهرية</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-heading text-muted-foreground">اتجاه الأرباح الشهرية</h3>
+          <div className="flex gap-1">
+            <button className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="تعديل مصدر البيانات">
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+            <button className="p-1 rounded hover:bg-warning/10 text-muted-foreground hover:text-warning transition-colors" title="إعادة توليد">
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
         <ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={project.monthlyData}>
+          <AreaChart data={monthlyData || []}>
             <defs>
               <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={project.netProfit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={project.netProfit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'} stopOpacity={0} />
+                <stop offset="5%" stopColor={project.net_profit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={project.net_profit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,18%)" />
@@ -112,7 +245,7 @@ export default function ProjectDetail() {
             <YAxis tick={{ fill: 'hsl(215,15%,55%)', fontSize: 10 }} />
             <Tooltip content={<CustomTooltip />} />
             <Area type="monotone" dataKey="profit" name="الربح"
-              stroke={project.netProfit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'}
+              stroke={project.net_profit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'}
               fill="url(#profitGrad)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
@@ -126,10 +259,10 @@ export default function ProjectDetail() {
             <Activity className="w-4 h-4 text-primary" /> تحليل الأداء
           </h3>
           <div className="space-y-3">
-            {project.analysis.map((item, i) => (
-              <div key={i} className="flex items-start gap-2">
+            {analysis?.map((item) => (
+              <div key={item.id} className="flex items-start gap-2 group">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <p className="text-sm text-foreground">{item}</p>
+                <EditableField table="project_analysis" recordId={item.id} field="content" value={item.content} valueClassName="text-sm text-foreground" />
               </div>
             ))}
           </div>
@@ -148,17 +281,17 @@ export default function ProjectDetail() {
               <p className="text-sm text-destructive">لم يتم الوصول لنقطة التعادل بعد</p>
             </div>
           )}
-          {project.occupancyRate && (
+          {project.occupancy_rate && (
             <div className="mt-4 pt-4 border-t border-border">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-muted-foreground">نسبة الإشغال</span>
-                <span className="text-primary font-bold">{project.occupancyRate}%</span>
+                <EditableField table="projects" recordId={project.id} field="occupancy_rate" value={project.occupancy_rate} type="number" formatter={(v) => `${v}%`} valueClassName="text-primary font-bold" />
               </div>
               <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-gradient-gold"
                   initial={{ width: 0 }}
-                  animate={{ width: `${project.occupancyRate}%` }}
+                  animate={{ width: `${project.occupancy_rate}%` }}
                   transition={{ duration: 1, delay: 1 }}
                 />
               </div>
@@ -166,6 +299,14 @@ export default function ProjectDetail() {
           )}
         </motion.div>
       </div>
+
+      <AuditLogDialog
+        open={showProjectHistory}
+        onOpenChange={setShowProjectHistory}
+        tableName="projects"
+        recordId={project.id}
+        title={project.name}
+      />
     </Layout>
   );
 }
