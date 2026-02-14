@@ -11,6 +11,7 @@ import EmployeeDetail from "./pages/EmployeeDetail";
 import Forecasts from "./pages/Forecasts";
 import StrategicAnalysis from "./pages/StrategicAnalysis";
 import BatSharkAI from "./pages/BatSharkAI";
+import FinancialLab from "./pages/FinancialLab";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/forecasts" element={<Forecasts />} />
           <Route path="/strategic" element={<StrategicAnalysis />} />
           <Route path="/ai" element={<BatSharkAI />} />
+          <Route path="/lab" element={<FinancialLab />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
