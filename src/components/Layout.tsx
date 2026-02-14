@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
-  Menu, X, ChevronLeft, Brain
+  Menu, X, ChevronLeft, Brain, FlaskConical
 } from 'lucide-react';
 import logo from '@/assets/batshark-logo.png';
 
@@ -13,6 +13,7 @@ const navItems = [
   { path: '/employees', label: 'الموظفين', icon: Users },
   { path: '/forecasts', label: 'التوقعات', icon: TrendingUp },
   { path: '/strategic', label: 'التحليل الاستراتيجي', icon: Shield },
+  { path: '/lab', label: 'مختبر النمذجة', icon: FlaskConical },
   { path: '/ai', label: 'اسأل BatShark', icon: Brain },
 ];
 
