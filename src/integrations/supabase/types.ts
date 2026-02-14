@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      employee_evaluations: {
+        Row: {
+          admin_rating: number
+          budget_compliance: number
+          communication: number
+          created_at: string
+          employee_id: string
+          employee_name: string
+          evaluation_month: string
+          evaluation_year: number
+          expense_exceeded: boolean
+          goal_achievement: number
+          id: string
+          initiative: number
+          notes: string | null
+          overall_score: number
+          projects_completed: number
+          teamwork: number
+        }
+        Insert: {
+          admin_rating: number
+          budget_compliance: number
+          communication: number
+          created_at?: string
+          employee_id: string
+          employee_name: string
+          evaluation_month: string
+          evaluation_year: number
+          expense_exceeded?: boolean
+          goal_achievement: number
+          id?: string
+          initiative: number
+          notes?: string | null
+          overall_score: number
+          projects_completed?: number
+          teamwork: number
+        }
+        Update: {
+          admin_rating?: number
+          budget_compliance?: number
+          communication?: number
+          created_at?: string
+          employee_id?: string
+          employee_name?: string
+          evaluation_month?: string
+          evaluation_year?: number
+          expense_exceeded?: boolean
+          goal_achievement?: number
+          id?: string
+          initiative?: number
+          notes?: string | null
+          overall_score?: number
+          projects_completed?: number
+          teamwork?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
