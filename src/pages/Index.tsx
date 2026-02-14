@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { DollarSign, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { DollarSign, TrendingUp, TrendingDown, BarChart3, Percent, Activity, Gauge, Wallet, PiggyBank, Target } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, RadialBarChart, RadialBar } from 'recharts';
 import Layout from '@/components/Layout';
 import StatCard from '@/components/StatCard';
 import HealthScore from '@/components/HealthScore';
@@ -28,6 +28,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+const IndicatorCard = ({ label, value, unit, color, delay }: { label: string; value: string | number; unit?: string; color: string; delay: number }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay }}
+    className="bg-gradient-card rounded-xl border border-border p-4 shadow-card text-center"
+  >
+    <p className="text-[11px] text-muted-foreground mb-1 font-heading">{label}</p>
+    <p className="text-xl font-heading font-bold" style={{ color }}>{value}<span className="text-xs text-muted-foreground mr-1">{unit}</span></p>
+  </motion.div>
+);
+
 export default function Dashboard() {
   return (
     <Layout>
@@ -41,12 +53,12 @@ export default function Dashboard() {
           BatShark Economy
         </h1>
         <p className="text-muted-foreground text-sm lg:text-base">
-          قيادة مالية مبنية على البيانات، وتحليل استراتيجي يقود النمو المستدام
+          نظام تشغيل مالي استراتيجي — قيادة مبنية على البيانات والتحليل
         </p>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Main Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           title="إجمالي الإيرادات"
           value={formatCurrency(companyMetrics.totalRevenue)}
@@ -79,13 +91,35 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Advanced Financial Indicators */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="mb-6"
+      >
+        <h3 className="text-sm font-heading text-muted-foreground mb-3">📊 المؤشرات المالية المتقدمة</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <IndicatorCard label="العائد على الاستثمار (ROI)" value={`${companyMetrics.roi}%`} color="hsl(152, 60%, 45%)" delay={0.4} />
+          <IndicatorCard label="EBITDA" value={formatCurrency(companyMetrics.ebitda)} color="hsl(43, 65%, 55%)" delay={0.45} />
+          <IndicatorCard label="معدل الحرق الشهري" value={formatCurrency(companyMetrics.burnRate)} color="hsl(0, 72%, 51%)" delay={0.5} />
+          <IndicatorCard label="المدرج (Runway)" value={companyMetrics.runway} unit=" شهر" color="hsl(210, 70%, 55%)" delay={0.55} />
+          <IndicatorCard label="نسبة السيولة" value={companyMetrics.liquidityRatio} unit="x" color="hsl(152, 60%, 45%)" delay={0.6} />
+          <IndicatorCard label="هامش الربح الإجمالي" value={`${companyMetrics.grossMargin}%`} color="hsl(43, 65%, 55%)" delay={0.65} />
+          <IndicatorCard label="هامش الربح التشغيلي" value={`${companyMetrics.operatingMargin}%`} color="hsl(38, 92%, 50%)" delay={0.7} />
+          <IndicatorCard label="كفاءة التكلفة" value={`${(companyMetrics.costEfficiencyIndex * 100).toFixed(0)}%`} color="hsl(152, 60%, 45%)" delay={0.75} />
+          <IndicatorCard label="الدين إلى الملكية" value={companyMetrics.debtToEquity} unit="x" color="hsl(210, 70%, 55%)" delay={0.8} />
+          <IndicatorCard label="مؤشر الأداء العام" value={`${companyMetrics.performanceIndex}%`} color="hsl(43, 65%, 55%)" delay={0.85} />
+        </div>
+      </motion.div>
+
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Main chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className="lg:col-span-2 bg-gradient-card rounded-xl border border-border p-5 shadow-card"
         >
           <h3 className="text-sm font-heading text-muted-foreground mb-4">أرباح المشاريع الشهرية</h3>
@@ -116,7 +150,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.6 }}
         >
           <HealthScore score={companyMetrics.healthScore} />
 
@@ -138,6 +172,18 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
+
+          {/* Board Members */}
+          <div className="mt-4 bg-gradient-card rounded-xl border border-border p-5 shadow-card">
+            <h3 className="text-sm font-heading text-muted-foreground mb-3">مجلس الإدارة التنفيذي</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs"><span>👑</span><span className="text-foreground">عبدالرحمن بن بندر</span><span className="text-muted-foreground">— CEO</span></div>
+              <div className="flex items-center gap-2 text-xs"><span>⚙️</span><span className="text-foreground">محمد بن تركي</span><span className="text-muted-foreground">— COO</span></div>
+              <div className="flex items-center gap-2 text-xs"><span>📊</span><span className="text-foreground">فهد سلطان</span><span className="text-muted-foreground">— استراتيجي</span></div>
+              <div className="flex items-center gap-2 text-xs"><span>📣</span><span className="text-foreground">سعد سلطان</span><span className="text-muted-foreground">— تسويق</span></div>
+              <div className="flex items-center gap-2 text-xs"><span>💻</span><span className="text-foreground">نايف المطيري</span><span className="text-muted-foreground">— تقنية</span></div>
+            </div>
+          </div>
         </motion.div>
       </div>
 
@@ -145,7 +191,7 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
+        transition={{ delay: 0.7 }}
         className="bg-gradient-card rounded-xl border border-border p-5 shadow-card"
       >
         <h3 className="text-sm font-heading text-muted-foreground mb-4">مقارنة الإيرادات والمصروفات حسب المشروع</h3>

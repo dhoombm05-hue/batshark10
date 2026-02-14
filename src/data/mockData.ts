@@ -158,7 +158,7 @@ export const employees: Employee[] = [
   {
     id: '1',
     name: 'عبدالرحمن بن بندر بن محبوب',
-    position: 'الرئيس التنفيذي',
+    position: 'الرئيس التنفيذي (CEO)',
     projects: ['مشروع البادل', 'مشروع الشاشات', 'مشروع Umbrex'],
     performance: 95,
     kpiAchievement: 92,
@@ -177,7 +177,7 @@ export const employees: Employee[] = [
   {
     id: '2',
     name: 'محمد بن تركي الداود',
-    position: 'مدير العمليات',
+    position: 'مدير العمليات (COO)',
     projects: ['مشروع البادل'],
     performance: 91,
     kpiAchievement: 88,
@@ -196,7 +196,7 @@ export const employees: Employee[] = [
   {
     id: '3',
     name: 'فهد سلطان المحبوب',
-    position: 'مدير مالي',
+    position: 'المدير الاستراتيجي',
     projects: ['مشروع الشاشات', 'مشروع Umbrex'],
     performance: 74,
     kpiAchievement: 68,
@@ -215,7 +215,7 @@ export const employees: Employee[] = [
   {
     id: '4',
     name: 'نايف بن محمد المطيري',
-    position: 'مدير التسويق',
+    position: 'مدير التقنية والتسويق الرقمي',
     projects: ['مشروع البادل', 'مشروع Umbrex'],
     performance: 86,
     kpiAchievement: 82,
@@ -234,7 +234,7 @@ export const employees: Employee[] = [
   {
     id: '5',
     name: 'سعد سلطان المحبوب',
-    position: 'مدير تطوير الأعمال',
+    position: 'مدير الأعمال التسويقية',
     projects: ['مشروع الشاشات'],
     performance: 80,
     kpiAchievement: 76,
@@ -258,6 +258,17 @@ export const companyMetrics = {
   netProfit: projects.reduce((s, p) => s + p.netProfit, 0),
   monthlyGrowth: 6.2,
   healthScore: 72,
+  // Advanced Financial Indicators
+  roi: 12.5,
+  ebitda: 380000,
+  burnRate: 158000,
+  runway: 14, // months
+  liquidityRatio: 1.8,
+  costEfficiencyIndex: 0.87,
+  performanceIndex: 82,
+  grossMargin: 31.2,
+  operatingMargin: 11.2,
+  debtToEquity: 0.35,
 };
 
 export const forecasts = {
