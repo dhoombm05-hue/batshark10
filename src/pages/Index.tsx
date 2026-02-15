@@ -7,6 +7,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '@/components/Layout';
 import HealthScore from '@/components/HealthScore';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { projects, companyMetrics, formatCurrency, formatPercent } from '@/data/mockData';
 import logo from '@/assets/batshark-logo-main.png';
 
@@ -64,6 +65,7 @@ const SectionCard = ({ to, icon: Icon, label, desc, bgColor, textColor, borderCo
 );
 
 export default function Dashboard() {
+  const { profile } = useAuthContext();
   return (
     <Layout>
       {/* Background watermark */}
@@ -117,7 +119,7 @@ export default function Dashboard() {
               <Settings className="w-5 h-5" />
             </button>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,80%,52%)] to-[hsl(190,80%,45%)] flex items-center justify-center text-white font-heading font-bold text-sm shadow-card mr-1">
-              عب
+              {profile?.display_name?.charAt(0) || '؟'}
             </div>
           </motion.div>
         </div>
