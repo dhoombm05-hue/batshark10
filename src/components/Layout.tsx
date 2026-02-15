@@ -3,9 +3,18 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
-  Menu, X, ChevronLeft, Brain, FlaskConical
+  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog
 } from 'lucide-react';
+import { useAuthContext } from '@/contexts/AuthContext';
 import logo from '@/assets/batshark-logo-main.png';
+
+const ROLE_LABELS: Record<string, string> = {
+  ceo: '👑 الرئيس',
+  coo: '⚙️ العمليات',
+  strategic_director: '📊 الاستراتيجي',
+  marketing_director: '📣 التسويق',
+  tech_director: '💻 التقنية',
+};
 
 const navItems = [
   { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard, color: 'section-finance' },
@@ -31,6 +40,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { profile, role, isCEO, signOut } = useAuthContext();
+
+  const allNavItems = isCEO
+    ? [...navItems, { path: '/users', label: 'إدارة المستخدمين', icon: UserCog, color: 'section-finance' }]
+    : navItems;
 
   return (
     <div className="flex min-h-screen">
@@ -88,7 +102,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-1">
-          {navItems.map((item) => {
+          {allNavItems.map((item) => {
             const active = location.pathname === item.path ||
               (item.path !== '/' && location.pathname.startsWith(item.path));
             const colors = colorMap[item.color];
@@ -113,15 +127,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Footer */}
-        {!collapsed && (
-          <div className="p-4 border-t border-border flex items-center gap-2 justify-center">
-            <img src={logo} alt="BatShark" className="w-5 h-5 rounded opacity-50" />
-            <p className="text-[10px] text-muted-foreground">
-              © 2024 BatShark Economy
-            </p>
-          </div>
-        )}
+        {/* User Info & Logout */}
+        <div className="p-4 border-t border-border space-y-3">
+          {!collapsed && profile && (
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] flex items-center justify-center text-white font-heading font-bold text-xs shrink-0">
+                {profile.display_name.charAt(0)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-heading font-bold text-white truncate">{profile.display_name}</p>
+                {role && <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[role] || role}</p>}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={signOut}
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-destructive/80 hover:bg-destructive/10 hover:text-destructive transition-all text-sm ${collapsed ? 'justify-center' : ''}`}
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            {!collapsed && <span className="font-body text-xs">تسجيل الخروج</span>}
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}
