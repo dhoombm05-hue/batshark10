@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pencil, Trash2, History, Check, X } from 'lucide-react';
 import { useUpdateField, useDeleteRecord, type DBExpense } from '@/hooks/useProjects';
+import { useFinancialEngine } from '@/hooks/useFinancialEngine';
 import AuditLogDialog from './AuditLogDialog';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/data/mockData';
@@ -17,6 +18,7 @@ export default function ExpenseRow({ expense }: ExpenseRowProps) {
   const [showHistory, setShowHistory] = useState(false);
   const updateField = useUpdateField();
   const deleteRecord = useDeleteRecord();
+  const { recalculateProject } = useFinancialEngine();
 
   const handleSave = () => {
     const updates: Promise<void>[] = [];
@@ -40,10 +42,11 @@ export default function ExpenseRow({ expense }: ExpenseRowProps) {
         )
       );
     }
-    Promise.all(updates).then(() => {
+    Promise.all(updates).then(async () => {
       toast.success('تم تحديث المصروف');
       setEditing(false);
       setReason('');
+      await recalculateProject(expense.project_id);
     });
   };
 
@@ -51,7 +54,10 @@ export default function ExpenseRow({ expense }: ExpenseRowProps) {
     if (!confirm('هل أنت متأكد من حذف هذا المصروف؟')) return;
     deleteRecord.mutate(
       { table: 'project_expenses', id: expense.id },
-      { onSuccess: () => toast.success('تم حذف المصروف') }
+      { onSuccess: async () => {
+        toast.success('تم حذف المصروف');
+        await recalculateProject(expense.project_id);
+      }}
     );
   };
 

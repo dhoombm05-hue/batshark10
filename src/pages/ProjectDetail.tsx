@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, DollarSign, TrendingUp, Users, Megaphone, Activity, Plus, History, RotateCcw, Settings, Shield } from 'lucide-react';
@@ -8,7 +8,9 @@ import StatCard from '@/components/StatCard';
 import EditableField from '@/components/EditableField';
 import ExpenseRow from '@/components/ExpenseRow';
 import AuditLogDialog from '@/components/AuditLogDialog';
+import PrintButton from '@/components/PrintButton';
 import { useProject, useProjectMonthlyData, useProjectExpenses, useProjectAnalysis, useAddRecord, useDeleteRecord, useUpdateField } from '@/hooks/useProjects';
+import { useFinancialEngine } from '@/hooks/useFinancialEngine';
 import { formatCurrency, formatPercent } from '@/data/mockData';
 import { toast } from 'sonner';
 
@@ -37,6 +39,7 @@ export default function ProjectDetail() {
   const addRecord = useAddRecord();
   const deleteRecord = useDeleteRecord();
   const updateField = useUpdateField();
+  const { recalculateProject } = useFinancialEngine();
 
   const [showProjectHistory, setShowProjectHistory] = useState(false);
   const [addingExpense, setAddingExpense] = useState(false);
@@ -53,27 +56,26 @@ export default function ProjectDetail() {
     addRecord.mutate(
       { table: 'project_expenses', data: { project_id: project.id, category: newExpCategory, amount: Number(newExpAmount) } },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           toast.success('تمت إضافة المصروف');
           setAddingExpense(false);
           setNewExpCategory('');
           setNewExpAmount('');
+          // Auto-recalculate
+          await recalculateProject(project.id);
+          toast.success('تمت إعادة الاحتساب تلقائياً');
         },
       }
     );
   };
 
-  const handleRecalculate = () => {
-    if (!expenses || !monthlyData) return;
-    const totalExp = expenses.reduce((s, e) => s + Number(e.amount), 0);
-    const totalRev = monthlyData.reduce((s, m) => s + Number(m.revenue), 0);
-    const netProfit = totalRev - totalExp;
-
-    Promise.all([
-      new Promise<void>((res) => updateField.mutate({ table: 'projects', id: project.id, field: 'total_expenses', value: totalExp, oldValue: project.total_expenses, reason: 'إعادة احتساب تلقائي' }, { onSuccess: () => res() })),
-      new Promise<void>((res) => updateField.mutate({ table: 'projects', id: project.id, field: 'total_revenue', value: totalRev, oldValue: project.total_revenue, reason: 'إعادة احتساب تلقائي' }, { onSuccess: () => res() })),
-      new Promise<void>((res) => updateField.mutate({ table: 'projects', id: project.id, field: 'net_profit', value: netProfit, oldValue: project.net_profit, reason: 'إعادة احتساب تلقائي' }, { onSuccess: () => res() })),
-    ]).then(() => toast.success('تمت إعادة الاحتساب'));
+  const handleRecalculate = async () => {
+    try {
+      await recalculateProject(project.id);
+      toast.success('تمت إعادة الاحتساب');
+    } catch {
+      toast.error('فشلت إعادة الاحتساب');
+    }
   };
 
   // Break-even calculation
@@ -96,6 +98,7 @@ export default function ProjectDetail() {
           <EditableField table="projects" recordId={project.id} field="description" value={project.description} valueClassName="text-sm text-muted-foreground" />
         </div>
         <div className="flex gap-2">
+          <PrintButton title={`طباعة ${project.name}`} />
           <button onClick={() => setShowProjectHistory(true)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-accent/10 text-accent rounded-lg hover:bg-accent/20 transition-colors">
             <History className="w-3.5 h-3.5" /> سجل التعديلات
           </button>
@@ -125,19 +128,19 @@ export default function ProjectDetail() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">إجمالي الإيرادات</span>
-          <EditableField table="projects" recordId={project.id} field="total_revenue" value={project.total_revenue} type="number" formatter={formatCurrency} valueClassName="text-lg font-bold text-foreground" onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} />
+          <EditableField table="projects" recordId={project.id} field="total_revenue" value={project.total_revenue} type="number" formatter={formatCurrency} valueClassName="text-lg font-bold text-foreground" onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} onAfterSave={() => recalculateProject(project.id)} />
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">صافي الربح</span>
-          <EditableField table="projects" recordId={project.id} field="net_profit" value={project.net_profit} type="number" formatter={formatCurrency} valueClassName={`text-lg font-bold ${project.net_profit >= 0 ? 'text-success' : 'text-destructive'}`} onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} />
+          <EditableField table="projects" recordId={project.id} field="net_profit" value={project.net_profit} type="number" formatter={formatCurrency} valueClassName={`text-lg font-bold ${project.net_profit >= 0 ? 'text-success' : 'text-destructive'}`} onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} onAfterSave={() => recalculateProject(project.id)} />
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">العملاء</span>
-          <EditableField table="projects" recordId={project.id} field="client_count" value={project.client_count} type="number" formatter={(v) => Number(v).toLocaleString('ar-SA')} valueClassName="text-lg font-bold text-foreground" />
+          <EditableField table="projects" recordId={project.id} field="client_count" value={project.client_count} type="number" formatter={(v) => Number(v).toLocaleString('ar-SA')} valueClassName="text-lg font-bold text-foreground" onAfterSave={() => recalculateProject(project.id)} />
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">نسبة النمو</span>
-          <EditableField table="projects" recordId={project.id} field="growth_rate" value={project.growth_rate} type="number" formatter={formatPercent} valueClassName={`text-lg font-bold ${project.growth_rate >= 0 ? 'text-success' : 'text-destructive'}`} />
+          <EditableField table="projects" recordId={project.id} field="growth_rate" value={project.growth_rate} type="number" formatter={formatPercent} valueClassName={`text-lg font-bold ${project.growth_rate >= 0 ? 'text-success' : 'text-destructive'}`} onAfterSave={() => recalculateProject(project.id)} />
         </div>
       </div>
 

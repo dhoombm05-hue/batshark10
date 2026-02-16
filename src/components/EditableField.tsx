@@ -14,6 +14,7 @@ interface EditableFieldProps {
   formatter?: (v: any) => string;
   onHistoryClick?: () => void;
   onRecalculate?: () => void;
+  onAfterSave?: () => void;
   className?: string;
   valueClassName?: string;
 }
@@ -28,6 +29,7 @@ export default function EditableField({
   formatter,
   onHistoryClick,
   onRecalculate,
+  onAfterSave,
   className = '',
   valueClassName = '',
 }: EditableFieldProps) {
@@ -56,6 +58,7 @@ export default function EditableField({
           setEditing(false);
           setShowReason(false);
           setReason('');
+          onAfterSave?.();
         },
         onError: () => toast.error('فشل التحديث'),
       }
