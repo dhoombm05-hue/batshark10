@@ -215,3 +215,43 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(210 80% 52%);
 }
+
+/* Print styles */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+
+  .print\\:hidden,
+  aside,
+  nav,
+  button:not(.print-keep),
+  .shadow-card,
+  .shadow-elevated {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .print\\:block {
+    display: block !important;
+  }
+
+  .print\\:border-none {
+    border: none !important;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
+}
