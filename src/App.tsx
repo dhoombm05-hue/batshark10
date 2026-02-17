@@ -17,6 +17,7 @@ import BatSharkAI from "./pages/BatSharkAI";
 import FinancialLab from "./pages/FinancialLab";
 import UserManagement from "./pages/UserManagement";
 import SetupCEO from "./pages/SetupCEO";
+import DocumentCenter from "./pages/DocumentCenter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/ai" element={<ProtectedRoute><BatSharkAI /></ProtectedRoute>} />
             <Route path="/lab" element={<ProtectedRoute><FinancialLab /></ProtectedRoute>} />
             <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+            <Route path="/documents" element={<ProtectedRoute><DocumentCenter /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
