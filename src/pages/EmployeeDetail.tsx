@@ -1,11 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X } from 'lucide-react';
+import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X, Printer } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '@/components/Layout';
 import { employees } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
+import PrintButton from '@/components/PrintButton';
 import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -182,6 +183,7 @@ export default function EmployeeDetail() {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
+            <PrintButton title={`طباعة تقرير ${emp.name}`} />
             <Button variant="outline" size="sm" onClick={() => setEditingProfile(!editingProfile)}
               className={editingProfile ? 'border-section-employees/30 text-section-employees' : ''}>
               {editingProfile ? <><Save className="w-4 h-4 ml-1" /> حفظ</> : <><Pencil className="w-4 h-4 ml-1" /> تعديل البيانات</>}

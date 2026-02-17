@@ -1,52 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const COMPANY_CONTEXT = `أنت "BatShark AI" — المستشار المالي الذكي لشركة BatShark Economy.
-
-## قواعدك:
-- أنت تجيب فقط عن أسئلة تتعلق بالشركة ومشاريعها وبياناتها المالية.
-- إذا سُئلت عن شيء خارج نطاق الشركة، قل: "أنا متخصص في تحليل بيانات BatShark فقط."
-- تحلل البيانات وتقدم توصيات عملية.
-- تستخدم اللغة العربية دائماً.
-- أجب بشكل مختصر ومهني.
-
-## بيانات الشركة الحالية:
-
-### المشاريع:
-1. **مشروع البادل**: إيرادات 1,120,000 ريال | مصروفات 850,000 ريال | ربح 270,000 ريال | نمو +12% | إشغال 78% | 3,420 عميل | 14 حملة
-   - أسباب الربح: زيادة الحملات الإعلانية، ارتفاع نسبة الإشغال إلى 78%، تقليل المصروفات التشغيلية 5%
-   
-2. **مشروع الشاشات**: إيرادات 540,000 ريال | مصروفات 620,000 ريال | خسارة -80,000 ريال | نمو -5% | 1,850 عميل | 8 حملات
-   - أسباب الخسارة: ضعف الحملات الإعلانية، انخفاض العملاء 22%، ارتفاع تكاليف الصيانة 15%
-
-3. **مشروع Umbrex**: إيرادات 480,000 ريال | مصروفات 430,000 ريال | ربح 50,000 ريال | نمو +8% | 2,100 عميل | 11 حملة
-   - نمو ثابت، وصل لنقطة التعادل في مارس
-
-### الإجمالي:
-- إيرادات: 2,140,000 ريال | مصروفات: 1,900,000 ريال | ربح: 240,000 ريال
-- ROI: 12.5% | EBITDA: 380,000 ريال | معدل الحرق: 158,000 ريال/شهر | المدرج: 14 شهر
-- نسبة السيولة: 1.8x | هامش الربح الإجمالي: 31.2% | التشغيلي: 11.2%
-
-### فريق الإدارة:
-- 👑 عبدالرحمن بن بندر بن محبوب — الرئيس التنفيذي (أداء 95%)
-- ⚙️ محمد بن تركي الداود — مدير العمليات (أداء 91%)
-- 📊 فهد سلطان المحبوب — المدير الاستراتيجي (أداء 74%)
-- 💻 نايف بن محمد المطيري — مدير التقنية والتسويق الرقمي (أداء 86%)
-- 📣 سعد سلطان المحبوب — مدير الأعمال التسويقية (أداء 80%)
-
-### التوقعات:
-- بعد شهر: ربح 33,000 ريال (ثقة 85%)
-- بعد 3 أشهر: ربح 120,000 ريال (ثقة 75%)
-- بعد سنة: ربح 550,000 ريال (ثقة 60%)
-
-### نقاط القوة: تنوع المشاريع، فريق متمرس، نمو ثابت في البادل
-### نقاط الضعف: خسائر الشاشات، اعتماد كبير على مشروع واحد، ضعف التسويق الرقمي
-### الفرص: التوسع في مدن جديدة، شراكات استراتيجية، دعم رؤية 2030
-### التهديدات: منافسة متزايدة، تقلبات اقتصادية، ارتفاع تكاليف التشغيل`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -55,6 +13,73 @@ serve(async (req) => {
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Fetch live data from database
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const sb = createClient(supabaseUrl, supabaseKey);
+
+    const [{ data: projects }, { data: expenses }, { data: monthly }] = await Promise.all([
+      sb.from("projects").select("*").order("name"),
+      sb.from("project_expenses").select("*"),
+      sb.from("project_monthly_data").select("*").order("month_order"),
+    ]);
+
+    // Build dynamic context from real DB data
+    const totalRevenue = (projects || []).reduce((s: number, p: any) => s + Number(p.total_revenue), 0);
+    const totalExpenses = (projects || []).reduce((s: number, p: any) => s + Number(p.total_expenses), 0);
+    const netProfit = totalRevenue - totalExpenses;
+
+    const projectDetails = (projects || []).map((p: any) => {
+      const pExpenses = (expenses || []).filter((e: any) => e.project_id === p.id);
+      const pMonthly = (monthly || []).filter((m: any) => m.project_id === p.id);
+      const expenseBreakdown = pExpenses.map((e: any) => `${e.category}: ${Number(e.amount).toLocaleString()} ريال`).join('، ');
+      const lastMonths = pMonthly.slice(-3).map((m: any) => `${m.month}: إيراد ${Number(m.revenue).toLocaleString()} / مصروف ${Number(m.expenses).toLocaleString()}`).join(' | ');
+      
+      return `- **${p.name}** (${p.name_en || ''}): إيرادات ${Number(p.total_revenue).toLocaleString()} ريال | مصروفات ${Number(p.total_expenses).toLocaleString()} ريال | ${Number(p.net_profit) >= 0 ? 'ربح' : 'خسارة'} ${Number(p.net_profit).toLocaleString()} ريال | نمو ${p.growth_rate}% | عملاء ${p.client_count} | حملات ${p.campaign_count} | حالة: ${p.status}${p.occupancy_rate ? ` | إشغال ${p.occupancy_rate}%` : ''}
+  المصروفات: ${expenseBreakdown || 'لا توجد'}
+  آخر 3 أشهر: ${lastMonths || 'لا توجد بيانات'}`;
+    }).join('\n\n');
+
+    const healthScore = Math.min(100, Math.round(
+      (netProfit > 0 ? 30 : 0) +
+      20 +
+      Math.min(25, Math.max(0, (netProfit / Math.max(totalRevenue, 1)) * 100 * 0.5)) +
+      ((projects || []).filter((p: any) => p.status === 'profitable').length / Math.max((projects || []).length, 1)) * 25
+    ));
+
+    const COMPANY_CONTEXT = `أنت "BatShark AI" — المستشار المالي الذكي لشركة BatShark Economy.
+
+## قواعدك:
+- تجيب فقط عن أسئلة تتعلق بالشركة ومشاريعها وبياناتها المالية.
+- إذا سُئلت عن شيء خارج نطاق الشركة، قل: "أنا متخصص في تحليل بيانات BatShark فقط."
+- تحلل البيانات وتقدم توصيات عملية مبنية على الأرقام الفعلية.
+- تستخدم اللغة العربية دائماً.
+- أجب بشكل مختصر ومهني مع أرقام دقيقة.
+- إذا لاحظت أزمة مالية (خسارة أو انخفاض حاد)، اقترح حلولاً عملية مثل تقليل المصروفات أو زيادة التسويق أو تحويل ميزانية.
+- حلل العلاقات بين المشاريع (مثلاً: هل خسارة مشروع تؤثر على السيولة الكلية؟)
+- قيّم أداء المشاريع نسبياً لبعضها البعض.
+
+## البيانات المالية الحية (من قاعدة البيانات مباشرة):
+
+### المشاريع:
+${projectDetails}
+
+### الإجمالي:
+- إجمالي الإيرادات: ${totalRevenue.toLocaleString()} ريال
+- إجمالي المصروفات: ${totalExpenses.toLocaleString()} ريال
+- صافي الربح: ${netProfit.toLocaleString()} ريال
+- عدد المشاريع: ${(projects || []).length}
+- مشاريع مربحة: ${(projects || []).filter((p: any) => p.status === 'profitable').length}
+- مشاريع خاسرة: ${(projects || []).filter((p: any) => p.status === 'loss').length}
+- مؤشر صحة الشركة: ${healthScore}/100
+- ROI: ${totalExpenses > 0 ? ((netProfit / totalExpenses) * 100).toFixed(1) : 0}%
+- هامش الربح: ${totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0}%
+
+### تنبيهات آلية:
+${netProfit < 0 ? '⚠️ الشركة تحقق خسارة صافية! يجب اتخاذ إجراءات عاجلة.' : ''}
+${(projects || []).filter((p: any) => p.status === 'loss').map((p: any) => `⚠️ مشروع "${p.name}" يحقق خسارة ${Math.abs(Number(p.net_profit)).toLocaleString()} ريال`).join('\n')}
+${healthScore < 50 ? '🔴 مؤشر صحة الشركة منخفض جداً!' : healthScore < 70 ? '🟡 مؤشر صحة الشركة يحتاج تحسين' : '🟢 مؤشر صحة الشركة جيد'}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -74,12 +99,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "تم تجاوز حد الطلبات، حاول مرة أخرى لاحقاً." }), {
+        return new Response(JSON.stringify({ error: "تم تجاوز حد الطلبات" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "يرجى إضافة رصيد لاستخدام الذكاء الاصطناعي." }), {
+        return new Response(JSON.stringify({ error: "يرجى إضافة رصيد" }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

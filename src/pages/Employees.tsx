@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Target, TrendingUp, Plus, Users } from 'lucide-react';
 import Layout from '@/components/Layout';
+import PrintButton from '@/components/PrintButton';
 import { employees } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 
@@ -21,9 +22,12 @@ export default function Employees() {
               <p className="text-sm text-muted-foreground">إدارة الأداء وتقييم فريق العمل</p>
             </div>
           </div>
-          <Button size="sm" className="bg-section-employees hover:bg-section-employees/90 text-white">
-            <Plus className="w-4 h-4 ml-1" /> إضافة موظف
-          </Button>
+          <div className="flex gap-2">
+            <PrintButton title="طباعة تقرير الموظفين" />
+            <Button size="sm" className="bg-section-employees hover:bg-section-employees/90 text-white">
+              <Plus className="w-4 h-4 ml-1" /> إضافة موظف
+            </Button>
+          </div>
         </div>
       </motion.div>
 
