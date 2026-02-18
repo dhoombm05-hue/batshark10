@@ -1,15 +1,15 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X, Printer } from 'lucide-react';
+import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '@/components/Layout';
-import { employees } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import PrintButton from '@/components/PrintButton';
 import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useEmployee, useEmployeeMonthlyPerformance, useUpdateEmployee } from '@/hooks/useEmployees';
 
 const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
@@ -40,9 +40,8 @@ const RatingSlider = ({ label, value, onChange }: { label: string; value: number
   </div>
 );
 
-// Editable info field
-const InfoField = ({ label, value, icon: Icon, editing, onChange }: {
-  label: string; value: string; icon: any; editing: boolean; onChange?: (v: string) => void;
+const InfoField = ({ label, value, icon: Icon, editing, onChange, onSave }: {
+  label: string; value: string; icon: any; editing: boolean; onChange?: (v: string) => void; onSave?: () => void;
 }) => (
   <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 border border-border">
     <div className="p-2 rounded-lg bg-section-employees/10">
@@ -62,7 +61,9 @@ const InfoField = ({ label, value, icon: Icon, editing, onChange }: {
 
 export default function EmployeeDetail() {
   const { id } = useParams();
-  const emp = employees.find(e => e.id === id);
+  const { data: emp, isLoading: loadingEmp } = useEmployee(id || '');
+  const { data: monthlyPerf } = useEmployeeMonthlyPerformance(emp?.id || '');
+  const updateEmployee = useUpdateEmployee();
   const { toast } = useToast();
 
   const [showForm, setShowForm] = useState(false);
@@ -72,17 +73,26 @@ export default function EmployeeDetail() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Editable profile fields (local state for demo)
+  // Editable profile fields - initialized from DB
   const [profileData, setProfileData] = useState({
-    name: emp?.name || '',
-    position: emp?.position || '',
-    age: '32',
-    department: 'الإدارة العامة',
-    experience: '8 سنوات',
-    salary: '15,000 ريال',
-    bonus: '3,000 ريال',
-    adminNotes: emp?.feedback || '',
+    name: '', position: '', age: '', department: '', experience: '', salary: '', bonus: '', adminNotes: '',
   });
+
+  // Sync profile data when employee loads from DB
+  useEffect(() => {
+    if (emp) {
+      setProfileData({
+        name: emp.name,
+        position: emp.position,
+        age: String(emp.age),
+        department: emp.department,
+        experience: emp.experience,
+        salary: String(emp.salary),
+        bonus: String(emp.bonus),
+        adminNotes: emp.admin_notes || emp.feedback || '',
+      });
+    }
+  }, [emp]);
 
   // Form state
   const [evalMonth, setEvalMonth] = useState(MONTHS[new Date().getMonth()]);
@@ -105,7 +115,7 @@ export default function EmployeeDetail() {
     const { data, error } = await supabase
       .from('employee_evaluations')
       .select('*')
-      .eq('employee_id', emp.id)
+      .eq('employee_id', emp.slug)
       .order('evaluation_year', { ascending: false })
       .order('created_at', { ascending: false });
     if (error) {
@@ -121,11 +131,37 @@ export default function EmployeeDetail() {
     if (emp) fetchHistory();
   }, [emp?.id]);
 
+  const handleSaveProfile = async () => {
+    if (!emp) return;
+    const updates: { field: string; value: any; oldValue: any }[] = [];
+    
+    if (profileData.name !== emp.name) updates.push({ field: 'name', value: profileData.name, oldValue: emp.name });
+    if (profileData.position !== emp.position) updates.push({ field: 'position', value: profileData.position, oldValue: emp.position });
+    if (String(profileData.age) !== String(emp.age)) updates.push({ field: 'age', value: Number(profileData.age), oldValue: emp.age });
+    if (profileData.department !== emp.department) updates.push({ field: 'department', value: profileData.department, oldValue: emp.department });
+    if (profileData.experience !== emp.experience) updates.push({ field: 'experience', value: profileData.experience, oldValue: emp.experience });
+    if (String(profileData.salary) !== String(emp.salary)) updates.push({ field: 'salary', value: Number(profileData.salary), oldValue: emp.salary });
+    if (String(profileData.bonus) !== String(emp.bonus)) updates.push({ field: 'bonus', value: Number(profileData.bonus), oldValue: emp.bonus });
+    if (profileData.adminNotes !== (emp.admin_notes || emp.feedback || '')) updates.push({ field: 'admin_notes', value: profileData.adminNotes, oldValue: emp.admin_notes });
+
+    if (updates.length === 0) {
+      setEditingProfile(false);
+      return;
+    }
+
+    for (const u of updates) {
+      await updateEmployee.mutateAsync({ id: emp.id, field: u.field, value: u.value, oldValue: u.oldValue });
+    }
+    
+    toast({ title: '✅ تم الحفظ', description: 'تم حفظ بيانات الموظف في قاعدة البيانات' });
+    setEditingProfile(false);
+  };
+
   const handleSubmit = async () => {
     if (!emp) return;
     setSaving(true);
     const { error } = await supabase.from('employee_evaluations').insert({
-      employee_id: emp.id,
+      employee_id: emp.slug,
       employee_name: emp.name,
       evaluation_month: evalMonth,
       evaluation_year: evalYear,
@@ -156,7 +192,13 @@ export default function EmployeeDetail() {
     setSaving(false);
   };
 
+  if (loadingEmp) {
+    return <Layout><div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-section-employees" /></div></Layout>;
+  }
+
   if (!emp) return <Layout><p className="text-foreground">الموظف غير موجود</p></Layout>;
+
+  const chartData = monthlyPerf?.map(m => ({ month: m.month, score: m.score })) || [];
 
   return (
     <Layout>
@@ -164,7 +206,7 @@ export default function EmployeeDetail() {
         <ArrowRight className="w-4 h-4" /> العودة للموظفين
       </Link>
 
-      {/* Header with orange identity */}
+      {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
         className="bg-card rounded-xl border border-section-employees/20 p-6 shadow-card mb-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -176,7 +218,7 @@ export default function EmployeeDetail() {
               <h1 className="text-xl font-heading font-bold text-foreground">{profileData.name}</h1>
               <p className="text-sm text-section-employees font-medium">{profileData.position}</p>
               <div className="flex gap-2 mt-1 flex-wrap">
-                {emp.projects.map(p => (
+                {(emp.projects || []).map(p => (
                   <span key={p} className="text-[10px] bg-section-employees/10 text-section-employees px-2 py-0.5 rounded-full">{p}</span>
                 ))}
               </div>
@@ -184,9 +226,15 @@ export default function EmployeeDetail() {
           </div>
           <div className="flex gap-2 flex-wrap">
             <PrintButton title={`طباعة تقرير ${emp.name}`} />
-            <Button variant="outline" size="sm" onClick={() => setEditingProfile(!editingProfile)}
+            <Button variant="outline" size="sm" onClick={() => {
+              if (editingProfile) {
+                handleSaveProfile();
+              } else {
+                setEditingProfile(true);
+              }
+            }}
               className={editingProfile ? 'border-section-employees/30 text-section-employees' : ''}>
-              {editingProfile ? <><Save className="w-4 h-4 ml-1" /> حفظ</> : <><Pencil className="w-4 h-4 ml-1" /> تعديل البيانات</>}
+              {editingProfile ? <><Save className="w-4 h-4 ml-1" /> حفظ في قاعدة البيانات</> : <><Pencil className="w-4 h-4 ml-1" /> تعديل البيانات</>}
             </Button>
             <Button variant="outline" size="sm" onClick={() => { setShowHistory(!showHistory); setShowForm(false); }}>
               <History className="w-4 h-4 ml-1" /> السجل
@@ -199,7 +247,7 @@ export default function EmployeeDetail() {
         </div>
       </motion.div>
 
-      {/* Editable Profile Info */}
+      {/* Editable Profile Info - from DB */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <InfoField label="العمر" value={profileData.age} icon={Calendar} editing={editingProfile}
@@ -340,13 +388,13 @@ export default function EmployeeDetail() {
         )}
       </AnimatePresence>
 
-      {/* Stats */}
+      {/* Stats from DB */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
           { title: 'الأداء العام', value: `${emp.performance}%`, icon: Target, color: emp.performance >= 85 ? 'text-success' : 'text-section-employees' },
-          { title: 'تحقيق الأهداف', value: `${emp.kpiAchievement}%`, icon: CheckCircle, color: 'text-primary' },
-          { title: 'مساهمة في الربح', value: `${emp.profitContribution}%`, icon: TrendingUp, color: 'text-success' },
-          { title: 'التقييم الشهري', value: `${emp.monthlyRating}/10`, icon: Star, color: 'text-gold' },
+          { title: 'تحقيق الأهداف', value: `${emp.kpi_achievement}%`, icon: CheckCircle, color: 'text-primary' },
+          { title: 'مساهمة في الربح', value: `${emp.profit_contribution}%`, icon: TrendingUp, color: 'text-success' },
+          { title: 'التقييم الشهري', value: `${emp.monthly_rating}/10`, icon: Star, color: 'text-gold' },
         ].map((stat, i) => (
           <motion.div key={stat.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.08 }}
             className="bg-card rounded-xl border border-border p-4 shadow-card">
@@ -360,12 +408,12 @@ export default function EmployeeDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Performance Chart */}
+        {/* Performance Chart from DB */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
           className="bg-card rounded-xl border border-border p-5 shadow-card">
           <h3 className="text-sm font-heading text-foreground mb-4">📈 الأداء الشهري</h3>
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={emp.monthlyPerformance}>
+            <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 88%)" />
               <XAxis dataKey="month" tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
               <YAxis domain={[50, 100]} tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
@@ -375,12 +423,11 @@ export default function EmployeeDetail() {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Feedback & Achievements */}
+        {/* Feedback & Achievements from DB */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
           className="bg-card rounded-xl border border-border p-5 shadow-card">
           <h3 className="text-sm font-heading text-foreground mb-4">📝 تقييم النظام</h3>
 
-          {/* Admin Notes - editable */}
           <div className={`p-4 rounded-lg mb-4 ${emp.performance >= 85 ? 'bg-success/10 border border-success/20' : emp.performance >= 70 ? 'bg-section-employees/10 border border-section-employees/20' : 'bg-destructive/10 border border-destructive/20'}`}>
             {editingProfile ? (
               <textarea value={profileData.adminNotes} onChange={e => setProfileData(p => ({ ...p, adminNotes: e.target.value }))}
@@ -390,7 +437,7 @@ export default function EmployeeDetail() {
             )}
           </div>
 
-          {emp.achievements.length > 0 && (
+          {(emp.achievements || []).length > 0 && (
             <div className="mb-4">
               <h4 className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Award className="w-3 h-3 text-section-employees" /> الإنجازات</h4>
               <div className="space-y-1.5">
@@ -403,7 +450,7 @@ export default function EmployeeDetail() {
             </div>
           )}
 
-          {emp.improvements.length > 0 && (
+          {(emp.improvements || []).length > 0 && (
             <div>
               <h4 className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-warning" /> نقاط تحتاج تحسين</h4>
               <div className="space-y-1.5">
