@@ -1,17 +1,29 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Target, TrendingUp, Plus, Users } from 'lucide-react';
+import { ArrowLeft, Star, Target, TrendingUp, Plus, Users, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import PrintButton from '@/components/PrintButton';
-import { employees } from '@/data/mockData';
+import { useEmployees } from '@/hooks/useEmployees';
 import { Button } from '@/components/ui/button';
 
 export default function Employees() {
+  const { data: employees, isLoading } = useEmployees();
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-section-employees" />
+        </div>
+      </Layout>
+    );
+  }
+
+  const empList = employees || [];
+
   return (
     <Layout>
-      {/* Page header with orange identity */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        className="mb-6">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-section-employees/15">
@@ -31,15 +43,14 @@ export default function Employees() {
         </div>
       </motion.div>
 
-      {/* Summary bar */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
-          { label: 'عدد الموظفين', value: employees.length, color: 'text-section-employees' },
-          { label: 'متوسط الأداء', value: `${Math.round(employees.reduce((s, e) => s + e.performance, 0) / employees.length)}%`, color: 'text-success' },
-          { label: 'أعلى أداء', value: employees.reduce((best, e) => e.performance > best.performance ? e : best).name.split(' ')[0], color: 'text-primary' },
-          { label: 'المشاريع المسندة', value: new Set(employees.flatMap(e => e.projects)).size, color: 'text-gold' },
-        ].map((stat, i) => (
+          { label: 'عدد الموظفين', value: empList.length, color: 'text-section-employees' },
+          { label: 'متوسط الأداء', value: empList.length > 0 ? `${Math.round(empList.reduce((s, e) => s + e.performance, 0) / empList.length)}%` : '0%', color: 'text-success' },
+          { label: 'أعلى أداء', value: empList.length > 0 ? empList.reduce((best, e) => e.performance > best.performance ? e : best).name.split(' ')[0] : '-', color: 'text-primary' },
+          { label: 'المشاريع المسندة', value: new Set(empList.flatMap(e => e.projects || [])).size, color: 'text-gold' },
+        ].map((stat) => (
           <div key={stat.label} className="bg-card rounded-xl border border-section-employees/15 p-4 shadow-card">
             <p className="text-[10px] text-muted-foreground mb-1">{stat.label}</p>
             <p className={`text-lg font-heading font-bold ${stat.color}`}>{stat.value}</p>
@@ -48,13 +59,12 @@ export default function Employees() {
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {employees.map((emp, i) => (
+        {empList.map((emp, i) => (
           <motion.div key={emp.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}>
-            <Link to={`/employees/${emp.id}`}
+            <Link to={`/employees/${emp.slug}`}
               className="block bg-card rounded-xl border border-border p-5 shadow-card hover:shadow-elevated hover:border-section-employees/30 transition-all duration-300 group">
               
-              {/* Avatar + Name */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-section-employees/15 flex items-center justify-center shrink-0 ring-2 ring-section-employees/20">
                   <span className="text-section-employees font-heading font-bold text-sm">{emp.name.charAt(0)}</span>
@@ -66,14 +76,12 @@ export default function Employees() {
                 <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-section-employees transition-colors shrink-0" />
               </div>
 
-              {/* Projects badges */}
               <div className="flex flex-wrap gap-1 mb-3">
-                {emp.projects.map(p => (
+                {(emp.projects || []).map(p => (
                   <span key={p} className="text-[9px] bg-secondary px-2 py-0.5 rounded-full text-secondary-foreground">{p}</span>
                 ))}
               </div>
 
-              {/* Performance bar */}
               <div className="mb-3">
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-muted-foreground">الأداء العام</span>
@@ -91,11 +99,10 @@ export default function Employees() {
                 </div>
               </div>
 
-              {/* Quick stats */}
               <div className="flex gap-4 text-xs text-muted-foreground pt-3 border-t border-border">
-                <span className="flex items-center gap-1"><Star className="w-3 h-3 text-gold" />{emp.monthlyRating}</span>
-                <span className="flex items-center gap-1"><Target className="w-3 h-3 text-section-employees" />{emp.kpiAchievement}%</span>
-                <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3 text-success" />{emp.profitContribution}%</span>
+                <span className="flex items-center gap-1"><Star className="w-3 h-3 text-gold" />{emp.monthly_rating}</span>
+                <span className="flex items-center gap-1"><Target className="w-3 h-3 text-section-employees" />{emp.kpi_achievement}%</span>
+                <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3 text-success" />{emp.profit_contribution}%</span>
               </div>
             </Link>
           </motion.div>

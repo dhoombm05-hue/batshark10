@@ -10,10 +10,12 @@ import Layout from '@/components/Layout';
 import HealthScore from '@/components/HealthScore';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useProjects, useProjectMonthlyData } from '@/hooks/useProjects';
+import { useEmployees } from '@/hooks/useEmployees';
 import { useFinancialEngine, computeCompanyMetrics } from '@/hooks/useFinancialEngine';
 import { formatCurrency, formatPercent } from '@/data/mockData';
 import { toast } from 'sonner';
 import logo from '@/assets/batshark-logo-main.png';
+import RiskAlertBanner from '@/components/RiskAlertBanner';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
@@ -61,6 +63,7 @@ const SectionCard = ({ to, icon: Icon, label, desc, bgColor, textColor, borderCo
 export default function Dashboard() {
   const { profile } = useAuthContext();
   const { data: dbProjects, isLoading } = useProjects();
+  const { data: dbEmployees } = useEmployees();
   const { recalculateAll } = useFinancialEngine();
 
   // Compute metrics from real DB data
@@ -130,6 +133,16 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
+        {/* AI Risk Alerts */}
+        <RiskAlertBanner
+          totalRevenue={m.totalRevenue}
+          totalExpenses={m.totalExpenses}
+          netProfit={m.netProfit}
+          burnRate={m.burnRate}
+          runway={m.runway}
+          liquidityRatio={m.liquidityRatio}
+        />
+
         {/* Stats Cards - from real DB */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
@@ -194,10 +207,10 @@ export default function Dashboard() {
             bgColor="bg-[hsl(25,85%,96%)]" textColor="text-orange" borderColor="border-orange/25"
           >
             <div className="flex items-center gap-3 mt-3">
-              <div className="text-3xl font-heading font-black text-orange">5</div>
+              <div className="text-3xl font-heading font-black text-orange">{dbEmployees?.length || 0}</div>
               <div className="text-[11px] text-muted-foreground leading-relaxed">
                 أعضاء الفريق<br/>
-                متوسط الأداء: <span className="text-orange font-bold">85%</span>
+                متوسط الأداء: <span className="text-orange font-bold">{dbEmployees && dbEmployees.length > 0 ? Math.round(dbEmployees.reduce((s, e) => s + e.performance, 0) / dbEmployees.length) : 0}%</span>
               </div>
             </div>
           </SectionCard>
