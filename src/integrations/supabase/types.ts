@@ -149,6 +149,110 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_monthly_performance: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          month: string
+          month_order: number
+          score: number
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          month: string
+          month_order?: number
+          score?: number
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          month?: string
+          month_order?: number
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_monthly_performance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          achievements: string[] | null
+          admin_notes: string | null
+          age: number | null
+          bonus: number | null
+          created_at: string
+          department: string | null
+          experience: string | null
+          feedback: string | null
+          id: string
+          improvements: string[] | null
+          kpi_achievement: number | null
+          monthly_rating: number | null
+          name: string
+          performance: number | null
+          position: string
+          profit_contribution: number | null
+          projects: string[] | null
+          salary: number | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          achievements?: string[] | null
+          admin_notes?: string | null
+          age?: number | null
+          bonus?: number | null
+          created_at?: string
+          department?: string | null
+          experience?: string | null
+          feedback?: string | null
+          id?: string
+          improvements?: string[] | null
+          kpi_achievement?: number | null
+          monthly_rating?: number | null
+          name: string
+          performance?: number | null
+          position: string
+          profit_contribution?: number | null
+          projects?: string[] | null
+          salary?: number | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          achievements?: string[] | null
+          admin_notes?: string | null
+          age?: number | null
+          bonus?: number | null
+          created_at?: string
+          department?: string | null
+          experience?: string | null
+          feedback?: string | null
+          id?: string
+          improvements?: string[] | null
+          kpi_achievement?: number | null
+          monthly_rating?: number | null
+          name?: string
+          performance?: number | null
+          position?: string
+          profit_contribution?: number | null
+          projects?: string[] | null
+          salary?: number | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
