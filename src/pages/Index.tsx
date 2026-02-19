@@ -119,13 +119,12 @@ export default function Dashboard() {
             <Link to="/ai" className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-section-ai">
               <Brain className="w-5 h-5" />
             </Link>
-            <button className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-muted-foreground relative">
+            <Link to="/documents" className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-muted-foreground relative" title="مركز الملفات">
               <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full border-2 border-card" />
-            </button>
-            <button className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-muted-foreground">
+            </Link>
+            <Link to="/users" className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-muted-foreground" title="إدارة المستخدمين">
               <Settings className="w-5 h-5" />
-            </button>
+            </Link>
             <PrintButton title="طباعة التقرير" />
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,80%,52%)] to-[hsl(190,80%,45%)] flex items-center justify-center text-white font-heading font-bold text-sm shadow-card mr-1">
               {profile?.display_name?.charAt(0) || '؟'}
