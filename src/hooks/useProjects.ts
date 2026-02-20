@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUserName, logActivity } from './useActivityLog';
 
 export interface DBProject {
   id: string;
@@ -165,14 +166,18 @@ export function useUpdateField() {
       oldValue: any;
       reason?: string;
     }) => {
-      // Update the record
+      // Update the record in DB — exactly as the user entered, no modification
       const { error: updateError } = await supabase
         .from(table as any)
         .update({ [field]: value } as any)
         .eq('id', id);
       if (updateError) throw updateError;
 
-      // Log the audit
+      // Get current user for audit trail
+      const { data: { session } } = await supabase.auth.getSession();
+      const changedBy = await getCurrentUserName();
+
+      // Log the audit with real user name
       const { error: auditError } = await supabase
         .from('audit_logs' as any)
         .insert({
@@ -182,9 +187,20 @@ export function useUpdateField() {
           old_value: String(oldValue ?? ''),
           new_value: String(value ?? ''),
           change_reason: reason || null,
-          changed_by: 'admin',
+          changed_by: changedBy,
         } as any);
       if (auditError) console.error('Audit log error:', auditError);
+
+      // Log to user_activity for performance tracking
+      if (session?.user) {
+        await logActivity({
+          userId: session.user.id,
+          actionType: 'update',
+          entityType: table,
+          entityId: id,
+          details: { field, old_value: oldValue, new_value: value, reason: reason || null },
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
@@ -203,7 +219,10 @@ export function useDeleteRecord() {
         .eq('id', id);
       if (error) throw error;
 
-      // Log deletion
+      const { data: { session } } = await supabase.auth.getSession();
+      const changedBy = await getCurrentUserName();
+
+      // Log deletion with real user name
       await supabase
         .from('audit_logs' as any)
         .insert({
@@ -212,8 +231,17 @@ export function useDeleteRecord() {
           field_name: '_deleted',
           old_value: 'existed',
           new_value: 'deleted',
-          changed_by: 'admin',
+          changed_by: changedBy,
         } as any);
+
+      if (session?.user) {
+        await logActivity({
+          userId: session.user.id,
+          actionType: 'delete',
+          entityType: table,
+          entityId: id,
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
@@ -232,6 +260,32 @@ export function useAddRecord() {
         .select()
         .single();
       if (error) throw error;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const changedBy = await getCurrentUserName();
+
+      // Log addition with real user name
+      await supabase
+        .from('audit_logs' as any)
+        .insert({
+          table_name: table,
+          record_id: (inserted as any)?.id ?? '',
+          field_name: '_created',
+          old_value: null,
+          new_value: JSON.stringify(data),
+          changed_by: changedBy,
+        } as any);
+
+      if (session?.user) {
+        await logActivity({
+          userId: session.user.id,
+          actionType: 'create',
+          entityType: table,
+          entityId: (inserted as any)?.id ?? '',
+          details: data,
+        });
+      }
+
       return inserted;
     },
     onSuccess: () => {
