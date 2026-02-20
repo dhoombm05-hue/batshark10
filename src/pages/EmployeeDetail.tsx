@@ -137,11 +137,12 @@ export default function EmployeeDetail() {
     
     if (profileData.name !== emp.name) updates.push({ field: 'name', value: profileData.name, oldValue: emp.name });
     if (profileData.position !== emp.position) updates.push({ field: 'position', value: profileData.position, oldValue: emp.position });
-    if (String(profileData.age) !== String(emp.age)) updates.push({ field: 'age', value: Number(profileData.age), oldValue: emp.age });
+    // Compare as numbers to avoid "25" !== 25 false-positives
+    if (Number(profileData.age) !== Number(emp.age)) updates.push({ field: 'age', value: Number(profileData.age), oldValue: emp.age });
     if (profileData.department !== emp.department) updates.push({ field: 'department', value: profileData.department, oldValue: emp.department });
     if (profileData.experience !== emp.experience) updates.push({ field: 'experience', value: profileData.experience, oldValue: emp.experience });
-    if (String(profileData.salary) !== String(emp.salary)) updates.push({ field: 'salary', value: Number(profileData.salary), oldValue: emp.salary });
-    if (String(profileData.bonus) !== String(emp.bonus)) updates.push({ field: 'bonus', value: Number(profileData.bonus), oldValue: emp.bonus });
+    if (Number(profileData.salary) !== Number(emp.salary)) updates.push({ field: 'salary', value: Number(profileData.salary), oldValue: emp.salary });
+    if (Number(profileData.bonus) !== Number(emp.bonus)) updates.push({ field: 'bonus', value: Number(profileData.bonus), oldValue: emp.bonus });
     if (profileData.adminNotes !== (emp.admin_notes || emp.feedback || '')) updates.push({ field: 'admin_notes', value: profileData.adminNotes, oldValue: emp.admin_notes });
 
     if (updates.length === 0) {
@@ -149,12 +150,18 @@ export default function EmployeeDetail() {
       return;
     }
 
-    for (const u of updates) {
-      await updateEmployee.mutateAsync({ id: emp.id, field: u.field, value: u.value, oldValue: u.oldValue });
+    setSaving(true);
+    try {
+      for (const u of updates) {
+        await updateEmployee.mutateAsync({ id: emp.id, field: u.field, value: u.value, oldValue: u.oldValue });
+      }
+      toast({ title: '✅ تم الحفظ', description: 'تم حفظ بيانات الموظف في قاعدة البيانات بنجاح' });
+      setEditingProfile(false);
+    } catch {
+      toast({ title: '❌ خطأ', description: 'فشل حفظ البيانات، حاول مرة أخرى', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
-    
-    toast({ title: '✅ تم الحفظ', description: 'تم حفظ بيانات الموظف في قاعدة البيانات' });
-    setEditingProfile(false);
   };
 
   const handleSubmit = async () => {

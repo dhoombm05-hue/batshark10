@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getCurrentUserName, logActivity } from './useActivityLog';
 
 export interface DBEmployee {
   id: string;
@@ -90,15 +91,18 @@ export function useUpdateEmployee() {
       oldValue?: any;
       reason?: string;
     }) => {
-      console.log(`[DB UPDATE] employees.${field}: ${oldValue} → ${value}`);
-      
+      // Save exactly what the user entered — no modification
       const { error: updateError } = await supabase
         .from('employees' as any)
         .update({ [field]: value } as any)
         .eq('id', id);
       if (updateError) throw updateError;
 
-      // Log audit
+      // Get real user identity
+      const { data: { session } } = await supabase.auth.getSession();
+      const changedBy = await getCurrentUserName();
+
+      // Log audit with real user name
       const { error: auditError } = await supabase
         .from('audit_logs' as any)
         .insert({
@@ -108,11 +112,23 @@ export function useUpdateEmployee() {
           old_value: String(oldValue ?? ''),
           new_value: String(value ?? ''),
           change_reason: reason || null,
-          changed_by: 'admin',
+          changed_by: changedBy,
         } as any);
       if (auditError) console.error('Audit log error:', auditError);
+
+      // Log to user_activity for performance tracking
+      if (session?.user) {
+        await logActivity({
+          userId: session.user.id,
+          actionType: 'update',
+          entityType: 'employees',
+          entityId: id,
+          details: { field, old_value: oldValue, new_value: value, reason: reason || null },
+        });
+      }
     },
     onSuccess: () => {
+      // Invalidate all employee queries to force fresh data from DB
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['employee'] });
     },
