@@ -221,15 +221,15 @@
   body {
     background: white !important;
     color: black !important;
-    font-size: 12pt;
+    font-size: 11pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  .print\\:hidden,
+  .print\:hidden,
   aside,
   nav,
-  button:not(.print-keep),
-  .shadow-card,
-  .shadow-elevated {
+  button:not(.print-keep) {
     display: none !important;
   }
 
@@ -239,11 +239,11 @@
     width: 100% !important;
   }
 
-  .print\\:block {
+  .print\:block {
     display: block !important;
   }
 
-  .print\\:border-none {
+  .print\:border-none {
     border: none !important;
   }
 
@@ -251,7 +251,38 @@
     box-shadow: none !important;
   }
 
+  /* Print header with logo, user, date */
+  .print-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 2px solid #333;
+    margin-bottom: 16px;
+  }
+
+  .print-header img {
+    height: 40px;
+    width: auto;
+  }
+
+  .print-footer {
+    display: block !important;
+    text-align: center;
+    font-size: 9pt;
+    color: #666;
+    border-top: 1px solid #ccc;
+    padding-top: 8px;
+    margin-top: 16px;
+  }
+
+  /* Keep charts visible */
+  .recharts-wrapper {
+    page-break-inside: avoid;
+  }
+
   @page {
     margin: 1.5cm;
+    size: A4;
   }
 }

@@ -15,7 +15,7 @@ import { useFinancialEngine, computeCompanyMetrics } from '@/hooks/useFinancialE
 import { formatCurrency, formatPercent } from '@/data/mockData';
 import { toast } from 'sonner';
 import logo from '@/assets/batshark-logo-main.png';
-import RiskAlertBanner from '@/components/RiskAlertBanner';
+import SmartAlerts from '@/components/SmartAlerts';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
@@ -132,14 +132,16 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* AI Risk Alerts */}
-        <RiskAlertBanner
+        {/* Smart Alerts with risk analysis & suggestions */}
+        <SmartAlerts
           totalRevenue={m.totalRevenue}
           totalExpenses={m.totalExpenses}
           netProfit={m.netProfit}
           burnRate={m.burnRate}
           runway={m.runway}
           liquidityRatio={m.liquidityRatio}
+          grossMargin={m.grossMargin}
+          healthScore={m.healthScore}
         />
 
         {/* Stats Cards - from real DB */}

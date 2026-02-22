@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Target, TrendingUp, Plus, Users, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import PrintButton from '@/components/PrintButton';
 import { useEmployees } from '@/hooks/useEmployees';
+import { usePerformanceScoring } from '@/hooks/usePerformanceScoring';
 import { Button } from '@/components/ui/button';
 
 export default function Employees() {
   const { data: employees, isLoading } = useEmployees();
+  const { data: perfScores } = usePerformanceScoring();
 
   if (isLoading) {
     return (
@@ -36,9 +39,6 @@ export default function Employees() {
           </div>
           <div className="flex gap-2">
             <PrintButton title="طباعة تقرير الموظفين" />
-            <Button size="sm" className="bg-section-employees hover:bg-section-employees/90 text-white">
-              <Plus className="w-4 h-4 ml-1" /> إضافة موظف
-            </Button>
           </div>
         </div>
       </motion.div>
@@ -57,6 +57,41 @@ export default function Employees() {
           </div>
         ))}
       </motion.div>
+
+      {/* Auto Performance Scoring */}
+      {perfScores && perfScores.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="mb-6 bg-card rounded-xl border border-section-employees/15 p-5 shadow-card">
+          <h3 className="text-sm font-heading text-foreground mb-3 flex items-center gap-2">
+            <Target className="w-4 h-4 text-section-employees" /> تقييم أداء تلقائي (من سجل النشاط)
+          </h3>
+          <div className="space-y-2">
+            {perfScores.map((ps) => (
+              <div key={ps.userId} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/20 border border-border">
+                <span className="w-6 h-6 rounded-full bg-section-employees/15 flex items-center justify-center text-[10px] font-bold text-section-employees">
+                  #{ps.rank}
+                </span>
+                <span className="text-xs font-medium text-foreground flex-1">{ps.displayName}</span>
+                <div className="flex gap-3 text-[10px] text-muted-foreground">
+                  <span>أسبوعي: <b className="text-foreground">{ps.weeklyActions}</b></span>
+                  <span>شهري: <b className="text-foreground">{ps.monthlyActions}</b></span>
+                  <span>إجمالي: <b className="text-foreground">{ps.totalActions}</b></span>
+                </div>
+                <div className="w-16">
+                  <div className="flex justify-between text-[9px] mb-0.5">
+                    <span className="text-muted-foreground">النقاط</span>
+                    <span className={`font-bold ${ps.score >= 70 ? 'text-success' : ps.score >= 40 ? 'text-warning' : 'text-destructive'}`}>{ps.score}</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${ps.score >= 70 ? 'bg-success' : ps.score >= 40 ? 'bg-warning' : 'bg-destructive'}`}
+                      style={{ width: `${ps.score}%` }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {empList.map((emp, i) => (

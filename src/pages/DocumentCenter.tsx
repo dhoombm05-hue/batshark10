@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Upload, Trash2, Download, Pencil, Check, X, FolderOpen, Search, Loader2, Printer } from 'lucide-react';
+import { FileText, Upload, Trash2, Download, Pencil, Check, X, FolderOpen, Search, Loader2, Building2, FolderTree, Plus } from 'lucide-react';
 import Layout from '@/components/Layout';
 import PrintButton from '@/components/PrintButton';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,13 @@ const CATEGORIES = [
   { value: 'investment', label: '📈 استثماري', color: 'bg-gold/10 text-gold border-gold/20' },
   { value: 'projects', label: '📂 مشاريع', color: 'bg-section-revenue/10 text-section-revenue border-section-revenue/20' },
   { value: 'hr', label: '👥 موارد بشرية', color: 'bg-section-employees/10 text-section-employees border-section-employees/20' },
+  { value: 'operations', label: '⚙️ تشغيل', color: 'bg-warning/10 text-warning border-warning/20' },
+  { value: 'contracts', label: '📋 عقود', color: 'bg-purple/10 text-purple border-purple/20' },
   { value: 'general', label: '📋 عام', color: 'bg-muted text-muted-foreground border-border' },
 ];
+
+const DEFAULT_BUSINESSES = ['البادل', 'أومبركس', 'الشاشات'];
+const DEFAULT_SECTIONS = ['مالية', 'تشغيل', 'عقود', 'استثمارات', 'أخرى'];
 
 interface Doc {
   id: string;
@@ -29,6 +34,8 @@ interface Doc {
   file_type: string | null;
   uploaded_by: string;
   created_at: string;
+  business_name: string | null;
+  section: string | null;
 }
 
 function formatFileSize(bytes: number) {
@@ -49,6 +56,12 @@ export default function DocumentCenter() {
   const [editDesc, setEditDesc] = useState('');
   const [newCategory, setNewCategory] = useState('general');
   const [newDescription, setNewDescription] = useState('');
+  const [newBusinessName, setNewBusinessName] = useState('');
+  const [newSection, setNewSection] = useState('');
+  const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null);
+  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [customBusiness, setCustomBusiness] = useState('');
+  const [showAddBusiness, setShowAddBusiness] = useState(false);
 
   const { data: docs, isLoading } = useQuery({
     queryKey: ['documents'],
@@ -62,12 +75,16 @@ export default function DocumentCenter() {
     },
   });
 
+  // Derive available businesses from DB + defaults
+  const businesses = useMemo(() => {
+    const fromDb = docs?.map(d => d.business_name).filter(Boolean) as string[] || [];
+    return [...new Set([...DEFAULT_BUSINESSES, ...fromDb])];
+  }, [docs]);
+
   const deleteMutation = useMutation({
     mutationFn: async (doc: Doc) => {
-      // Delete from storage
       const path = doc.file_url.split('/documents/')[1];
       if (path) await supabase.storage.from('documents').remove([path]);
-      // Delete from DB
       const { error } = await supabase.from('documents' as any).delete().eq('id', doc.id);
       if (error) throw error;
     },
@@ -113,6 +130,8 @@ export default function DocumentCenter() {
         file_size: file.size,
         file_type: file.type,
         uploaded_by: profile?.display_name || 'مجهول',
+        business_name: newBusinessName || null,
+        section: newSection || null,
       } as any);
       if (dbError) throw dbError;
 
@@ -120,6 +139,8 @@ export default function DocumentCenter() {
       toast.success('تم رفع الملف بنجاح');
       setNewDescription('');
       setNewCategory('general');
+      setNewBusinessName('');
+      setNewSection('');
     } catch (err) {
       console.error(err);
       toast.error('فشل رفع الملف');
@@ -131,11 +152,13 @@ export default function DocumentCenter() {
 
   const filtered = docs?.filter(d => {
     if (filter !== 'all' && d.category !== filter) return false;
+    if (selectedBusiness && d.business_name !== selectedBusiness) return false;
+    if (selectedSection && d.section !== selectedSection) return false;
     if (search && !d.title.includes(search) && !d.file_name.includes(search)) return false;
     return true;
   }) || [];
 
-  const getCategoryStyle = (cat: string) => CATEGORIES.find(c => c.value === cat)?.color || CATEGORIES[5].color;
+  const getCategoryStyle = (cat: string) => CATEGORIES.find(c => c.value === cat)?.color || CATEGORIES[7].color;
   const getCategoryLabel = (cat: string) => CATEGORIES.find(c => c.value === cat)?.label || '📋 عام';
 
   return (
@@ -148,7 +171,7 @@ export default function DocumentCenter() {
             </div>
             <div>
               <h1 className="text-2xl font-heading font-bold text-foreground">مركز الملفات</h1>
-              <p className="text-sm text-muted-foreground">إدارة ورفع وتصنيف ملفات الشركة</p>
+              <p className="text-sm text-muted-foreground">إدارة ورفع وتصنيف ملفات الشركة — بزنس {'>'} قسم {'>'} ملف</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -161,10 +184,85 @@ export default function DocumentCenter() {
         </div>
       </motion.div>
 
+      {/* Business Hierarchy Navigation */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Building2 className="w-4 h-4 text-primary" />
+          <span className="text-xs font-heading text-muted-foreground">البزنس</span>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <button onClick={() => { setSelectedBusiness(null); setSelectedSection(null); }}
+            className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${!selectedBusiness ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
+            الكل
+          </button>
+          {businesses.map(b => {
+            const count = docs?.filter(d => d.business_name === b).length || 0;
+            return (
+              <button key={b} onClick={() => { setSelectedBusiness(b); setSelectedSection(null); }}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${selectedBusiness === b ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
+                🏢 {b} ({count})
+              </button>
+            );
+          })}
+          <button onClick={() => setShowAddBusiness(!showAddBusiness)}
+            className="text-xs px-2 py-1.5 rounded-lg border border-dashed border-border text-muted-foreground hover:text-primary">
+            <Plus className="w-3 h-3" />
+          </button>
+        </div>
+        {showAddBusiness && (
+          <div className="flex gap-2 mb-3">
+            <input value={customBusiness} onChange={e => setCustomBusiness(e.target.value)}
+              placeholder="اسم البزنس الجديد..."
+              className="bg-secondary/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground" />
+            <button onClick={() => {
+              if (customBusiness.trim()) {
+                setNewBusinessName(customBusiness.trim());
+                setShowAddBusiness(false);
+              }
+            }} className="text-xs px-2 py-1.5 bg-success/20 text-success rounded-lg">إضافة</button>
+          </div>
+        )}
+
+        {selectedBusiness && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            <FolderTree className="w-4 h-4 text-muted-foreground mt-0.5" />
+            <button onClick={() => setSelectedSection(null)}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${!selectedSection ? 'bg-gold/15 border-gold/30 text-gold' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
+              كل الأقسام
+            </button>
+            {DEFAULT_SECTIONS.map(s => {
+              const count = docs?.filter(d => d.business_name === selectedBusiness && d.section === s).length || 0;
+              return (
+                <button key={s} onClick={() => setSelectedSection(s)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${selectedSection === s ? 'bg-gold/15 border-gold/30 text-gold' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
+                  📁 {s} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
+
       {/* Upload config */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 bg-card rounded-xl border border-border p-4 shadow-card">
         <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[150px]">
+            <label className="text-xs text-muted-foreground mb-1 block">البزنس</label>
+            <select value={newBusinessName} onChange={e => setNewBusinessName(e.target.value)}
+              className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+              <option value="">بدون بزنس</option>
+              {businesses.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[150px]">
+            <label className="text-xs text-muted-foreground mb-1 block">القسم</label>
+            <select value={newSection} onChange={e => setNewSection(e.target.value)}
+              className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+              <option value="">بدون قسم</option>
+              {DEFAULT_SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[150px]">
             <label className="text-xs text-muted-foreground mb-1 block">تصنيف الملف</label>
             <select value={newCategory} onChange={e => setNewCategory(e.target.value)}
               className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
@@ -248,8 +346,10 @@ export default function DocumentCenter() {
                     <>
                       <h4 className="text-sm font-heading font-bold text-foreground truncate">{doc.title}</h4>
                       {doc.description && <p className="text-xs text-muted-foreground truncate">{doc.description}</p>}
-                      <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground flex-wrap">
                         <span className={`px-2 py-0.5 rounded-full border ${getCategoryStyle(doc.category)}`}>{getCategoryLabel(doc.category)}</span>
+                        {doc.business_name && <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">🏢 {doc.business_name}</span>}
+                        {doc.section && <span className="px-2 py-0.5 rounded-full bg-gold/10 text-gold border border-gold/20">📁 {doc.section}</span>}
                         <span>{formatFileSize(doc.file_size)}</span>
                         <span>{doc.uploaded_by}</span>
                         <span>{new Date(doc.created_at).toLocaleDateString('ar-SA')}</span>

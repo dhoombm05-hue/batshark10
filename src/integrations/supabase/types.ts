@@ -82,6 +82,7 @@ export type Database = {
       }
       documents: {
         Row: {
+          business_name: string | null
           category: string
           created_at: string
           description: string | null
@@ -90,11 +91,13 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
+          section: string | null
           title: string
           updated_at: string
           uploaded_by: string
         }
         Insert: {
+          business_name?: string | null
           category?: string
           created_at?: string
           description?: string | null
@@ -103,11 +106,13 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
+          section?: string | null
           title: string
           updated_at?: string
           uploaded_by?: string
         }
         Update: {
+          business_name?: string | null
           category?: string
           created_at?: string
           description?: string | null
@@ -116,6 +121,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
+          section?: string | null
           title?: string
           updated_at?: string
           uploaded_by?: string
