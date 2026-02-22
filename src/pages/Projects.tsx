@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Users, Megaphone, TrendingUp, TrendingDown, Plus, Shield } from 'lucide-react';
 import Layout from '@/components/Layout';
+import PrintButton from '@/components/PrintButton';
 import { useProjects } from '@/hooks/useProjects';
 import { formatCurrency, formatPercent } from '@/data/mockData';
 
@@ -25,6 +26,7 @@ export default function Projects() {
           <h1 className="text-2xl font-heading font-bold text-foreground mb-1">المشاريع</h1>
           <p className="text-sm text-muted-foreground">إدارة ومتابعة أداء جميع المشاريع</p>
         </div>
+        <PrintButton title="طباعة تقرير المشاريع" />
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
