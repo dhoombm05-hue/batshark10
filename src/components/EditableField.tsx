@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pencil, Check, X, History, RotateCcw } from 'lucide-react';
+import { Pencil, Check, X, History, RotateCcw, Lock, Unlock } from 'lucide-react';
 import { useUpdateField } from '@/hooks/useProjects';
+import { useFinancialEngine } from '@/hooks/useFinancialEngine';
+import { logActivityImpact } from '@/hooks/useActivityImpact';
 import { toast } from 'sonner';
 
 interface EditableFieldProps {
@@ -17,7 +19,15 @@ interface EditableFieldProps {
   onAfterSave?: () => void;
   className?: string;
   valueClassName?: string;
+  /** If this field has an override_* value in DB, pass true */
+  isOverridden?: boolean;
+  /** Project name for activity logging */
+  entityName?: string;
+  /** Section name for activity logging */
+  section?: string;
 }
+
+const OVERRIDE_FIELDS = ['total_revenue', 'total_expenses', 'net_profit', 'growth_rate'];
 
 export default function EditableField({
   table,
@@ -32,12 +42,19 @@ export default function EditableField({
   onAfterSave,
   className = '',
   valueClassName = '',
+  isOverridden = false,
+  entityName,
+  section,
 }: EditableFieldProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(String(value ?? ''));
   const [reason, setReason] = useState('');
   const [showReason, setShowReason] = useState(false);
   const updateField = useUpdateField();
+  const { setOverride, clearOverride } = useFinancialEngine();
+
+  const isOverridable = table === 'projects' && OVERRIDE_FIELDS.includes(field);
+  const isFinancialField = type === 'number' && ['total_revenue', 'total_expenses', 'net_profit', 'growth_rate', 'amount', 'revenue', 'expenses', 'profit'].includes(field);
 
   const handleSave = () => {
     const newVal = type === 'number' ? Number(editValue) : editValue;
@@ -45,15 +62,62 @@ export default function EditableField({
       setEditing(false);
       return;
     }
-    setShowReason(true);
+    // Financial fields always require a reason
+    if (isFinancialField) {
+      setShowReason(true);
+    } else {
+      setShowReason(true);
+    }
   };
 
-  const confirmSave = () => {
+  const confirmSave = async () => {
     const newVal = type === 'number' ? Number(editValue) : editValue;
+
+    // If this is an overridable project field, use setOverride
+    if (isOverridable && type === 'number') {
+      try {
+        await setOverride(recordId, field, Number(editValue));
+        // Log the impact
+        await logActivityImpact({
+          actionType: 'override',
+          entityType: table,
+          entityId: recordId,
+          entityName,
+          section,
+          fieldName: field,
+          oldValue: value,
+          newValue: newVal,
+          isManualOverride: true,
+          changeReason: reason || 'تعديل يدوي',
+        });
+        toast.success('تم الحفظ — تعديل يدوي محمي من إعادة الاحتساب');
+        setEditing(false);
+        setShowReason(false);
+        setReason('');
+        onAfterSave?.();
+      } catch {
+        toast.error('فشل الحفظ');
+      }
+      return;
+    }
+
+    // Standard update
     updateField.mutate(
       { table, id: recordId, field, value: newVal, oldValue: value, reason },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          // Log impact
+          await logActivityImpact({
+            actionType: 'update',
+            entityType: table,
+            entityId: recordId,
+            entityName,
+            section,
+            fieldName: field,
+            oldValue: value,
+            newValue: newVal,
+            changeReason: reason,
+          });
           toast.success('تم التحديث بنجاح');
           setEditing(false);
           setShowReason(false);
@@ -63,6 +127,16 @@ export default function EditableField({
         onError: () => toast.error('فشل التحديث'),
       }
     );
+  };
+
+  const handleClearOverride = async () => {
+    if (!isOverridable) return;
+    try {
+      await clearOverride(recordId, field);
+      toast.success('تم إعادة تفعيل الحساب التلقائي');
+    } catch {
+      toast.error('فشلت العملية');
+    }
   };
 
   const displayValue = formatter ? formatter(value) : String(value ?? '');
@@ -92,16 +166,21 @@ export default function EditableField({
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
                 <input
                   type="text"
-                  placeholder="سبب التعديل (اختياري)"
+                  placeholder={isFinancialField ? "سبب التعديل (إجباري للحقول المالية)" : "سبب التعديل (اختياري)"}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
+                {isOverridable && (
+                  <p className="text-[9px] text-warning mt-1 flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5" /> سيتم حماية هذه القيمة من إعادة الاحتساب التلقائي
+                  </p>
+                )}
                 <div className="flex gap-1 mt-1">
                   <button
                     onClick={confirmSave}
-                    disabled={updateField.isPending}
-                    className="flex items-center gap-1 px-2 py-0.5 text-xs bg-success/20 text-success rounded hover:bg-success/30 transition-colors"
+                    disabled={updateField.isPending || (isFinancialField && !reason.trim())}
+                    className="flex items-center gap-1 px-2 py-0.5 text-xs bg-success/20 text-success rounded hover:bg-success/30 transition-colors disabled:opacity-50"
                   >
                     <Check className="w-3 h-3" /> حفظ
                   </button>
@@ -129,7 +208,12 @@ export default function EditableField({
         ) : (
           <motion.div key="display" className="flex items-center gap-1">
             <span className={`text-sm ${valueClassName}`}>{displayValue}</span>
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 mr-1">
+            {isOverridden && (
+              <span className="text-[8px] px-1 py-0.5 rounded bg-warning/15 text-warning border border-warning/20 flex items-center gap-0.5 print:hidden">
+                <Lock className="w-2 h-2" /> يدوي
+              </span>
+            )}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 mr-1 print:hidden">
               <button
                 onClick={() => { setEditValue(String(value ?? '')); setEditing(true); }}
                 className="p-0.5 rounded hover:bg-primary/10 text-primary transition-colors"
@@ -137,6 +221,15 @@ export default function EditableField({
               >
                 <Pencil className="w-3 h-3" />
               </button>
+              {isOverridden && (
+                <button
+                  onClick={handleClearOverride}
+                  className="p-0.5 rounded hover:bg-success/10 text-success transition-colors"
+                  title="إعادة تفعيل الحساب التلقائي"
+                >
+                  <Unlock className="w-3 h-3" />
+                </button>
+              )}
               {onHistoryClick && (
                 <button
                   onClick={onHistoryClick}

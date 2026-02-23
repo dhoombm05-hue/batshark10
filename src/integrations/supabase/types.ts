@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_impact_log: {
+        Row: {
+          action_type: string
+          change_reason: string | null
+          created_at: string
+          entity_id: string | null
+          entity_name: string | null
+          entity_type: string
+          field_name: string | null
+          id: string
+          impact_on_growth: number | null
+          impact_on_liquidity: number | null
+          impact_on_net_profit: number | null
+          is_manual_override: boolean | null
+          new_value: string | null
+          numeric_difference: number | null
+          old_value: string | null
+          risk_level: string | null
+          section: string | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          action_type: string
+          change_reason?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type: string
+          field_name?: string | null
+          id?: string
+          impact_on_growth?: number | null
+          impact_on_liquidity?: number | null
+          impact_on_net_profit?: number | null
+          is_manual_override?: boolean | null
+          new_value?: string | null
+          numeric_difference?: number | null
+          old_value?: string | null
+          risk_level?: string | null
+          section?: string | null
+          user_id: string
+          user_name?: string
+        }
+        Update: {
+          action_type?: string
+          change_reason?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string
+          field_name?: string | null
+          id?: string
+          impact_on_growth?: number | null
+          impact_on_liquidity?: number | null
+          impact_on_net_profit?: number | null
+          is_manual_override?: boolean | null
+          new_value?: string | null
+          numeric_difference?: number | null
+          old_value?: string | null
+          risk_level?: string | null
+          section?: string | null
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           change_reason: string | null
@@ -581,6 +647,10 @@ export type Database = {
           name_en: string | null
           net_profit: number
           occupancy_rate: number | null
+          override_growth_rate: number | null
+          override_net_profit: number | null
+          override_total_expenses: number | null
+          override_total_revenue: number | null
           slug: string
           status: string
           total_expenses: number
@@ -599,6 +669,10 @@ export type Database = {
           name_en?: string | null
           net_profit?: number
           occupancy_rate?: number | null
+          override_growth_rate?: number | null
+          override_net_profit?: number | null
+          override_total_expenses?: number | null
+          override_total_revenue?: number | null
           slug: string
           status?: string
           total_expenses?: number
@@ -617,6 +691,10 @@ export type Database = {
           name_en?: string | null
           net_profit?: number
           occupancy_rate?: number | null
+          override_growth_rate?: number | null
+          override_net_profit?: number | null
+          override_total_expenses?: number | null
+          override_total_revenue?: number | null
           slug?: string
           status?: string
           total_expenses?: number
