@@ -124,23 +124,23 @@ export default function ProjectDetail() {
         </div>
       </motion.div>
 
-      {/* Editable Stats */}
+      {/* Editable Stats — override-aware */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">إجمالي الإيرادات</span>
-          <EditableField table="projects" recordId={project.id} field="total_revenue" value={project.total_revenue} type="number" formatter={formatCurrency} valueClassName="text-lg font-bold text-foreground" onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} onAfterSave={() => recalculateProject(project.id)} />
+          <EditableField table="projects" recordId={project.id} field="total_revenue" value={project.total_revenue} type="number" formatter={formatCurrency} valueClassName="text-lg font-bold text-foreground" onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} onAfterSave={() => recalculateProject(project.id)} isOverridden={(project as any).override_total_revenue != null} entityName={project.name} section={project.name} />
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">صافي الربح</span>
-          <EditableField table="projects" recordId={project.id} field="net_profit" value={project.net_profit} type="number" formatter={formatCurrency} valueClassName={`text-lg font-bold ${project.net_profit >= 0 ? 'text-success' : 'text-destructive'}`} onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} onAfterSave={() => recalculateProject(project.id)} />
+          <EditableField table="projects" recordId={project.id} field="net_profit" value={project.net_profit} type="number" formatter={formatCurrency} valueClassName={`text-lg font-bold ${project.net_profit >= 0 ? 'text-success' : 'text-destructive'}`} onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} onAfterSave={() => recalculateProject(project.id)} isOverridden={(project as any).override_net_profit != null} entityName={project.name} section={project.name} />
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">العملاء</span>
-          <EditableField table="projects" recordId={project.id} field="client_count" value={project.client_count} type="number" formatter={(v) => Number(v).toLocaleString('ar-SA')} valueClassName="text-lg font-bold text-foreground" onAfterSave={() => recalculateProject(project.id)} />
+          <EditableField table="projects" recordId={project.id} field="client_count" value={project.client_count} type="number" formatter={(v) => Number(v).toLocaleString('ar-SA')} valueClassName="text-lg font-bold text-foreground" onAfterSave={() => recalculateProject(project.id)} entityName={project.name} section={project.name} />
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">نسبة النمو</span>
-          <EditableField table="projects" recordId={project.id} field="growth_rate" value={project.growth_rate} type="number" formatter={formatPercent} valueClassName={`text-lg font-bold ${project.growth_rate >= 0 ? 'text-success' : 'text-destructive'}`} onAfterSave={() => recalculateProject(project.id)} />
+          <EditableField table="projects" recordId={project.id} field="growth_rate" value={project.growth_rate} type="number" formatter={formatPercent} valueClassName={`text-lg font-bold ${project.growth_rate >= 0 ? 'text-success' : 'text-destructive'}`} onAfterSave={() => recalculateProject(project.id)} isOverridden={(project as any).override_growth_rate != null} entityName={project.name} section={project.name} />
         </div>
       </div>
 
