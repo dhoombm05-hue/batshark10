@@ -62,12 +62,8 @@ export default function EditableField({
       setEditing(false);
       return;
     }
-    // Financial fields always require a reason
-    if (isFinancialField) {
-      setShowReason(true);
-    } else {
-      setShowReason(true);
-    }
+    // Auto-save directly — no mandatory reason prompt
+    confirmSave();
   };
 
   const confirmSave = async () => {
@@ -162,48 +158,14 @@ export default function EditableField({
               autoFocus
             />
 
-            {showReason && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
-                <input
-                  type="text"
-                  placeholder={isFinancialField ? "سبب التعديل (إجباري للحقول المالية)" : "سبب التعديل (اختياري)"}
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                {isOverridable && (
-                  <p className="text-[9px] text-warning mt-1 flex items-center gap-1">
-                    <Lock className="w-2.5 h-2.5" /> سيتم حماية هذه القيمة من إعادة الاحتساب التلقائي
-                  </p>
-                )}
-                <div className="flex gap-1 mt-1">
-                  <button
-                    onClick={confirmSave}
-                    disabled={updateField.isPending || (isFinancialField && !reason.trim())}
-                    className="flex items-center gap-1 px-2 py-0.5 text-xs bg-success/20 text-success rounded hover:bg-success/30 transition-colors disabled:opacity-50"
-                  >
-                    <Check className="w-3 h-3" /> حفظ
-                  </button>
-                  <button
-                    onClick={() => { setEditing(false); setShowReason(false); setReason(''); }}
-                    className="flex items-center gap-1 px-2 py-0.5 text-xs bg-destructive/20 text-destructive rounded hover:bg-destructive/30 transition-colors"
-                  >
-                    <X className="w-3 h-3" /> إلغاء
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {!showReason && (
-              <div className="flex gap-1">
-                <button onClick={handleSave} className="flex items-center gap-1 px-2 py-0.5 text-xs bg-success/20 text-success rounded hover:bg-success/30 transition-colors">
-                  <Check className="w-3 h-3" /> تأكيد
-                </button>
-                <button onClick={() => setEditing(false)} className="flex items-center gap-1 px-2 py-0.5 text-xs bg-destructive/20 text-destructive rounded hover:bg-destructive/30 transition-colors">
-                  <X className="w-3 h-3" /> إلغاء
-                </button>
-              </div>
-            )}
+            <div className="flex gap-1">
+              <button onClick={handleSave} disabled={updateField.isPending} className="flex items-center gap-1 px-2 py-0.5 text-xs bg-success/20 text-success rounded hover:bg-success/30 transition-colors disabled:opacity-50">
+                <Check className="w-3 h-3" /> حفظ
+              </button>
+              <button onClick={() => { setEditing(false); setShowReason(false); setReason(''); }} className="flex items-center gap-1 px-2 py-0.5 text-xs bg-destructive/20 text-destructive rounded hover:bg-destructive/30 transition-colors">
+                <X className="w-3 h-3" /> إلغاء
+              </button>
+            </div>
           </motion.div>
         ) : (
           <motion.div key="display" className="flex items-center gap-1">
