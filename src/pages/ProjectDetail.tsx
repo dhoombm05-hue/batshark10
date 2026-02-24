@@ -9,6 +9,8 @@ import EditableField from '@/components/EditableField';
 import ExpenseRow from '@/components/ExpenseRow';
 import AuditLogDialog from '@/components/AuditLogDialog';
 import PrintButton from '@/components/PrintButton';
+import ActivityFeed from '@/components/ActivityFeed';
+import { usePageViewTracker } from '@/hooks/useAutoTracker';
 import { useProject, useProjectMonthlyData, useProjectExpenses, useProjectAnalysis, useAddRecord, useDeleteRecord, useUpdateField } from '@/hooks/useProjects';
 import { useFinancialEngine } from '@/hooks/useFinancialEngine';
 import { formatCurrency, formatPercent } from '@/data/mockData';
@@ -40,6 +42,9 @@ export default function ProjectDetail() {
   const deleteRecord = useDeleteRecord();
   const updateField = useUpdateField();
   const { recalculateProject } = useFinancialEngine();
+
+  // Auto-track page view
+  usePageViewTracker(project?.name, project?.id, project?.name);
 
   const [showProjectHistory, setShowProjectHistory] = useState(false);
   const [addingExpense, setAddingExpense] = useState(false);
@@ -301,6 +306,11 @@ export default function ProjectDetail() {
             </div>
           )}
         </motion.div>
+      </div>
+
+      {/* Live Activity Feed */}
+      <div className="mb-8">
+        <ActivityFeed entityId={project.id} section={project.name} />
       </div>
 
       <AuditLogDialog
