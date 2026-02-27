@@ -6,6 +6,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import Layout from '@/components/Layout';
 import StatCard from '@/components/StatCard';
 import EditableField from '@/components/EditableField';
+import AskMeDialog from '@/components/AskMeDialog';
 import ExpenseRow from '@/components/ExpenseRow';
 import AuditLogDialog from '@/components/AuditLogDialog';
 import PrintButton from '@/components/PrintButton';
@@ -320,6 +321,7 @@ export default function ProjectDetail() {
         recordId={project.id}
         title={project.name}
       />
+      <AskMeDialog pageKey="project" />
     </Layout>
   );
 }

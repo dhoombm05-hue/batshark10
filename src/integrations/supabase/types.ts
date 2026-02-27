@@ -146,6 +146,79 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_table_rows: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          table_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          table_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          table_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_table_rows_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "custom_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_tables: {
+        Row: {
+          columns: Json
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          project_id: string | null
+          table_type: string
+          updated_at: string
+        }
+        Insert: {
+          columns?: Json
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          project_id?: string | null
+          table_type?: string
+          updated_at?: string
+        }
+        Update: {
+          columns?: Json
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          project_id?: string | null
+          table_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_tables_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           business_name: string | null

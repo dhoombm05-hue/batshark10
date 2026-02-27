@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   DollarSign, TrendingUp, TrendingDown, BarChart3, Users, FolderKanban,
-  Brain, FlaskConical, Shield, Bell, Settings, UserCircle, RotateCcw
+  Brain, FlaskConical, Shield, Bell, Settings, UserCircle, RotateCcw, FileSpreadsheet
 } from 'lucide-react';
 import PrintButton from '@/components/PrintButton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -16,6 +16,7 @@ import { formatCurrency, formatPercent } from '@/data/mockData';
 import { toast } from 'sonner';
 import logo from '@/assets/batshark-logo-main.png';
 import SmartAlerts from '@/components/SmartAlerts';
+import AskMeDialog from '@/components/AskMeDialog';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
@@ -250,15 +251,21 @@ export default function Dashboard() {
           </SectionCard>
 
           <SectionCard
-            to="/lab" icon={FlaskConical} label="BatShark Financial Lab" desc="مختبر النمذجة والسيناريوهات"
+            to="/lab" icon={FlaskConical} label="المختبر المالي" desc="سيناريوهات وقيود محاسبية"
             bgColor="bg-[hsl(43,65%,96%)]" textColor="text-gold" borderColor="border-gold/25"
-            className="lg:col-span-2"
           >
-            <div className="flex gap-2 mt-3 flex-wrap">
-              {['ROI', 'NPV', 'IRR', 'CAGR', 'سيناريوهات', 'جداول'].map(tag => (
-                <span key={tag} className="text-[10px] px-3 py-1.5 rounded-full bg-white/70 text-gold-dark border border-gold/20 font-semibold shadow-sm">{tag}</span>
+            <div className="flex gap-1.5 mt-2 flex-wrap">
+              {['ROI', 'NPV', 'سيناريوهات'].map(tag => (
+                <span key={tag} className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-gold-dark border border-gold/20 font-semibold shadow-sm">{tag}</span>
               ))}
             </div>
+          </SectionCard>
+
+          <SectionCard
+            to="/tables" icon={FileSpreadsheet} label="الجداول المخصصة" desc="إنشاء وإدارة جداول بيانات"
+            bgColor="bg-[hsl(200,60%,96%)]" textColor="text-primary" borderColor="border-primary/25"
+          >
+            <p className="text-[10px] text-muted-foreground mt-2">CRUD كامل • ربط بالمشاريع</p>
           </SectionCard>
 
           <div>
@@ -365,6 +372,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <AskMeDialog pageKey="dashboard" />
     </Layout>
   );
 }
