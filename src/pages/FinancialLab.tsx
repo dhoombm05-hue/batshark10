@@ -22,6 +22,7 @@ import {
 import { formatCurrency, formatPercent } from '@/data/mockData';
 import { Slider } from '@/components/ui/slider';
 import logo from '@/assets/batshark-logo-new.png';
+import AskMeDialog from '@/components/AskMeDialog';
 
 // =================== TYPES ===================
 interface CellValue {
@@ -854,6 +855,7 @@ export default function FinancialLab() {
           </motion.div>
         )}
       </AnimatePresence>
+      <AskMeDialog pageKey="lab" />
     </Layout>
   );
 }
