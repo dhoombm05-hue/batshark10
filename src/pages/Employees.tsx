@@ -1,16 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Target, TrendingUp, Plus, Users, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Star, Target, TrendingUp, Users, Loader2, RotateCcw, Archive, ChevronDown, ChevronUp } from 'lucide-react';
 import Layout from '@/components/Layout';
 import PrintButton from '@/components/PrintButton';
 import { useEmployees } from '@/hooks/useEmployees';
 import { usePerformanceScoring } from '@/hooks/usePerformanceScoring';
+import { usePerformanceCycles, useResetPerformanceCycle } from '@/hooks/usePerformanceCycles';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/data/mockData';
 
 export default function Employees() {
   const { data: employees, isLoading } = useEmployees();
   const { data: perfScores } = usePerformanceScoring();
+  const { data: cycles } = usePerformanceCycles();
+  const resetCycle = useResetPerformanceCycle();
+  const [showArchive, setShowArchive] = useState(false);
 
   if (isLoading) {
     return (
@@ -23,6 +28,25 @@ export default function Employees() {
   }
 
   const empList = employees || [];
+
+  const handleResetCycle = () => {
+    if (!perfScores || perfScores.length === 0) return;
+    if (!confirm('هل تريد أرشفة الدورة الحالية وبدء دورة جديدة من الصفر؟')) return;
+
+    resetCycle.mutate(
+      perfScores.map(ps => ({
+        userId: ps.userId,
+        displayName: ps.displayName,
+        totalActions: ps.totalActions,
+        updates: ps.updates,
+        creates: ps.creates,
+        deletes: ps.deletes,
+        financialImpact: ps.financialImpact,
+        score: ps.score,
+        cycleStart: ps.cycleStart,
+      }))
+    );
+  };
 
   return (
     <Layout>
@@ -58,13 +82,37 @@ export default function Employees() {
         ))}
       </motion.div>
 
-      {/* Auto Performance Scoring */}
-      {perfScores && perfScores.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          className="mb-6 bg-card rounded-xl border border-section-employees/15 p-5 shadow-card">
-          <h3 className="text-sm font-heading text-foreground mb-3 flex items-center gap-2">
-            <Target className="w-4 h-4 text-section-employees" /> تقييم أداء تلقائي (من سجل النشاط)
+      {/* Auto Performance Scoring — Current Cycle */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        className="mb-6 bg-card rounded-xl border border-section-employees/15 p-5 shadow-card">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-heading text-foreground flex items-center gap-2">
+            <Target className="w-4 h-4 text-section-employees" /> تقييم أداء — الدورة الحالية
           </h3>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowArchive(!showArchive)}
+              className="text-xs"
+            >
+              <Archive className="w-3.5 h-3.5 ml-1" />
+              سجل الدورات ({cycles?.length || 0})
+              {showArchive ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleResetCycle}
+              disabled={resetCycle.isPending || !perfScores || perfScores.length === 0}
+              className="bg-section-employees hover:bg-section-employees/90 text-white text-xs"
+            >
+              <RotateCcw className="w-3.5 h-3.5 ml-1" />
+              {resetCycle.isPending ? 'جاري...' : 'تحديث الدورة / إعادة احتساب'}
+            </Button>
+          </div>
+        </div>
+
+        {perfScores && perfScores.length > 0 ? (
           <div className="space-y-2">
             {perfScores.map((ps) => (
               <div key={ps.userId} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/20 border border-border">
@@ -73,25 +121,76 @@ export default function Employees() {
                 </span>
                 <span className="text-xs font-medium text-foreground flex-1">{ps.displayName}</span>
                 <div className="flex gap-3 text-[10px] text-muted-foreground">
-                  <span>أسبوعي: <b className="text-foreground">{ps.weeklyActions}</b></span>
-                  <span>شهري: <b className="text-foreground">{ps.monthlyActions}</b></span>
-                  <span>إجمالي: <b className="text-foreground">{ps.totalActions}</b></span>
+                  <span>عمليات: <b className="text-foreground">{ps.totalActions}</b></span>
+                  <span>تأثير مالي: <b className="text-foreground">{ps.financialImpact > 0 ? formatCurrency(ps.financialImpact) : '0'}</b></span>
                 </div>
-                <div className="w-16">
+                <div className="w-20">
                   <div className="flex justify-between text-[9px] mb-0.5">
                     <span className="text-muted-foreground">النقاط</span>
-                    <span className={`font-bold ${ps.score >= 70 ? 'text-success' : ps.score >= 40 ? 'text-warning' : 'text-destructive'}`}>{ps.score}</span>
+                    <span className={`font-bold ${ps.score >= 70 ? 'text-success' : ps.score >= 40 ? 'text-warning' : 'text-muted-foreground'}`}>{ps.score}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${ps.score >= 70 ? 'bg-success' : ps.score >= 40 ? 'bg-warning' : 'bg-destructive'}`}
+                    <div className={`h-full rounded-full transition-all duration-500 ${ps.score >= 70 ? 'bg-success' : ps.score >= 40 ? 'bg-warning' : 'bg-muted-foreground'}`}
                       style={{ width: `${ps.score}%` }} />
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </motion.div>
-      )}
+        ) : (
+          <p className="text-xs text-muted-foreground text-center py-4">لا توجد عمليات في الدورة الحالية — سيبدأ الاحتساب من أول نشاط جديد</p>
+        )}
+      </motion.div>
+
+      {/* Archived Cycles */}
+      <AnimatePresence>
+        {showArchive && cycles && cycles.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6 overflow-hidden"
+          >
+            <div className="bg-card rounded-xl border border-border p-5 shadow-card">
+              <h3 className="text-sm font-heading text-foreground mb-3 flex items-center gap-2">
+                <Archive className="w-4 h-4 text-muted-foreground" /> سجل دورات الأداء المؤرشفة
+              </h3>
+              <div className="space-y-3">
+                {/* Group cycles by cycle_end */}
+                {(() => {
+                  const grouped = new Map<string, typeof cycles>();
+                  for (const c of cycles) {
+                    const key = c.cycle_end;
+                    if (!grouped.has(key)) grouped.set(key, []);
+                    grouped.get(key)!.push(c);
+                  }
+                  return Array.from(grouped.entries()).map(([endDate, group]) => (
+                    <div key={endDate} className="border border-border rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-foreground">
+                          دورة: {new Date(group[0].cycle_start).toLocaleDateString('ar-SA')} → {new Date(endDate).toLocaleDateString('ar-SA')}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {group.map(c => (
+                          <div key={c.id} className="flex items-center gap-2 text-[11px] p-1.5 rounded bg-secondary/20">
+                            <span className="text-foreground font-medium flex-1">{c.display_name}</span>
+                            <span className="text-muted-foreground">عمليات: {c.total_actions}</span>
+                            <span className="text-muted-foreground">تأثير: {formatCurrency(c.financial_impact)}</span>
+                            <span className={`font-bold ${c.final_score >= 70 ? 'text-success' : c.final_score >= 40 ? 'text-warning' : 'text-destructive'}`}>
+                              {c.final_score}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {empList.map((emp, i) => (

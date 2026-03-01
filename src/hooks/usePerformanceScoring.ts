@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-interface UserPerformanceScore {
+export interface UserPerformanceScore {
   userId: string;
   displayName: string;
   totalActions: number;
@@ -11,23 +11,39 @@ interface UserPerformanceScore {
   weeklyActions: number;
   monthlyActions: number;
   financialImpact: number;
-  score: number; // 0-100
+  score: number;
   rank: number;
+  cycleStart: string;
 }
 
 /**
- * Auto Performance Scoring System
- * Computes weekly/monthly scores from user_activity + audit_logs
+ * Auto Performance Scoring System — cycle-aware.
+ * Only counts activities AFTER the last archived cycle end date.
  */
 export function usePerformanceScoring() {
   return useQuery({
     queryKey: ['performance-scoring'],
     queryFn: async () => {
-      // Get all activity
-      const { data: activities } = await supabase
+      // Find the last cycle end to scope current cycle
+      const { data: lastCycleData } = await supabase
+        .from('performance_cycles' as any)
+        .select('cycle_end')
+        .order('cycle_end', { ascending: false })
+        .limit(1);
+
+      const lastCycleEnd = (lastCycleData as any)?.[0]?.cycle_end || null;
+
+      // Get activities only from current cycle
+      let query = supabase
         .from('user_activity')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (lastCycleEnd) {
+        query = query.gt('created_at', lastCycleEnd);
+      }
+
+      const { data: activities } = await query;
 
       // Get all profiles
       const { data: profiles } = await supabase
@@ -51,7 +67,6 @@ export function usePerformanceScoring() {
         const creates = userActivities.filter((a: any) => a.action_type === 'create').length;
         const deletes = userActivities.filter((a: any) => a.action_type === 'delete').length;
 
-        // Calculate financial impact from details
         let financialImpact = 0;
         for (const a of userActivities) {
           const details = a.details as any;
@@ -64,7 +79,7 @@ export function usePerformanceScoring() {
           }
         }
 
-        // Score calculation: activity volume + consistency + financial impact
+        // Score: starts from 0, builds up with activity
         const activityScore = Math.min(userActivities.length * 2, 30);
         const weeklyScore = Math.min(weeklyActivities.length * 5, 25);
         const monthlyScore = Math.min(monthlyActivities.length * 1.5, 20);
@@ -85,10 +100,12 @@ export function usePerformanceScoring() {
           financialImpact,
           score,
           rank: 0,
+          cycleStart: lastCycleEnd || (userActivities.length > 0 
+            ? userActivities[userActivities.length - 1].created_at 
+            : now.toISOString()),
         });
       }
 
-      // Rank by score
       const sorted = Array.from(userMap.values()).sort((a, b) => b.score - a.score);
       sorted.forEach((s, i) => { s.rank = i + 1; });
 
