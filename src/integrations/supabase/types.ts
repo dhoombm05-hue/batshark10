@@ -516,6 +516,54 @@ export type Database = {
           },
         ]
       }
+      performance_cycles: {
+        Row: {
+          created_at: string
+          creates_count: number
+          cycle_end: string
+          cycle_start: string
+          deletes_count: number
+          display_name: string
+          final_score: number
+          financial_impact: number
+          id: string
+          notes: string | null
+          total_actions: number
+          updates_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          creates_count?: number
+          cycle_end?: string
+          cycle_start: string
+          deletes_count?: number
+          display_name?: string
+          final_score?: number
+          financial_impact?: number
+          id?: string
+          notes?: string | null
+          total_actions?: number
+          updates_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          creates_count?: number
+          cycle_end?: string
+          cycle_start?: string
+          deletes_count?: number
+          display_name?: string
+          final_score?: number
+          financial_impact?: number
+          id?: string
+          notes?: string | null
+          total_actions?: number
+          updates_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
