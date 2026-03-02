@@ -19,7 +19,9 @@ import UserManagement from "./pages/UserManagement";
 import SetupCEO from "./pages/SetupCEO";
 import DocumentCenter from "./pages/DocumentCenter";
 import CustomTables from "./pages/CustomTables";
+import ChatRooms from "./pages/ChatRooms";
 import NotFound from "./pages/NotFound";
+import BatSharkRobot from "./components/BatSharkRobot";
 
 const queryClient = new QueryClient();
 
@@ -45,8 +47,10 @@ const App = () => (
             <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/documents" element={<ProtectedRoute><DocumentCenter /></ProtectedRoute>} />
             <Route path="/tables" element={<ProtectedRoute><CustomTables /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute><ChatRooms /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <BatSharkRobot />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

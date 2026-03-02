@@ -49,10 +49,8 @@ export default function BatSharkAI() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Cleanup speech on unmount
-  useEffect(() => {
-    return () => { window.speechSynthesis?.cancel(); };
-  }, []);
+  // Don't cancel speech on unmount - allow it to continue during navigation
+  // User can stop manually with the stop button
 
   const speak = useCallback((text: string) => {
     if (!window.speechSynthesis) {

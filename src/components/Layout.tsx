@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
-  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen
+  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import logo from '@/assets/batshark-logo-main.png';
@@ -25,6 +25,7 @@ const navItems = [
   { path: '/lab', label: 'مختبر النمذجة', icon: FlaskConical, color: 'section-invest' },
   { path: '/ai', label: 'اسأل BatShark', icon: Brain, color: 'section-ai' },
   { path: '/documents', label: 'مركز الملفات', icon: FolderOpen, color: 'section-finance' },
+  { path: '/chat', label: 'غرفة النقاشات', icon: MessageSquare, color: 'section-ai' },
 ];
 
 const colorMap: Record<string, { text: string; bg: string; glow: string }> = {
