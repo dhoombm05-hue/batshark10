@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare, Plus, Send, Hash, Lock, FolderKanban, Shield,
-  Search, Reply, Paperclip, X, Trash2, Users
+  Search, Reply, Paperclip, X, Trash2, Users, Pin, PinOff,
+  Pencil, Check, SmilePlus, Image as ImageIcon, Brain
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useChatRooms, useChatMessages, type ChatRoom, type ChatMessage } from '@/hooks/useChatRooms';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -28,35 +31,126 @@ const ROOM_COLORS: Record<string, string> = {
   admin: 'text-section-employees',
 };
 
+const ROOM_BG: Record<string, string> = {
+  general: 'from-[hsl(190,80%,45%/0.1)] to-[hsl(210,80%,52%/0.05)]',
+  private: 'from-[hsl(270,60%,55%/0.1)] to-[hsl(270,60%,55%/0.03)]',
+  project: 'from-[hsl(152,60%,40%/0.1)] to-[hsl(152,60%,40%/0.03)]',
+  admin: 'from-[hsl(25,85%,52%/0.1)] to-[hsl(25,85%,52%/0.03)]',
+};
+
+const QUICK_REACTIONS = ['👍', '❤️', '🔥', '⚡', '✅', '👏'];
+
+function getInitials(name: string) {
+  return name.split(' ').map(w => w[0]).join('').slice(0, 2);
+}
+
+function getAvatarColor(name: string) {
+  const colors = [
+    'from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)]',
+    'from-[hsl(152,60%,40%)] to-[hsl(175,60%,38%)]',
+    'from-[hsl(270,60%,55%)] to-[hsl(300,50%,50%)]',
+    'from-[hsl(25,85%,52%)] to-[hsl(38,92%,50%)]',
+    'from-[hsl(43,65%,50%)] to-[hsl(25,85%,52%)]',
+    'from-[hsl(0,72%,55%)] to-[hsl(330,60%,50%)]',
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
 export default function ChatRooms() {
   const { rooms, loading: roomsLoading, createRoom, deleteRoom } = useChatRooms();
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
-  const { messages, loading: msgsLoading, sendMessage } = useChatMessages(selectedRoom?.id || null);
+  const { messages, loading: msgsLoading, sendMessage, editMessage, deleteMessage, togglePin, addReaction } = useChatMessages(selectedRoom?.id || null);
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editingMsg, setEditingMsg] = useState<ChatMessage | null>(null);
+  const [editText, setEditText] = useState('');
+  const [showReactions, setShowReactions] = useState<string | null>(null);
   const [newRoomOpen, setNewRoomOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomType, setNewRoomType] = useState('general');
   const [newRoomDesc, setNewRoomDesc] = useState('');
+  const [showPinned, setShowPinned] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-  const { user, isCEO } = useAuthContext();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, isCEO, profile } = useAuthContext();
+  const { toast } = useToast();
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-select first room
   useEffect(() => {
     if (!selectedRoom && rooms.length > 0) setSelectedRoom(rooms[0]);
   }, [rooms, selectedRoom]);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (!input.trim()) return;
-    sendMessage(input, replyTo?.id);
+    // Check for @BatShark mention
+    if (input.includes('@BatShark') || input.includes('@batshark')) {
+      const question = input.replace(/@[Bb]at[Ss]hark\s*/g, '').trim();
+      await sendMessage(input, replyTo?.id);
+      setInput('');
+      setReplyTo(null);
+      // Send AI query in chat
+      if (question) {
+        try {
+          const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/batshark-ai`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              messages: [{ role: 'user', content: question }],
+              userName: profile?.display_name || 'المستخدم',
+            }),
+          });
+          if (resp.ok && resp.body) {
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let aiResponse = '';
+            let buf = '';
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buf += decoder.decode(value, { stream: true });
+              let idx: number;
+              while ((idx = buf.indexOf('\n')) !== -1) {
+                let line = buf.slice(0, idx);
+                buf = buf.slice(idx + 1);
+                if (line.endsWith('\r')) line = line.slice(0, -1);
+                if (!line.startsWith('data: ')) continue;
+                const json = line.slice(6).trim();
+                if (json === '[DONE]') break;
+                try {
+                  const c = JSON.parse(json).choices?.[0]?.delta?.content;
+                  if (c) aiResponse += c;
+                } catch {}
+              }
+            }
+            if (aiResponse) {
+              await sendMessage(`🧠 **BatShark AI:**\n\n${aiResponse}`, undefined, undefined, undefined, 'ai');
+            }
+          }
+        } catch { /* silent */ }
+      }
+      return;
+    }
+    await sendMessage(input, replyTo?.id);
     setInput('');
     setReplyTo(null);
-  }, [input, replyTo, sendMessage]);
+  }, [input, replyTo, sendMessage, profile]);
+
+  const handleEdit = useCallback(async () => {
+    if (!editingMsg || !editText.trim()) return;
+    await editMessage(editingMsg.id, editText);
+    setEditingMsg(null);
+    setEditText('');
+  }, [editingMsg, editText, editMessage]);
 
   const handleCreateRoom = useCallback(async () => {
     if (!newRoomName.trim()) return;
@@ -67,45 +161,59 @@ export default function ChatRooms() {
     setNewRoomOpen(false);
   }, [newRoomName, newRoomType, newRoomDesc, createRoom]);
 
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedRoom) return;
+    const ext = file.name.split('.').pop();
+    const path = `chat/${selectedRoom.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('documents').upload(path, file);
+    if (error) {
+      toast({ title: 'خطأ في رفع الملف', variant: 'destructive' });
+      return;
+    }
+    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+    const isImage = file.type.startsWith('image/');
+    await sendMessage(isImage ? '📷 صورة' : `📎 ${file.name}`, undefined, urlData.publicUrl, file.name, isImage ? 'image' : 'file');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [selectedRoom, sendMessage, toast]);
+
   const filteredMessages = search
     ? messages.filter(m => m.content.includes(search) || m.user_name.includes(search))
     : messages;
 
+  const pinnedMessages = messages.filter(m => m.is_pinned);
+
   return (
     <Layout>
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-section-ai/15">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-[hsl(190,80%,45%/0.15)] to-[hsl(210,80%,52%/0.1)]">
             <MessageSquare className="w-6 h-6 text-section-ai" />
           </div>
           <div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">غرفة النقاشات</h1>
-            <p className="text-sm text-muted-foreground">تواصل مع فريق العمل في الوقت الفعلي</p>
+            <h1 className="text-xl font-heading font-bold text-foreground">غرفة النقاشات</h1>
+            <p className="text-xs text-muted-foreground">تواصل ذكي مع فريقك — في الوقت الفعلي</p>
           </div>
         </div>
       </motion.div>
 
-      <div className="flex gap-4 bg-gradient-card rounded-2xl border border-border shadow-card overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
+      <div className="flex rounded-2xl border border-border shadow-elevated overflow-hidden" style={{ height: 'calc(100vh - 180px)', background: 'linear-gradient(135deg, hsl(220 20% 14%), hsl(220 22% 11%))' }}>
         {/* Rooms Sidebar */}
-        <div className="w-72 border-l border-border flex flex-col shrink-0">
-          <div className="p-3 border-b border-border flex items-center justify-between">
-            <h3 className="font-heading font-bold text-sm text-foreground">الغرف</h3>
+        <div className="w-72 border-l border-[hsl(220,18%,22%)] flex flex-col shrink-0" style={{ background: 'linear-gradient(180deg, hsl(220 20% 13%), hsl(220 22% 9%))' }}>
+          <div className="p-3 border-b border-[hsl(220,18%,22%)] flex items-center justify-between">
+            <h3 className="font-heading font-bold text-sm text-[hsl(210,20%,90%)]">💬 الغرف</h3>
             <Dialog open={newRoomOpen} onOpenChange={setNewRoomOpen}>
               <DialogTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8">
-                  <Plus className="w-4 h-4" />
-                </Button>
+                <button className="h-7 w-7 rounded-lg bg-[hsl(210,80%,52%/0.15)] hover:bg-[hsl(210,80%,52%/0.25)] flex items-center justify-center transition-colors">
+                  <Plus className="w-4 h-4 text-[hsl(210,80%,58%)]" />
+                </button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle className="font-heading">إنشاء غرفة جديدة</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 mt-2">
-                  <Input
-                    placeholder="اسم الغرفة"
-                    value={newRoomName}
-                    onChange={e => setNewRoomName(e.target.value)}
-                  />
+                  <Input placeholder="اسم الغرفة" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} />
                   <Select value={newRoomType} onValueChange={setNewRoomType}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -115,45 +223,65 @@ export default function ChatRooms() {
                       <SelectItem value="admin">🛡️ إدارية</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Input
-                    placeholder="وصف الغرفة (اختياري)"
-                    value={newRoomDesc}
-                    onChange={e => setNewRoomDesc(e.target.value)}
-                  />
+                  <Input placeholder="وصف الغرفة (اختياري)" value={newRoomDesc} onChange={e => setNewRoomDesc(e.target.value)} />
                   <Button onClick={handleCreateRoom} className="w-full">إنشاء الغرفة</Button>
                 </div>
               </DialogContent>
             </Dialog>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
             {roomsLoading ? (
-              <p className="text-xs text-muted-foreground text-center py-4">جاري التحميل...</p>
+              <div className="flex items-center justify-center py-8">
+                <div className="w-5 h-5 border-2 border-[hsl(210,80%,52%/0.3)] border-t-[hsl(210,80%,52%)] rounded-full animate-spin" />
+              </div>
             ) : rooms.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">لا توجد غرف بعد</p>
+              <div className="text-center py-8">
+                <MessageSquare className="w-8 h-8 text-[hsl(220,15%,30%)] mx-auto mb-2" />
+                <p className="text-xs text-[hsl(220,10%,45%)]">أنشئ أول غرفة نقاش</p>
+              </div>
             ) : (
-              rooms.map(room => (
-                <button
-                  key={room.id}
-                  onClick={() => setSelectedRoom(room)}
-                  className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-right transition-all ${
-                    selectedRoom?.id === room.id
-                      ? 'bg-primary/10 border border-primary/20'
-                      : 'hover:bg-secondary/50 border border-transparent'
-                  }`}
-                >
-                  <span className={ROOM_COLORS[room.type] || 'text-muted-foreground'}>
-                    {ROOM_ICONS[room.type] || <Hash className="w-4 h-4" />}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{room.name}</p>
-                    {room.description && (
-                      <p className="text-[10px] text-muted-foreground truncate">{room.description}</p>
-                    )}
-                  </div>
-                </button>
-              ))
+              rooms.map(room => {
+                const isActive = selectedRoom?.id === room.id;
+                return (
+                  <motion.button
+                    key={room.id}
+                    onClick={() => setSelectedRoom(room)}
+                    whileHover={{ x: -2 }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-right transition-all ${
+                      isActive
+                        ? `bg-gradient-to-l ${ROOM_BG[room.type] || ROOM_BG.general} border border-[hsl(210,80%,52%/0.2)]`
+                        : 'hover:bg-[hsl(220,18%,18%)] border border-transparent'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isActive ? 'bg-[hsl(210,80%,52%/0.2)]' : 'bg-[hsl(220,18%,20%)]'}`}>
+                      <span className={ROOM_COLORS[room.type] || 'text-[hsl(220,10%,50%)]'}>
+                        {ROOM_ICONS[room.type] || <Hash className="w-3.5 h-3.5" />}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${isActive ? 'text-white' : 'text-[hsl(210,20%,80%)]'}`}>{room.name}</p>
+                      {room.description && (
+                        <p className="text-[10px] text-[hsl(220,10%,45%)] truncate">{room.description}</p>
+                      )}
+                    </div>
+                  </motion.button>
+                );
+              })
             )}
+          </div>
+
+          {/* User presence area */}
+          <div className="p-3 border-t border-[hsl(220,18%,22%)]">
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-xs font-bold`}>
+                {getInitials(profile?.display_name || 'U')}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-[hsl(210,20%,85%)] truncate">{profile?.display_name}</p>
+                <p className="text-[10px] text-[hsl(152,60%,45%)]">● متصل الآن</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -162,82 +290,236 @@ export default function ChatRooms() {
           {selectedRoom ? (
             <>
               {/* Header */}
-              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className={ROOM_COLORS[selectedRoom.type]}>
-                    {ROOM_ICONS[selectedRoom.type]}
-                  </span>
-                  <h3 className="font-heading font-bold text-foreground">{selectedRoom.name}</h3>
-                  {selectedRoom.description && (
-                    <span className="text-xs text-muted-foreground">— {selectedRoom.description}</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      placeholder="بحث..."
-                      className="text-xs bg-secondary/30 border border-border rounded-md pr-7 pl-2 py-1.5 w-36 focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
-                    />
+              <div className="px-4 py-2.5 border-b border-[hsl(220,18%,22%)] flex items-center justify-between" style={{ background: 'linear-gradient(90deg, hsl(220 20% 15%), hsl(220 20% 13%))' }}>
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br ${ROOM_BG[selectedRoom.type] || ROOM_BG.general}`}>
+                    <span className={ROOM_COLORS[selectedRoom.type]}>
+                      {ROOM_ICONS[selectedRoom.type]}
+                    </span>
                   </div>
+                  <div>
+                    <h3 className="font-heading font-bold text-sm text-white">{selectedRoom.name}</h3>
+                    {selectedRoom.description && (
+                      <p className="text-[10px] text-[hsl(220,10%,50%)]">{selectedRoom.description}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {pinnedMessages.length > 0 && (
+                    <button
+                      onClick={() => setShowPinned(!showPinned)}
+                      className={`h-7 px-2 rounded-lg text-[10px] flex items-center gap-1 transition-colors ${showPinned ? 'bg-[hsl(43,65%,50%/0.2)] text-[hsl(43,65%,55%)]' : 'text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)]'}`}
+                    >
+                      <Pin className="w-3 h-3" /> {pinnedMessages.length}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSearchOpen(!searchOpen)}
+                    className={`h-7 w-7 rounded-lg flex items-center justify-center transition-colors ${searchOpen ? 'bg-[hsl(210,80%,52%/0.2)] text-[hsl(210,80%,58%)]' : 'text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)]'}`}
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                  </button>
                   {(isCEO || selectedRoom.created_by === user?.id) && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/60 hover:text-destructive" onClick={() => { deleteRoom(selectedRoom.id); setSelectedRoom(null); }}>
+                    <button
+                      onClick={() => { deleteRoom(selectedRoom.id); setSelectedRoom(null); }}
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(0,72%,55%/0.6)] hover:bg-[hsl(0,72%,55%/0.1)] hover:text-[hsl(0,72%,55%)] transition-colors"
+                    >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    </button>
                   )}
                 </div>
               </div>
 
+              {/* Search bar */}
+              <AnimatePresence>
+                {searchOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-4 py-2 bg-[hsl(220,20%,12%)] border-b border-[hsl(220,18%,22%)]"
+                  >
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(220,10%,45%)]" />
+                      <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="ابحث في الرسائل..."
+                        autoFocus
+                        className="w-full text-xs bg-[hsl(220,18%,18%)] border border-[hsl(220,18%,25%)] rounded-lg pr-8 pl-3 py-2 text-[hsl(210,20%,90%)] placeholder:text-[hsl(220,10%,40%)] focus:outline-none focus:ring-1 focus:ring-[hsl(210,80%,52%/0.5)]"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Pinned messages */}
+              <AnimatePresence>
+                {showPinned && pinnedMessages.length > 0 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-4 py-2 bg-[hsl(43,65%,50%/0.05)] border-b border-[hsl(43,65%,50%/0.15)]"
+                  >
+                    <p className="text-[10px] font-heading font-bold text-[hsl(43,65%,55%)] mb-1.5 flex items-center gap-1"><Pin className="w-3 h-3" /> رسائل مثبتة</p>
+                    {pinnedMessages.map(m => (
+                      <p key={m.id} className="text-xs text-[hsl(210,20%,80%)] truncate mb-0.5">
+                        <strong className="text-[hsl(43,65%,55%)]">{m.user_name}:</strong> {m.content.slice(0, 80)}
+                      </p>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2" style={{ background: 'radial-gradient(ellipse at 50% 0%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
                 {msgsLoading ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">جاري تحميل الرسائل...</p>
+                  <div className="flex items-center justify-center py-12">
+                    <div className="w-6 h-6 border-2 border-[hsl(210,80%,52%/0.3)] border-t-[hsl(210,80%,52%)] rounded-full animate-spin" />
+                  </div>
                 ) : filteredMessages.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">لا توجد رسائل بعد، ابدأ المحادثة!</p>
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <div className="w-16 h-16 rounded-2xl bg-[hsl(220,18%,18%)] flex items-center justify-center mb-3">
+                      <MessageSquare className="w-7 h-7 text-[hsl(220,15%,30%)]" />
+                    </div>
+                    <p className="text-sm text-[hsl(220,10%,45%)]">ابدأ المحادثة الآن!</p>
+                    <p className="text-[10px] text-[hsl(220,10%,35%)] mt-1">اكتب @BatShark لاستدعاء الذكاء الاصطناعي</p>
+                  </div>
                 ) : (
-                  filteredMessages.map((msg) => {
+                  filteredMessages.map((msg, idx) => {
                     const isOwn = msg.user_id === user?.id;
+                    const isAI = msg.message_type === 'ai';
                     const replyMsg = msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null;
+                    const showAvatar = idx === 0 || filteredMessages[idx - 1]?.user_id !== msg.user_id;
+                    const avatarColor = getAvatarColor(msg.user_name);
+                    const reactions = msg.reactions || {};
+
                     return (
                       <motion.div
                         key={msg.id}
-                        initial={{ opacity: 0, y: 6 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`flex ${isOwn ? 'justify-start' : 'justify-end'}`}
+                        transition={{ duration: 0.2 }}
+                        className={`flex gap-2 group ${isOwn ? 'flex-row' : 'flex-row-reverse'}`}
                       >
-                        <div className={`max-w-[75%] ${isOwn ? 'order-1' : 'order-2'}`}>
-                          {/* Reply preview */}
-                          {replyMsg && (
-                            <div className="text-[10px] bg-secondary/30 rounded-t-lg px-3 py-1 border-r-2 border-primary/40 text-muted-foreground mb-0.5">
-                              <span className="font-bold">{replyMsg.user_name}</span>: {replyMsg.content.slice(0, 50)}...
+                        {/* Avatar */}
+                        <div className="w-8 shrink-0">
+                          {showAvatar && (
+                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${isAI ? 'from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)]' : avatarColor} flex items-center justify-center text-white text-[10px] font-bold`}>
+                              {isAI ? <Brain className="w-4 h-4" /> : getInitials(msg.user_name)}
                             </div>
                           )}
-                          <div className={`rounded-xl px-4 py-2.5 ${
-                            isOwn
-                              ? 'bg-primary/15 text-foreground rounded-br-sm'
-                              : 'bg-secondary/50 border border-border text-foreground rounded-bl-sm'
-                          }`}>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-heading font-bold text-primary">{msg.user_name}</span>
-                              <span className="text-[10px] text-muted-foreground">
-                                {format(new Date(msg.created_at), 'hh:mm a', { locale: ar })}
-                              </span>
+                        </div>
+
+                        {/* Message */}
+                        <div className={`max-w-[70%] min-w-[120px]`}>
+                          {/* Reply preview */}
+                          {replyMsg && (
+                            <div className="text-[10px] bg-[hsl(210,80%,52%/0.08)] rounded-t-lg px-3 py-1 border-r-2 border-[hsl(210,80%,52%/0.4)] text-[hsl(220,10%,55%)] mb-0.5">
+                              <span className="font-bold text-[hsl(210,80%,58%)]">{replyMsg.user_name}</span>: {replyMsg.content.slice(0, 50)}
                             </div>
-                            <p className="text-sm leading-relaxed">{msg.content}</p>
-                            {msg.file_url && (
-                              <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline flex items-center gap-1 mt-1">
-                                <Paperclip className="w-3 h-3" /> {msg.file_name || 'ملف مرفق'}
+                          )}
+
+                          <div className={`rounded-2xl px-3.5 py-2 relative ${
+                            isAI
+                              ? 'bg-gradient-to-bl from-[hsl(190,80%,45%/0.12)] to-[hsl(210,80%,52%/0.06)] border border-[hsl(190,80%,45%/0.2)]'
+                              : isOwn
+                                ? 'bg-[hsl(210,80%,52%/0.15)] rounded-br-md'
+                                : 'bg-[hsl(220,18%,20%)] border border-[hsl(220,18%,25%)] rounded-bl-md'
+                          } ${msg.is_pinned ? 'ring-1 ring-[hsl(43,65%,50%/0.3)]' : ''}`}>
+                            {/* Name + time */}
+                            {showAvatar && (
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className={`text-[11px] font-heading font-bold ${isAI ? 'text-[hsl(190,80%,50%)]' : 'text-[hsl(210,80%,65%)]'}`}>
+                                  {isAI ? '🧠 BatShark AI' : msg.user_name}
+                                </span>
+                                <span className="text-[9px] text-[hsl(220,10%,40%)]">
+                                  {format(new Date(msg.created_at), 'hh:mm a', { locale: ar })}
+                                </span>
+                                {msg.is_edited && <span className="text-[9px] text-[hsl(220,10%,35%)]">(معدّل)</span>}
+                                {msg.is_pinned && <Pin className="w-2.5 h-2.5 text-[hsl(43,65%,55%)]" />}
+                              </div>
+                            )}
+
+                            {/* Content */}
+                            {msg.message_type === 'image' && msg.file_url ? (
+                              <div>
+                                <img src={msg.file_url} alt="صورة" className="rounded-lg max-w-full max-h-48 object-cover mb-1" loading="lazy" />
+                              </div>
+                            ) : msg.message_type === 'file' && msg.file_url ? (
+                              <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[hsl(220,18%,18%)] rounded-lg p-2 hover:bg-[hsl(220,18%,22%)] transition-colors">
+                                <Paperclip className="w-4 h-4 text-[hsl(210,80%,58%)]" />
+                                <span className="text-xs text-[hsl(210,20%,80%)]">{msg.file_name || 'ملف مرفق'}</span>
                               </a>
+                            ) : (
+                              <p className="text-[13px] text-[hsl(210,20%,88%)] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                            )}
+
+                            {/* Reactions */}
+                            {Object.keys(reactions).length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {Object.entries(reactions).map(([emoji, users]) => (
+                                  <button
+                                    key={emoji}
+                                    onClick={() => addReaction(msg.id, emoji)}
+                                    className={`text-[11px] px-1.5 py-0.5 rounded-md border transition-colors ${
+                                      (users as string[]).includes(user?.id || '')
+                                        ? 'bg-[hsl(210,80%,52%/0.15)] border-[hsl(210,80%,52%/0.3)] text-[hsl(210,20%,85%)]'
+                                        : 'bg-[hsl(220,18%,18%)] border-[hsl(220,18%,25%)] text-[hsl(220,10%,50%)]'
+                                    }`}
+                                  >
+                                    {emoji} {(users as string[]).length}
+                                  </button>
+                                ))}
+                              </div>
                             )}
                           </div>
-                          <button
-                            onClick={() => setReplyTo(msg)}
-                            className="text-[10px] text-muted-foreground hover:text-primary mt-0.5 flex items-center gap-1 transition-colors"
-                          >
-                            <Reply className="w-3 h-3" /> رد
-                          </button>
+
+                          {/* Actions (show on hover) */}
+                          <div className="flex items-center gap-0.5 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => setReplyTo(msg)} className="text-[10px] text-[hsl(220,10%,45%)] hover:text-[hsl(210,80%,58%)] p-1 rounded transition-colors">
+                              <Reply className="w-3 h-3" />
+                            </button>
+                            <button onClick={() => setShowReactions(showReactions === msg.id ? null : msg.id)} className="text-[10px] text-[hsl(220,10%,45%)] hover:text-[hsl(43,65%,55%)] p-1 rounded transition-colors">
+                              <SmilePlus className="w-3 h-3" />
+                            </button>
+                            <button onClick={() => togglePin(msg.id, msg.is_pinned)} className="text-[10px] text-[hsl(220,10%,45%)] hover:text-[hsl(43,65%,55%)] p-1 rounded transition-colors">
+                              {msg.is_pinned ? <PinOff className="w-3 h-3" /> : <Pin className="w-3 h-3" />}
+                            </button>
+                            {isOwn && (
+                              <>
+                                <button onClick={() => { setEditingMsg(msg); setEditText(msg.content); }} className="text-[10px] text-[hsl(220,10%,45%)] hover:text-[hsl(210,80%,58%)] p-1 rounded transition-colors">
+                                  <Pencil className="w-3 h-3" />
+                                </button>
+                                <button onClick={() => deleteMessage(msg.id)} className="text-[10px] text-[hsl(220,10%,45%)] hover:text-[hsl(0,72%,55%)] p-1 rounded transition-colors">
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Reaction picker */}
+                          <AnimatePresence>
+                            {showReactions === msg.id && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="flex gap-1 bg-[hsl(220,18%,18%)] border border-[hsl(220,18%,25%)] rounded-xl p-1.5 mt-1 w-fit"
+                              >
+                                {QUICK_REACTIONS.map(r => (
+                                  <button
+                                    key={r}
+                                    onClick={() => { addReaction(msg.id, r); setShowReactions(null); }}
+                                    className="w-7 h-7 rounded-lg hover:bg-[hsl(220,18%,25%)] flex items-center justify-center text-sm transition-colors"
+                                  >
+                                    {r}
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </motion.div>
                     );
@@ -246,45 +528,82 @@ export default function ChatRooms() {
                 <div ref={endRef} />
               </div>
 
-              {/* Reply indicator */}
+              {/* Edit bar */}
               <AnimatePresence>
-                {replyTo && (
+                {editingMsg && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="px-4 py-2 bg-secondary/20 border-t border-border flex items-center gap-2"
+                    className="px-4 py-2 bg-[hsl(210,80%,52%/0.08)] border-t border-[hsl(210,80%,52%/0.2)] flex items-center gap-2"
                   >
-                    <Reply className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs text-muted-foreground flex-1 truncate">
-                      رد على <strong>{replyTo.user_name}</strong>: {replyTo.content.slice(0, 40)}...
+                    <Pencil className="w-3.5 h-3.5 text-[hsl(210,80%,58%)]" />
+                    <input
+                      value={editText}
+                      onChange={e => setEditText(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleEdit()}
+                      autoFocus
+                      className="flex-1 text-xs bg-transparent text-[hsl(210,20%,90%)] focus:outline-none"
+                    />
+                    <button onClick={handleEdit} className="text-[hsl(152,60%,45%)]"><Check className="w-4 h-4" /></button>
+                    <button onClick={() => setEditingMsg(null)} className="text-[hsl(0,72%,55%/0.6)]"><X className="w-4 h-4" /></button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Reply indicator */}
+              <AnimatePresence>
+                {replyTo && !editingMsg && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-4 py-2 bg-[hsl(220,18%,15%)] border-t border-[hsl(220,18%,22%)] flex items-center gap-2"
+                  >
+                    <Reply className="w-3.5 h-3.5 text-[hsl(210,80%,58%)]" />
+                    <span className="text-xs text-[hsl(220,10%,55%)] flex-1 truncate">
+                      رد على <strong className="text-[hsl(210,80%,65%)]">{replyTo.user_name}</strong>: {replyTo.content.slice(0, 40)}
                     </span>
                     <button onClick={() => setReplyTo(null)}>
-                      <X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                      <X className="w-3.5 h-3.5 text-[hsl(220,10%,45%)] hover:text-[hsl(0,72%,55%)]" />
                     </button>
                   </motion.div>
                 )}
               </AnimatePresence>
 
               {/* Input */}
-              <div className="p-3 border-t border-border flex items-center gap-2">
+              <div className="p-3 border-t border-[hsl(220,18%,22%)] flex items-center gap-2" style={{ background: 'hsl(220 20% 12%)' }}>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-9 w-9 rounded-xl bg-[hsl(220,18%,18%)] hover:bg-[hsl(220,18%,22%)] flex items-center justify-center text-[hsl(220,10%,50%)] hover:text-[hsl(210,80%,58%)] transition-colors shrink-0"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
                 <input
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                  placeholder="اكتب رسالة..."
-                  className="flex-1 bg-secondary/30 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  placeholder="اكتب رسالة... (اكتب @BatShark لاستدعاء AI)"
+                  className="flex-1 bg-[hsl(220,18%,18%)] border border-[hsl(220,18%,25%)] rounded-xl px-4 py-2.5 text-sm text-[hsl(210,20%,90%)] placeholder:text-[hsl(220,10%,35%)] focus:outline-none focus:ring-1 focus:ring-[hsl(210,80%,52%/0.5)] focus:border-[hsl(210,80%,52%/0.3)]"
                 />
-                <Button onClick={handleSend} size="icon" disabled={!input.trim()}>
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  className="h-9 w-9 rounded-xl bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] hover:from-[hsl(190,80%,50%)] hover:to-[hsl(210,80%,57%)] flex items-center justify-center text-white transition-all disabled:opacity-30 shrink-0"
+                >
                   <Send className="w-4 h-4" />
-                </Button>
+                </button>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 50%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
               <div className="text-center">
-                <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">اختر غرفة للبدء بالمحادثة</p>
+                <div className="w-20 h-20 rounded-2xl bg-[hsl(220,18%,16%)] flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="w-9 h-9 text-[hsl(220,15%,25%)]" />
+                </div>
+                <p className="text-sm text-[hsl(220,10%,50%)]">اختر غرفة للبدء بالمحادثة</p>
+                <p className="text-[10px] text-[hsl(220,10%,35%)] mt-1">أو أنشئ غرفة جديدة من القائمة</p>
               </div>
             </div>
           )}

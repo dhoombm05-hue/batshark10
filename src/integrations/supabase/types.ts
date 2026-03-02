@@ -153,6 +153,10 @@ export type Database = {
           file_name: string | null
           file_url: string | null
           id: string
+          is_edited: boolean
+          is_pinned: boolean
+          message_type: string
+          reactions: Json
           reply_to_id: string | null
           room_id: string
           user_id: string
@@ -164,6 +168,10 @@ export type Database = {
           file_name?: string | null
           file_url?: string | null
           id?: string
+          is_edited?: boolean
+          is_pinned?: boolean
+          message_type?: string
+          reactions?: Json
           reply_to_id?: string | null
           room_id: string
           user_id: string
@@ -175,6 +183,10 @@ export type Database = {
           file_name?: string | null
           file_url?: string | null
           id?: string
+          is_edited?: boolean
+          is_pinned?: boolean
+          message_type?: string
+          reactions?: Json
           reply_to_id?: string | null
           room_id?: string
           user_id?: string

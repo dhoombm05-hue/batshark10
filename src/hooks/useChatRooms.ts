@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 
@@ -10,6 +10,9 @@ export interface ChatRoom {
   project_id: string | null;
   created_by: string;
   created_at: string;
+  updated_at: string;
+  last_message?: string;
+  last_message_at?: string;
 }
 
 export interface ChatMessage {
@@ -21,6 +24,10 @@ export interface ChatMessage {
   reply_to_id: string | null;
   file_url: string | null;
   file_name: string | null;
+  is_pinned: boolean;
+  is_edited: boolean;
+  reactions: Record<string, string[]>;
+  message_type: string;
   created_at: string;
 }
 
@@ -48,7 +55,6 @@ export function useChatRooms() {
       .select()
       .single();
     if (data) {
-      // Auto-join creator
       await supabase.from('chat_room_members').insert({ room_id: data.id, user_id: user.id });
       setRooms(prev => [data as ChatRoom, ...prev]);
     }
@@ -83,7 +89,7 @@ export function useChatMessages(roomId: string | null) {
       });
   }, [roomId]);
 
-  // Realtime subscription
+  // Realtime for INSERT and UPDATE
   useEffect(() => {
     if (!roomId) return;
     const channel = supabase
@@ -94,14 +100,32 @@ export function useChatMessages(roomId: string | null) {
         table: 'chat_messages',
         filter: `room_id=eq.${roomId}`,
       }, (payload) => {
-        setMessages(prev => [...prev, payload.new as ChatMessage]);
+        setMessages(prev => {
+          if (prev.find(m => m.id === (payload.new as ChatMessage).id)) return prev;
+          return [...prev, payload.new as ChatMessage];
+        });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `room_id=eq.${roomId}`,
+      }, (payload) => {
+        setMessages(prev => prev.map(m => m.id === (payload.new as ChatMessage).id ? payload.new as ChatMessage : m));
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `room_id=eq.${roomId}`,
+      }, (payload) => {
+        setMessages(prev => prev.filter(m => m.id !== (payload.old as any).id));
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [roomId]);
 
-  const sendMessage = useCallback(async (content: string, replyToId?: string, fileUrl?: string, fileName?: string) => {
+  const sendMessage = useCallback(async (content: string, replyToId?: string, fileUrl?: string, fileName?: string, messageType = 'text') => {
     if (!user || !roomId || !content.trim()) return;
     await supabase.from('chat_messages').insert({
       room_id: roomId,
@@ -111,8 +135,39 @@ export function useChatMessages(roomId: string | null) {
       reply_to_id: replyToId || null,
       file_url: fileUrl || null,
       file_name: fileName || null,
+      message_type: messageType,
     });
+    // Update room timestamp
+    await supabase.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', roomId);
   }, [user, roomId, profile]);
 
-  return { messages, loading, sendMessage };
+  const editMessage = useCallback(async (msgId: string, newContent: string) => {
+    await supabase.from('chat_messages').update({ content: newContent, is_edited: true }).eq('id', msgId);
+  }, []);
+
+  const deleteMessage = useCallback(async (msgId: string) => {
+    await supabase.from('chat_messages').delete().eq('id', msgId);
+    setMessages(prev => prev.filter(m => m.id !== msgId));
+  }, []);
+
+  const togglePin = useCallback(async (msgId: string, pinned: boolean) => {
+    await supabase.from('chat_messages').update({ is_pinned: !pinned }).eq('id', msgId);
+  }, []);
+
+  const addReaction = useCallback(async (msgId: string, emoji: string) => {
+    if (!user) return;
+    const msg = messages.find(m => m.id === msgId);
+    if (!msg) return;
+    const reactions = { ...(msg.reactions || {}) };
+    const users = reactions[emoji] || [];
+    if (users.includes(user.id)) {
+      reactions[emoji] = users.filter(u => u !== user.id);
+      if (reactions[emoji].length === 0) delete reactions[emoji];
+    } else {
+      reactions[emoji] = [...users, user.id];
+    }
+    await supabase.from('chat_messages').update({ reactions }).eq('id', msgId);
+  }, [messages, user]);
+
+  return { messages, loading, sendMessage, editMessage, deleteMessage, togglePin, addReaction };
 }
