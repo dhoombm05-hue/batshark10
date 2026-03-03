@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Send, Loader2, Sparkles, Trash2, Volume2, VolumeX, Mic } from 'lucide-react';
+import { Brain, Send, Loader2, Sparkles, Trash2, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,12 @@ const SUGGESTIONS = [
   'ما هو أفضل مشروع حالياً؟',
   'كيف نحسن ربحية الشركة؟',
   'حلل أداء الموظفين',
-  'قارن بين الدورات',
+  'قارن بين المشاريع',
   'ما هي المخاطر الرئيسية؟',
+  'أعطني ملخص مالي شامل',
+  'اقترح خطة لتقليل المصاريف',
 ];
 
-// Strip markdown for TTS
 function stripMarkdown(md: string): string {
   return md
     .replace(/#{1,6}\s/g, '')
@@ -40,7 +41,9 @@ export default function BatSharkAI() {
   const [isLoading, setIsLoading] = useState(false);
   const [autoVoice, setAutoVoice] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
   const { profile } = useAuthContext();
   const userName = profile?.display_name || 'المستخدم';
@@ -49,9 +52,6 @@ export default function BatSharkAI() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Don't cancel speech on unmount - allow it to continue during navigation
-  // User can stop manually with the stop button
-
   const speak = useCallback((text: string) => {
     if (!window.speechSynthesis) {
       toast({ title: 'المتصفح لا يدعم القراءة الصوتية', variant: 'destructive' });
@@ -59,24 +59,57 @@ export default function BatSharkAI() {
     }
     window.speechSynthesis.cancel();
     const clean = stripMarkdown(text);
-    const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.lang = 'ar-SA';
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    // Try to find an Arabic voice
-    const voices = window.speechSynthesis.getVoices();
-    const arVoice = voices.find(v => v.lang.startsWith('ar'));
-    if (arVoice) utterance.voice = arVoice;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+    // Split into chunks for better quality
+    const chunks = clean.match(/.{1,200}[.،!؟]?\s*/g) || [clean];
+    let idx = 0;
+    const speakNext = () => {
+      if (idx >= chunks.length) { setIsSpeaking(false); return; }
+      const utterance = new SpeechSynthesisUtterance(chunks[idx]);
+      utterance.lang = 'ar-SA';
+      utterance.rate = 0.95;
+      utterance.pitch = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const arVoice = voices.find(v => v.lang.startsWith('ar'));
+      if (arVoice) utterance.voice = arVoice;
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => { idx++; speakNext(); };
+      utterance.onerror = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    };
+    speakNext();
   }, [toast]);
 
   const stopSpeaking = useCallback(() => {
     window.speechSynthesis?.cancel();
     setIsSpeaking(false);
   }, []);
+
+  // Speech-to-text
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: 'المتصفح لا يدعم التحدث', variant: 'destructive' });
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ar-SA';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.onresult = (e: any) => {
+      const transcript = Array.from(e.results).map((r: any) => r[0].transcript).join('');
+      setInput(transcript);
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }, [isListening, toast]);
 
   const send = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -118,7 +151,6 @@ export default function BatSharkAI() {
         const { done, value } = await reader.read();
         if (done) break;
         textBuffer += decoder.decode(value, { stream: true });
-
         let newlineIndex: number;
         while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
@@ -174,7 +206,6 @@ export default function BatSharkAI() {
         }
       }
 
-      // Auto-voice: read the final response
       if (autoVoice && assistantSoFar) {
         speak(assistantSoFar);
       }
@@ -197,14 +228,20 @@ export default function BatSharkAI() {
             </div>
             <div>
               <h1 className="text-2xl font-heading font-bold" style={{ background: 'var(--gradient-ai)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BatShark AI</h1>
-              <p className="text-sm text-muted-foreground">المستشار المالي الذكي — مرحباً {userName}</p>
+              <p className="text-sm text-muted-foreground">المستشار التنفيذي الاقتصادي — مرحباً {userName}</p>
             </div>
           </div>
-          {/* Auto-voice toggle */}
-          <div className="flex items-center gap-2 bg-secondary/30 border border-border rounded-lg px-3 py-2">
-            <Mic className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">رد صوتي تلقائي</span>
-            <Switch checked={autoVoice} onCheckedChange={setAutoVoice} />
+          <div className="flex items-center gap-3">
+            {isSpeaking && (
+              <button onClick={stopSpeaking} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
+                <VolumeX className="w-3.5 h-3.5" /> إيقاف الصوت
+              </button>
+            )}
+            <div className="flex items-center gap-2 bg-secondary/30 border border-border rounded-lg px-3 py-2">
+              <Mic className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">رد صوتي تلقائي</span>
+              <Switch checked={autoVoice} onCheckedChange={setAutoVoice} />
+            </div>
           </div>
         </div>
       </motion.div>
@@ -216,20 +253,28 @@ export default function BatSharkAI() {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <Sparkles className="w-12 h-12 text-primary/40 mb-4" />
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 3 }}
+              >
+                <Sparkles className="w-14 h-14 text-primary/40 mb-4" />
+              </motion.div>
               <h3 className="text-lg font-heading text-foreground mb-2">مرحباً {userName} 👋</h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                اسألني أي سؤال عن مشاريع الشركة، الأرباح، المصروفات، أو التوقعات المالية. أحلل بياناتك الفعلية وأعطيك إجابات دقيقة.
+                أنا مستشارك التنفيذي الاقتصادي. أحلل بياناتك الفعلية وأعطيك توصيات عملية مبنية على الأرقام الحقيقية.
               </p>
               <div className="flex flex-wrap gap-2 justify-center max-w-lg">
                 {SUGGESTIONS.map((s, i) => (
-                  <button
+                  <motion.button
                     key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
                     onClick={() => send(s)}
                     className="text-xs px-3 py-2 rounded-lg border border-border bg-secondary/30 text-foreground hover:bg-primary/10 hover:border-primary/30 transition-all"
                   >
                     {s}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -252,7 +297,6 @@ export default function BatSharkAI() {
                     <div className="prose prose-sm prose-invert max-w-none text-sm [&_p]:mb-2 [&_ul]:mb-2 [&_ol]:mb-2 [&_li]:text-foreground [&_strong]:text-primary [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
-                    {/* Listen button per message */}
                     <div className="mt-2 flex justify-end">
                       <button
                         onClick={() => isSpeaking ? stopSpeaking() : speak(msg.content)}
@@ -272,8 +316,9 @@ export default function BatSharkAI() {
 
           {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-end">
-              <div className="bg-secondary/50 border border-border rounded-xl px-4 py-3">
+              <div className="bg-secondary/50 border border-border rounded-xl px-4 py-3 flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground">BatShark يفكر...</span>
               </div>
             </motion.div>
           )}
@@ -294,6 +339,16 @@ export default function BatSharkAI() {
                 <Trash2 className="w-4 h-4" />
               </Button>
             )}
+            <button
+              onClick={toggleListening}
+              className={`shrink-0 h-10 w-10 rounded-lg flex items-center justify-center transition-all ${
+                isListening 
+                  ? 'bg-destructive/20 text-destructive animate-pulse' 
+                  : 'bg-secondary/30 text-muted-foreground hover:text-primary hover:bg-primary/10'
+              }`}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}

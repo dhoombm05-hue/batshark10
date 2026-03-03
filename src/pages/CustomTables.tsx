@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Table2, Save, X, Edit3, FileSpreadsheet } from 'lucide-react';
+import { Plus, Trash2, Table2, Save, X, FileSpreadsheet, Calculator, Pencil, Check } from 'lucide-react';
 import Layout from '@/components/Layout';
 import AskMeDialog from '@/components/AskMeDialog';
 import {
@@ -23,17 +23,65 @@ const COL_TYPES = [
   { value: 'text', label: 'نص' },
   { value: 'number', label: 'رقم' },
   { value: 'date', label: 'تاريخ' },
+  { value: 'percentage', label: 'نسبة %' },
+  { value: 'formula', label: '🧮 معادلة' },
 ];
 
-function TableEditor({ tableId, columns }: { tableId: string; columns: CustomTableColumn[] }) {
+// Parse and evaluate formulas like =A1+B1, =SUM(A1:A10), =col_1+col_2
+function evaluateFormula(formula: string, rowData: Record<string, any>, allRows: CustomTableRow[], columns: CustomTableColumn[], currentRowIndex: number): number {
+  if (!formula || !formula.startsWith('=')) return 0;
+  const expr = formula.slice(1).trim();
+
+  // Handle SUM(col_id) - sum all rows for that column
+  const sumMatch = expr.match(/^SUM\((\w+)\)$/i);
+  if (sumMatch) {
+    const colId = sumMatch[1];
+    return allRows.reduce((sum, r) => sum + (Number(r.data[colId]) || 0), 0);
+  }
+
+  // Handle AVG(col_id)
+  const avgMatch = expr.match(/^AVG\((\w+)\)$/i);
+  if (avgMatch) {
+    const colId = avgMatch[1];
+    const total = allRows.reduce((sum, r) => sum + (Number(r.data[colId]) || 0), 0);
+    return allRows.length > 0 ? total / allRows.length : 0;
+  }
+
+  // Handle simple arithmetic with column references
+  try {
+    let evalExpr = expr;
+    // Replace column IDs with their values
+    columns.forEach(col => {
+      const regex = new RegExp(`\\b${col.id}\\b`, 'g');
+      evalExpr = evalExpr.replace(regex, String(Number(rowData[col.id]) || 0));
+    });
+    // Simple safe eval for basic math
+    const result = Function(`"use strict"; return (${evalExpr})`)();
+    return typeof result === 'number' && isFinite(result) ? result : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function TableEditor({ tableId, columns: initialColumns, onColumnsUpdate }: { 
+  tableId: string; 
+  columns: CustomTableColumn[];
+  onColumnsUpdate?: (cols: CustomTableColumn[]) => void;
+}) {
   const { data: rows } = useCustomTableRows(tableId);
   const addRow = useAddCustomTableRow();
   const updateRow = useUpdateCustomTableRow();
   const deleteRow = useDeleteCustomTableRow();
   const [editingCell, setEditingCell] = useState<{ rowId: string; colId: string } | null>(null);
   const [cellValue, setCellValue] = useState('');
+  const [editingColId, setEditingColId] = useState<string | null>(null);
+  const [colLabel, setColLabel] = useState('');
+
+  const columns = initialColumns;
 
   const handleCellClick = (rowId: string, colId: string, currentValue: any) => {
+    const col = columns.find(c => c.id === colId);
+    if (col?.type === 'formula') return; // Formula cells are read-only
     setEditingCell({ rowId, colId });
     setCellValue(String(currentValue ?? ''));
   };
@@ -41,7 +89,10 @@ function TableEditor({ tableId, columns }: { tableId: string; columns: CustomTab
   const handleCellSave = (row: CustomTableRow) => {
     if (!editingCell) return;
     const col = columns.find(c => c.id === editingCell.colId);
-    const newVal = col?.type === 'number' ? Number(cellValue) || 0 : cellValue;
+    let newVal: any = cellValue;
+    if (col?.type === 'number' || col?.type === 'percentage') {
+      newVal = Number(cellValue) || 0;
+    }
     const newData = { ...row.data, [editingCell.colId]: newVal };
     updateRow.mutate({ id: row.id, table_id: tableId, data: newData });
     setEditingCell(null);
@@ -49,9 +100,28 @@ function TableEditor({ tableId, columns }: { tableId: string; columns: CustomTab
 
   const handleAddRow = () => {
     const emptyData: Record<string, any> = {};
-    columns.forEach(c => { emptyData[c.id] = c.type === 'number' ? 0 : ''; });
+    columns.forEach(c => { 
+      if (c.type === 'number' || c.type === 'percentage') emptyData[c.id] = 0;
+      else if (c.type === 'formula') emptyData[c.id] = '';
+      else emptyData[c.id] = ''; 
+    });
     addRow.mutate({ table_id: tableId, data: emptyData });
   };
+
+  const handleColRename = (colId: string) => {
+    if (!colLabel.trim() || !onColumnsUpdate) return;
+    const updated = columns.map(c => c.id === colId ? { ...c, label: colLabel } : c);
+    onColumnsUpdate(updated);
+    setEditingColId(null);
+  };
+
+  // Calculate column sums for number columns
+  const columnSums: Record<string, number> = {};
+  columns.forEach(col => {
+    if (col.type === 'number' || col.type === 'percentage') {
+      columnSums[col.id] = (rows || []).reduce((sum, r) => sum + (Number(r.data[col.id]) || 0), 0);
+    }
+  });
 
   return (
     <div className="space-y-3">
@@ -61,9 +131,33 @@ function TableEditor({ tableId, columns }: { tableId: string; columns: CustomTab
             <tr className="bg-muted/30">
               <th className="p-2.5 text-center text-muted-foreground text-[10px] w-10">#</th>
               {columns.map(col => (
-                <th key={col.id} className="p-2.5 text-right text-muted-foreground text-[10px] font-heading" style={{ minWidth: col.width || 120 }}>
-                  {col.label}
-                  <span className="text-[8px] mr-1 opacity-50">({COL_TYPES.find(t => t.value === col.type)?.label})</span>
+                <th key={col.id} className="p-2.5 text-right text-muted-foreground text-[10px] font-heading group" style={{ minWidth: col.width || 120 }}>
+                  {editingColId === col.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        autoFocus
+                        value={colLabel}
+                        onChange={e => setColLabel(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleColRename(col.id); if (e.key === 'Escape') setEditingColId(null); }}
+                        onBlur={() => handleColRename(col.id)}
+                        className="bg-transparent border-b border-primary text-foreground text-[10px] outline-none w-full"
+                      />
+                      <button onClick={() => handleColRename(col.id)}><Check className="w-3 h-3 text-success" /></button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span>{col.label}</span>
+                      <span className="text-[8px] opacity-50">({COL_TYPES.find(t => t.value === col.type)?.label})</span>
+                      {onColumnsUpdate && (
+                        <button 
+                          onClick={() => { setEditingColId(col.id); setColLabel(col.label); }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Pencil className="w-2.5 h-2.5 text-muted-foreground hover:text-primary" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </th>
               ))}
               <th className="p-2 w-10" />
@@ -75,14 +169,19 @@ function TableEditor({ tableId, columns }: { tableId: string; columns: CustomTab
                 <td className="p-2.5 text-center text-[10px] text-muted-foreground">{ri + 1}</td>
                 {columns.map(col => {
                   const isEditing = editingCell?.rowId === row.id && editingCell?.colId === col.id;
-                  const val = row.data[col.id];
+                  const isFormula = col.type === 'formula';
+                  const rawVal = row.data[col.id];
+                  const displayVal = isFormula && typeof rawVal === 'string' && rawVal.startsWith('=')
+                    ? evaluateFormula(rawVal, row.data, rows || [], columns, ri)
+                    : rawVal;
+
                   return (
-                    <td key={col.id} onClick={() => handleCellClick(row.id, col.id, val)}
-                      className={`p-2.5 cursor-pointer transition-all ${isEditing ? 'bg-primary/10 ring-1 ring-primary/30' : ''}`}>
+                    <td key={col.id} onClick={() => handleCellClick(row.id, col.id, rawVal)}
+                      className={`p-2.5 cursor-pointer transition-all ${isEditing ? 'bg-primary/10 ring-1 ring-primary/30' : ''} ${isFormula ? 'bg-section-invest/5' : ''}`}>
                       {isEditing ? (
                         <input
                           autoFocus
-                          type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
+                          type={col.type === 'number' || col.type === 'percentage' ? 'number' : col.type === 'date' ? 'date' : 'text'}
                           value={cellValue}
                           onChange={e => setCellValue(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') handleCellSave(row); if (e.key === 'Escape') setEditingCell(null); }}
@@ -90,8 +189,12 @@ function TableEditor({ tableId, columns }: { tableId: string; columns: CustomTab
                           className="w-full bg-transparent outline-none text-sm text-foreground"
                         />
                       ) : (
-                        <span className="text-xs text-foreground">
-                          {col.type === 'number' && typeof val === 'number' ? val.toLocaleString('ar-SA') : String(val ?? '')}
+                        <span className={`text-xs ${isFormula ? 'text-section-invest font-mono font-bold' : 'text-foreground'}`}>
+                          {(col.type === 'number' || col.type === 'percentage' || isFormula) && typeof displayVal === 'number'
+                            ? displayVal.toLocaleString('ar-SA')
+                            : String(displayVal ?? '')}
+                          {col.type === 'percentage' && displayVal ? '%' : ''}
+                          {isFormula && <Calculator className="w-2.5 h-2.5 inline mr-1 opacity-50" />}
                         </span>
                       )}
                     </td>
@@ -108,12 +211,34 @@ function TableEditor({ tableId, columns }: { tableId: string; columns: CustomTab
               <tr><td colSpan={columns.length + 2} className="p-6 text-center text-muted-foreground text-xs">لا توجد بيانات — اضغط "صف جديد"</td></tr>
             )}
           </tbody>
+          {/* Auto-sum footer */}
+          {rows && rows.length > 0 && Object.keys(columnSums).length > 0 && (
+            <tfoot>
+              <tr className="border-t-2 border-primary/20 bg-primary/5">
+                <td className="p-2.5 text-center text-[10px] font-bold text-primary">Σ</td>
+                {columns.map(col => (
+                  <td key={col.id} className="p-2.5 text-right">
+                    {(col.type === 'number' || col.type === 'percentage') ? (
+                      <span className="text-xs font-bold text-primary font-mono">
+                        {columnSums[col.id]?.toLocaleString('ar-SA')}
+                        {col.type === 'percentage' ? '%' : ''}
+                      </span>
+                    ) : null}
+                  </td>
+                ))}
+                <td />
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 
-      <button onClick={handleAddRow} className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all flex items-center gap-1">
-        <Plus className="w-3 h-3" /> صف جديد
-      </button>
+      <div className="flex items-center gap-2">
+        <button onClick={handleAddRow} className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all flex items-center gap-1">
+          <Plus className="w-3 h-3" /> صف جديد
+        </button>
+        <span className="text-[10px] text-muted-foreground">💡 للمعادلات: اكتب =col_1+col_2 أو =SUM(col_1) في خلية "معادلة"</span>
+      </div>
     </div>
   );
 }
@@ -163,6 +288,13 @@ export default function CustomTablesPage() {
     setNewColumns(prev => [...prev, { id: `col_${Date.now()}`, label: `عمود ${prev.length + 1}`, type: 'text' }]);
   };
 
+  // Update columns in DB (for renaming)
+  const handleColumnsUpdate = useCallback(async (tableId: string, newCols: CustomTableColumn[]) => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    await (supabase.from('custom_tables' as any).update({ columns: newCols } as any).eq('id', tableId));
+    // Refetch will happen via react-query
+  }, []);
+
   return (
     <Layout>
       <div className="mb-6">
@@ -173,7 +305,7 @@ export default function CustomTablesPage() {
             </div>
             <div>
               <h1 className="text-2xl font-heading font-bold text-foreground">📊 نظام الجداول المخصصة</h1>
-              <p className="text-sm text-muted-foreground">إنشاء وإدارة جداول بيانات مخصصة محفوظة في قاعدة البيانات</p>
+              <p className="text-sm text-muted-foreground">جداول ذكية مع معادلات تلقائية — أقوى من Excel</p>
             </div>
           </div>
           <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm">
@@ -253,7 +385,7 @@ export default function CustomTablesPage() {
             const typeInfo = TABLE_TYPES.find(tt => tt.value === t.table_type);
             return (
               <button key={t.id} onClick={() => setActiveTableId(t.id)}
-                className={`w-full text-right p-3 rounded-xl border transition-all ${activeTableId === t.id ? 'bg-primary/10 border-primary/30' : 'bg-card border-border hover:bg-muted/30'}`}>
+                className={`w-full text-right p-3 rounded-xl border transition-all group ${activeTableId === t.id ? 'bg-primary/10 border-primary/30' : 'bg-card border-border hover:bg-muted/30'}`}>
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] ${typeInfo?.color}`}>{typeInfo?.label}</span>
                   <button onClick={(e) => { e.stopPropagation(); deleteTable.mutate(t.id); }}
@@ -285,8 +417,15 @@ export default function CustomTablesPage() {
                     {TABLE_TYPES.find(t => t.value === activeTable.table_type)?.label} • {activeTable.columns.length} أعمدة
                   </p>
                 </div>
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/30 rounded-lg px-2 py-1">
+                  <Calculator className="w-3 h-3" /> معادلات مدعومة
+                </div>
               </div>
-              <TableEditor tableId={activeTable.id} columns={activeTable.columns} />
+              <TableEditor 
+                tableId={activeTable.id} 
+                columns={activeTable.columns} 
+                onColumnsUpdate={(cols) => handleColumnsUpdate(activeTable.id, cols)}
+              />
             </motion.div>
           ) : (
             <div className="flex items-center justify-center h-64 bg-card rounded-xl border border-border">

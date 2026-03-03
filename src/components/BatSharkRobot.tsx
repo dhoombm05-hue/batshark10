@@ -1,18 +1,24 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, X, Sparkles, ArrowLeft } from 'lucide-react';
+import { Bot, X, Sparkles, ArrowLeft, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const GUIDE_RESPONSES: Record<string, { answer: string; route?: string; highlight?: string }> = {
-  'قيد': { answer: 'تعال معي نروح لمختبر النمذجة وتسجل القيد هناك!', route: '/lab', highlight: 'القيود' },
-  'مشروع': { answer: 'خلنا نشوف المشاريع سوا!', route: '/projects' },
-  'موظف': { answer: 'نروح لصفحة الموظفين ونشوف الأداء!', route: '/employees' },
-  'تحليل': { answer: 'التحليل الاستراتيجي هنا، تعال!', route: '/strategic' },
-  'توقع': { answer: 'صفحة التوقعات فيها كل اللي تحتاجه!', route: '/forecasts' },
-  'ملف': { answer: 'مركز الملفات جاهز لك!', route: '/documents' },
-  'نقاش': { answer: 'غرفة النقاشات تنتظرك!', route: '/chat' },
-  'ذكاء': { answer: 'اسأل BatShark AI أي سؤال تبيه!', route: '/ai' },
+const GUIDE_RESPONSES: Record<string, { answer: string; route?: string }> = {
+  'قيد': { answer: 'القيود المحاسبية موجودة في مختبر النمذجة! تعال أوريك.', route: '/lab' },
+  'مشروع': { answer: 'خلنا نشوف المشاريع والأرقام الحقيقية.', route: '/projects' },
+  'موظف': { answer: 'صفحة الموظفين فيها كل التفاصيل والأداء.', route: '/employees' },
+  'تحليل': { answer: 'التحليل الاستراتيجي جاهز لك!', route: '/strategic' },
+  'توقع': { answer: 'التوقعات المالية المبنية على بياناتك الفعلية.', route: '/forecasts' },
+  'ملف': { answer: 'مركز الملفات ينتظرك!', route: '/documents' },
+  'نقاش': { answer: 'غرفة النقاشات الذكية جاهزة.', route: '/chat' },
+  'ذكاء': { answer: 'اسأل BatShark AI أي سؤال اقتصادي!', route: '/ai' },
+  'جدول': { answer: 'الجداول المخصصة — أقوى من Excel!', route: '/tables' },
+  'لوحة': { answer: 'لوحة التحكم الرئيسية فيها كل المؤشرات.', route: '/' },
 };
+
+function stripMarkdown(md: string): string {
+  return md.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').trim();
+}
 
 export default function BatSharkRobot() {
   const [open, setOpen] = useState(false);
@@ -27,7 +33,7 @@ export default function BatSharkRobot() {
     if (match) {
       setResponse(match[1]);
     } else {
-      setResponse({ answer: 'أقدر أساعدك بالتنقل! اسألني عن: مشروع، موظف، قيد، تحليل، توقع، ملف، نقاش، أو ذكاء اصطناعي.', route: undefined });
+      setResponse({ answer: 'أقدر أساعدك بالتنقل! اسألني عن: مشروع، موظف، قيد، تحليل، توقع، ملف، نقاش، جدول، أو ذكاء اصطناعي.' });
     }
     setQuestion('');
   }, [question]);
@@ -40,9 +46,21 @@ export default function BatSharkRobot() {
     }
   }, [response, navigate]);
 
+  const speakAnswer = useCallback((text: string) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(stripMarkdown(text));
+    utterance.lang = 'ar-SA';
+    utterance.rate = 0.95;
+    utterance.pitch = 0.9;
+    const voices = window.speechSynthesis.getVoices();
+    const arVoice = voices.find(v => v.lang.startsWith('ar'));
+    if (arVoice) utterance.voice = arVoice;
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
   return (
     <>
-      {/* Floating Robot Button */}
       <motion.button
         onClick={() => setOpen(!open)}
         className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] text-white shadow-elevated flex items-center justify-center hover:scale-110 transition-transform"
@@ -54,7 +72,6 @@ export default function BatSharkRobot() {
         {open ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
       </motion.button>
 
-      {/* Robot Panel */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -63,29 +80,34 @@ export default function BatSharkRobot() {
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="fixed bottom-24 left-6 z-50 w-80 bg-card border border-border rounded-2xl shadow-elevated overflow-hidden"
           >
-            {/* Header */}
             <div className="p-3 border-b border-border flex items-center gap-2" style={{ background: 'var(--gradient-ai)' }}>
               <Bot className="w-5 h-5 text-white" />
               <span className="font-heading font-bold text-sm text-white">مساعد BatShark</span>
               <Sparkles className="w-3.5 h-3.5 text-white/60 mr-auto" />
             </div>
 
-            {/* Content */}
             <div className="p-4 space-y-3">
               {response ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                   <div className="bg-secondary/30 rounded-lg p-3">
                     <p className="text-sm text-foreground leading-relaxed">{response.answer}</p>
                   </div>
-                  {response.route && (
+                  <div className="flex gap-2">
+                    {response.route && (
+                      <button
+                        onClick={handleNavigate}
+                        className="flex-1 flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg py-2.5 text-sm font-medium transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> خذني هناك
+                      </button>
+                    )}
                     <button
-                      onClick={handleNavigate}
-                      className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg py-2.5 text-sm font-medium transition-colors"
+                      onClick={() => speakAnswer(response.answer)}
+                      className="h-10 w-10 rounded-lg bg-section-ai/10 hover:bg-section-ai/20 flex items-center justify-center text-section-ai transition-colors"
                     >
-                      <ArrowLeft className="w-4 h-4" />
-                      خذني هناك
+                      <Volume2 className="w-4 h-4" />
                     </button>
-                  )}
+                  </div>
                   <button
                     onClick={() => setResponse(null)}
                     className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -111,9 +133,8 @@ export default function BatSharkRobot() {
                       اسأل
                     </button>
                   </div>
-                  {/* Quick actions */}
                   <div className="flex flex-wrap gap-1.5">
-                    {['قيد محاسبي', 'مشروع', 'موظف', 'تحليل', 'نقاش'].map(q => (
+                    {['قيد محاسبي', 'مشروع', 'موظف', 'تحليل', 'نقاش', 'جدول'].map(q => (
                       <button
                         key={q}
                         onClick={() => { setQuestion(q); }}

@@ -9,7 +9,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import logo from '@/assets/batshark-logo-main.png';
 
 const ROLE_LABELS: Record<string, string> = {
-  ceo: '👑 الرئيس',
+  ceo: '👑 عبدالرحمن CEO',
   coo: '⚙️ العمليات',
   strategic_director: '📊 الاستراتيجي',
   marketing_director: '📣 التسويق',

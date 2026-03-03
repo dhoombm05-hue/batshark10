@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 export interface CustomTableColumn {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'date';
+  type: 'text' | 'number' | 'date' | 'percentage' | 'formula';
   width?: number;
 }
 
