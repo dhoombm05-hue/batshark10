@@ -316,9 +316,30 @@ export default function BatSharkAI() {
 
           {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-end">
-              <div className="bg-secondary/50 border border-border rounded-xl px-4 py-3 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span className="text-xs text-muted-foreground">BatShark يفكر...</span>
+              <div className="bg-secondary/50 border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+                {/* Animated thinking robot */}
+                <motion.div
+                  className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center"
+                  animate={{ boxShadow: ['0 0 0px hsl(190 80% 50% / 0)', '0 0 16px hsl(190 80% 50% / 0.35)', '0 0 0px hsl(190 80% 50% / 0)'] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                >
+                  <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ repeat: Infinity, duration: 1 }}>
+                    <Brain className="w-4 h-4 text-primary" />
+                  </motion.div>
+                </motion.div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-muted-foreground">BatShark يحلل...</span>
+                  <div className="flex items-center gap-1">
+                    {[0, 1, 2].map(i => (
+                      <motion.span
+                        key={i}
+                        className="w-1.5 h-1.5 rounded-full bg-primary"
+                        animate={{ y: [0, -4, 0], opacity: [0.3, 1, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 0.7, delay: i * 0.12 }}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

@@ -20,22 +20,45 @@ function stripMarkdown(md: string): string {
   return md.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').trim();
 }
 
+// Animated typing dots
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1 py-2">
+      {[0, 1, 2].map(i => (
+        <motion.span
+          key={i}
+          className="w-2 h-2 rounded-full bg-primary"
+          animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
+          transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function BatSharkRobot() {
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState<{ answer: string; route?: string } | null>(null);
+  const [isThinking, setIsThinking] = useState(false);
   const navigate = useNavigate();
 
   const handleAsk = useCallback(() => {
     if (!question.trim()) return;
+    setIsThinking(true);
     const q = question.toLowerCase();
-    const match = Object.entries(GUIDE_RESPONSES).find(([key]) => q.includes(key));
-    if (match) {
-      setResponse(match[1]);
-    } else {
-      setResponse({ answer: 'أقدر أساعدك بالتنقل! اسألني عن: مشروع، موظف، قيد، تحليل، توقع، ملف، نقاش، جدول، أو ذكاء اصطناعي.' });
-    }
     setQuestion('');
+
+    // Simulate a brief thinking delay for realism
+    setTimeout(() => {
+      const match = Object.entries(GUIDE_RESPONSES).find(([key]) => q.includes(key));
+      if (match) {
+        setResponse(match[1]);
+      } else {
+        setResponse({ answer: 'أقدر أساعدك بالتنقل! اسألني عن: مشروع، موظف، قيد، تحليل، توقع، ملف، نقاش، جدول، أو ذكاء اصطناعي.' });
+      }
+      setIsThinking(false);
+    }, 600);
   }, [question]);
 
   const handleNavigate = useCallback(() => {
@@ -61,15 +84,25 @@ export default function BatSharkRobot() {
 
   return (
     <>
+      {/* Floating Robot Button with glow */}
       <motion.button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] text-white shadow-elevated flex items-center justify-center hover:scale-110 transition-transform"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        animate={{ y: [0, -6, 0] }}
+        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] text-white flex items-center justify-center hover:scale-110 transition-transform"
+        style={{ boxShadow: open ? '0 0 24px 6px hsl(190 80% 50% / 0.4)' : '0 4px 20px hsl(210 80% 40% / 0.3)' }}
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.92 }}
+        animate={{ y: [0, -5, 0] }}
         transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
       >
         {open ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
+        {/* Glow ring when open */}
+        {open && (
+          <motion.span
+            className="absolute inset-0 rounded-full border-2 border-primary/40"
+            animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+          />
+        )}
       </motion.button>
 
       <AnimatePresence>
@@ -80,15 +113,36 @@ export default function BatSharkRobot() {
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="fixed bottom-24 left-6 z-50 w-80 bg-card border border-border rounded-2xl shadow-elevated overflow-hidden"
           >
-            <div className="p-3 border-b border-border flex items-center gap-2" style={{ background: 'var(--gradient-ai)' }}>
-              <Bot className="w-5 h-5 text-white" />
-              <span className="font-heading font-bold text-sm text-white">مساعد BatShark</span>
-              <Sparkles className="w-3.5 h-3.5 text-white/60 mr-auto" />
+            {/* Header with animated gradient */}
+            <div className="p-3 border-b border-border flex items-center gap-2 relative overflow-hidden" style={{ background: 'var(--gradient-ai)' }}>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+              />
+              <Bot className="w-5 h-5 text-white relative z-10" />
+              <span className="font-heading font-bold text-sm text-white relative z-10">مساعد BatShark</span>
+              <Sparkles className="w-3.5 h-3.5 text-white/60 mr-auto relative z-10" />
             </div>
 
             <div className="p-4 space-y-3">
-              {response ? (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+              {isThinking ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-4">
+                  {/* Robot thinking animation */}
+                  <motion.div
+                    className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3"
+                    animate={{ boxShadow: ['0 0 0px hsl(190 80% 50% / 0)', '0 0 20px hsl(190 80% 50% / 0.3)', '0 0 0px hsl(190 80% 50% / 0)'] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1.2 }}>
+                      <Bot className="w-6 h-6 text-primary" />
+                    </motion.div>
+                  </motion.div>
+                  <TypingDots />
+                  <span className="text-[10px] text-muted-foreground mt-1">يفكر...</span>
+                </motion.div>
+              ) : response ? (
+                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
                   <div className="bg-secondary/30 rounded-lg p-3">
                     <p className="text-sm text-foreground leading-relaxed">{response.answer}</p>
                   </div>
