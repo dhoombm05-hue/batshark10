@@ -73,6 +73,8 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
   const [editingColId, setEditingColId] = useState<string | null>(null);
   const [colLabel, setColLabel] = useState('');
   const [editingColType, setEditingColType] = useState<string | null>(null);
+  const [editingRowName, setEditingRowName] = useState<string | null>(null);
+  const [rowNameValue, setRowNameValue] = useState('');
 
   const handleCellClick = (rowId: string, colId: string, currentValue: any) => {
     const col = columns.find(c => c.id === colId);
@@ -94,13 +96,20 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
   };
 
   const handleAddRow = () => {
-    const emptyData: Record<string, any> = {};
+    const emptyData: Record<string, any> = { _row_name: `صف ${(rows?.length || 0) + 1}` };
     columns.forEach(c => { 
       if (c.type === 'number' || c.type === 'percentage') emptyData[c.id] = 0;
       else if (c.type === 'formula') emptyData[c.id] = '';
       else emptyData[c.id] = ''; 
     });
     addRow.mutate({ table_id: tableId, data: emptyData });
+  };
+
+  const handleRowNameSave = (row: CustomTableRow) => {
+    if (!editingRowName) return;
+    const newData = { ...row.data, _row_name: rowNameValue };
+    updateRow.mutate({ id: row.id, table_id: tableId, data: newData });
+    setEditingRowName(null);
   };
 
   const handleColRename = (colId: string) => {
@@ -201,7 +210,26 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
           <tbody>
             {rows?.map((row, ri) => (
               <tr key={row.id} className="border-t border-border hover:bg-primary/5 transition-colors">
-                <td className="p-2.5 text-center text-[10px] text-muted-foreground">{ri + 1}</td>
+                <td className="p-2.5 text-center text-[10px] text-muted-foreground min-w-[60px]">
+                  {editingRowName === row.id ? (
+                    <input
+                      autoFocus
+                      value={rowNameValue}
+                      onChange={e => setRowNameValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleRowNameSave(row); if (e.key === 'Escape') setEditingRowName(null); }}
+                      onBlur={() => handleRowNameSave(row)}
+                      className="w-full bg-transparent border-b border-primary text-foreground text-[10px] outline-none text-center"
+                    />
+                  ) : (
+                    <span
+                      onClick={() => { setEditingRowName(row.id); setRowNameValue(String(row.data._row_name || (ri + 1))); }}
+                      className="cursor-pointer hover:text-primary transition-colors"
+                      title="اضغط لإعادة التسمية"
+                    >
+                      {row.data._row_name || ri + 1}
+                    </span>
+                  )}
+                </td>
                 {columns.map(col => {
                   const isEditing = editingCell?.rowId === row.id && editingCell?.colId === col.id;
                   const isFormula = col.type === 'formula';
