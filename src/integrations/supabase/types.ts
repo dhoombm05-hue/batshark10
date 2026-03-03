@@ -311,27 +311,138 @@ export type Database = {
           },
         ]
       }
+      custom_table_cells: {
+        Row: {
+          cell_value: Json | null
+          column_id: string
+          created_at: string
+          id: string
+          row_id: string
+          table_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cell_value?: Json | null
+          column_id: string
+          created_at?: string
+          id?: string
+          row_id: string
+          table_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cell_value?: Json | null
+          column_id?: string
+          created_at?: string
+          id?: string
+          row_id?: string
+          table_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_table_cells_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "custom_table_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_table_cells_row_id_fkey"
+            columns: ["row_id"]
+            isOneToOne: false
+            referencedRelation: "custom_table_rows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_table_cells_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "custom_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_table_columns: {
+        Row: {
+          column_key: string
+          column_name: string
+          column_type: string
+          created_at: string
+          id: string
+          position: number
+          table_id: string
+          updated_at: string
+          updated_by: string | null
+          width: number | null
+        }
+        Insert: {
+          column_key: string
+          column_name?: string
+          column_type?: string
+          created_at?: string
+          id?: string
+          position?: number
+          table_id: string
+          updated_at?: string
+          updated_by?: string | null
+          width?: number | null
+        }
+        Update: {
+          column_key?: string
+          column_name?: string
+          column_type?: string
+          created_at?: string
+          id?: string
+          position?: number
+          table_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_table_columns_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "custom_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_table_rows: {
         Row: {
           created_at: string
           data: Json
           id: string
+          position: number
+          row_name: string | null
           table_id: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           created_at?: string
           data?: Json
           id?: string
+          position?: number
+          row_name?: string | null
           table_id: string
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           created_at?: string
           data?: Json
           id?: string
+          position?: number
+          row_name?: string | null
           table_id?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
