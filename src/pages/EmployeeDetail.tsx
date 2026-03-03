@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X } from 'lucide-react';
+import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X, Camera } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import PrintButton from '@/components/PrintButton';
 import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useEmployee, useEmployeeMonthlyPerformance, useUpdateEmployee } from '@/hooks/useEmployees';
+import { useEmployee, useEmployeeMonthlyPerformance, useUpdateEmployee, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
 
 const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
@@ -64,7 +64,9 @@ export default function EmployeeDetail() {
   const { data: emp, isLoading: loadingEmp } = useEmployee(id || '');
   const { data: monthlyPerf } = useEmployeeMonthlyPerformance(emp?.id || '');
   const updateEmployee = useUpdateEmployee();
+  const uploadAvatar = useUploadEmployeeAvatar();
   const { toast } = useToast();
+  const avatarFileRef = useRef<HTMLInputElement>(null);
 
   const [showForm, setShowForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -213,43 +215,71 @@ export default function EmployeeDetail() {
         <ArrowRight className="w-4 h-4" /> العودة للموظفين
       </Link>
 
-      {/* Header */}
+      {/* Header with prominent avatar */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        className="bg-card rounded-xl border border-section-employees/20 p-6 shadow-card mb-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-section-employees/15 flex items-center justify-center ring-2 ring-section-employees/20">
-              <span className="text-section-employees font-heading font-bold text-2xl">{emp.name.charAt(0)}</span>
+        className="bg-card rounded-xl border border-section-employees/20 shadow-card mb-6 overflow-hidden">
+        {/* Banner background */}
+        <div className="h-28 bg-gradient-to-l from-[hsl(25,85%,52%/0.2)] via-[hsl(38,92%,50%/0.1)] to-[hsl(210,80%,52%/0.1)] relative" />
+        
+        <div className="px-6 pb-6 -mt-12 relative">
+          <div className="flex items-end gap-4 flex-wrap">
+            {/* Large Avatar */}
+            <div className="relative group">
+              {emp.avatar_url ? (
+                <img src={emp.avatar_url} alt={emp.name}
+                  className="w-24 h-24 rounded-2xl object-cover ring-4 ring-card shadow-elevated" />
+              ) : (
+                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[hsl(25,85%,52%)] to-[hsl(38,92%,50%)] flex items-center justify-center ring-4 ring-card shadow-elevated">
+                  <span className="text-white font-heading font-bold text-3xl">{emp.name.charAt(0)}</span>
+                </div>
+              )}
+              <button
+                onClick={() => avatarFileRef.current?.click()}
+                className="absolute -bottom-1 -left-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+              >
+                {uploadAvatar.isPending ? (
+                  <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+                ) : (
+                  <Camera className="w-4 h-4 text-primary-foreground" />
+                )}
+              </button>
+              <input ref={avatarFileRef} type="file" accept="image/*" className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file && emp) await uploadAvatar.mutateAsync({ employeeId: emp.id, file });
+                }} />
             </div>
-            <div>
+
+            <div className="flex-1 min-w-0 pb-1">
               <h1 className="text-xl font-heading font-bold text-foreground">{profileData.name}</h1>
               <p className="text-sm text-section-employees font-medium">{profileData.position}</p>
-              <div className="flex gap-2 mt-1 flex-wrap">
+              <div className="flex gap-2 mt-1.5 flex-wrap">
                 {(emp.projects || []).map(p => (
                   <span key={p} className="text-[10px] bg-section-employees/10 text-section-employees px-2 py-0.5 rounded-full">{p}</span>
                 ))}
               </div>
             </div>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <PrintButton title={`طباعة تقرير ${emp.name}`} />
-            <Button variant="outline" size="sm" onClick={() => {
-              if (editingProfile) {
-                handleSaveProfile();
-              } else {
-                setEditingProfile(true);
-              }
-            }}
-              className={editingProfile ? 'border-section-employees/30 text-section-employees' : ''}>
-              {editingProfile ? <><Save className="w-4 h-4 ml-1" /> حفظ في قاعدة البيانات</> : <><Pencil className="w-4 h-4 ml-1" /> تعديل البيانات</>}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => { setShowHistory(!showHistory); setShowForm(false); }}>
-              <History className="w-4 h-4 ml-1" /> السجل
-            </Button>
-            <Button size="sm" className="bg-section-employees hover:bg-section-employees/90 text-white"
-              onClick={() => { setShowForm(!showForm); setShowHistory(false); }}>
-              <ClipboardCheck className="w-4 h-4 ml-1" /> تقييم جديد
-            </Button>
+
+            <div className="flex gap-2 flex-wrap">
+              <PrintButton title={`طباعة تقرير ${emp.name}`} />
+              <Button variant="outline" size="sm" onClick={() => {
+                if (editingProfile) {
+                  handleSaveProfile();
+                } else {
+                  setEditingProfile(true);
+                }
+              }}
+                className={editingProfile ? 'border-section-employees/30 text-section-employees' : ''}>
+                {editingProfile ? <><Save className="w-4 h-4 ml-1" /> حفظ</> : <><Pencil className="w-4 h-4 ml-1" /> تعديل</>}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { setShowHistory(!showHistory); setShowForm(false); }}>
+                <History className="w-4 h-4 ml-1" /> السجل
+              </Button>
+              <Button size="sm" className="bg-section-employees hover:bg-section-employees/90 text-white"
+                onClick={() => { setShowForm(!showForm); setShowHistory(false); }}>
+                <ClipboardCheck className="w-4 h-4 ml-1" /> تقييم جديد
+              </Button>
+            </div>
           </div>
         </div>
       </motion.div>

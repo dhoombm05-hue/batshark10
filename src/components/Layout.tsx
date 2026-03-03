@@ -6,6 +6,8 @@ import {
   Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import ThemeSettings from '@/components/ThemeSettings';
 import logo from '@/assets/batshark-logo-main.png';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -43,6 +45,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { profile, role, isCEO, signOut } = useAuthContext();
+  const { data: prefs } = useUserPreferences();
+
+  const currentTheme = prefs?.theme || 'light';
+
+  const getBodyBg = () => {
+    if (currentTheme === 'dark') return 'linear-gradient(135deg, hsl(220 20% 10%), hsl(220 22% 7%))';
+    if (currentTheme === 'glass') return 'linear-gradient(135deg, hsl(210 30% 92% / 0.7), hsl(220 20% 88% / 0.5))';
+    if (currentTheme === 'custom' && prefs?.custom_bg_url) return undefined;
+    return 'var(--background-gradient)';
+  };
 
   const allNavItems = isCEO
     ? [...navItems, { path: '/users', label: 'إدارة المستخدمين', icon: UserCog, color: 'section-finance' }]
@@ -103,7 +115,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {allNavItems.map((item) => {
             const active = location.pathname === item.path ||
               (item.path !== '/' && location.pathname.startsWith(item.path));
@@ -129,10 +141,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* User Info & Logout */}
-        <div className="p-4 border-t border-border space-y-3">
+        {/* Theme + User Info & Logout */}
+        <div className="p-4 border-t border-border space-y-2">
+          {!collapsed && <ThemeSettings />}
           {!collapsed && profile && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mt-1">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] flex items-center justify-center text-white font-heading font-bold text-xs shrink-0">
                 {profile.display_name.charAt(0)}
               </div>
@@ -153,8 +166,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-h-screen overflow-auto">
-        <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+      <main
+        className={`flex-1 min-h-screen overflow-auto ${currentTheme === 'dark' ? 'text-[hsl(210,20%,90%)]' : ''}`}
+        style={{
+          background: getBodyBg(),
+          ...(currentTheme === 'custom' && prefs?.custom_bg_url ? {
+            backgroundImage: `url(${prefs.custom_bg_url})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+          } : {}),
+        }}
+      >
+        {currentTheme === 'custom' && prefs?.custom_bg_url && (
+          <div className="fixed inset-0 bg-background/60 backdrop-blur-sm pointer-events-none" style={{ zIndex: 0 }} />
+        )}
+        <div className="p-4 lg:p-8 max-w-7xl mx-auto relative" style={{ zIndex: 1 }}>
           {children}
         </div>
       </main>

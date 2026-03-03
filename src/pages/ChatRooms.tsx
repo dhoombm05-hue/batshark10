@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare, Plus, Send, Hash, Lock, FolderKanban, Shield,
   Search, Reply, Paperclip, X, Trash2, Pin, PinOff,
-  Pencil, Check, SmilePlus, Brain, Volume2
+  Pencil, Check, SmilePlus, Brain, Volume2, Image as ImageIcon
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import Layout from '@/components/Layout';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useChatRooms, useChatMessages, type ChatRoom, type ChatMessage } from '@/hooks/useChatRooms';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useUserPreferences, useUpdatePreferences, useUploadThemeImage } from '@/hooks/useUserPreferences';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -69,23 +70,23 @@ function stripMarkdown(md: string): string {
   return md.replace(/#{1,6}\s/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/- /g, '، ').replace(/\n+/g, '. ').replace(/[|]/g, '،').trim();
 }
 
-// Map employee names to avatar URLs
-function useEmployeeAvatarMap() {
+// Map employee names to avatar URLs and positions
+function useEmployeeMap() {
   const { data: employees } = useEmployees();
-  const map = new Map<string, string>();
+  const avatarMap = new Map<string, string>();
+  const positionMap = new Map<string, string>();
   employees?.forEach(emp => {
-    if (emp.avatar_url) {
-      map.set(emp.name, emp.avatar_url);
-    }
+    if (emp.avatar_url) avatarMap.set(emp.name, emp.avatar_url);
+    positionMap.set(emp.name, emp.position);
   });
-  return map;
+  return { avatarMap, positionMap };
 }
 
 export default function ChatRooms() {
   const { rooms, loading: roomsLoading, createRoom, deleteRoom } = useChatRooms();
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const { messages, loading: msgsLoading, sendMessage, editMessage, deleteMessage, togglePin, addReaction } = useChatMessages(selectedRoom?.id || null);
-  const avatarMap = useEmployeeAvatarMap();
+  const { avatarMap, positionMap } = useEmployeeMap();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -99,9 +100,15 @@ export default function ChatRooms() {
   const [newRoomDesc, setNewRoomDesc] = useState('');
   const [showPinned, setShowPinned] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [wallpaperDialogOpen, setWallpaperDialogOpen] = useState(false);
+  const wallpaperFileRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, isCEO, profile, role } = useAuthContext();
+  const { data: prefs } = useUserPreferences();
+  const updatePrefs = useUpdatePreferences();
+  const uploadThemeImage = useUploadThemeImage();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -228,6 +235,28 @@ export default function ChatRooms() {
   const getUserAvatar = (userName: string): string | null => {
     return avatarMap.get(userName) || null;
   };
+
+  // Get position for a user
+  const getUserPosition = (userName: string): string | null => {
+    return positionMap.get(userName) || null;
+  };
+
+  // Handle chat wallpaper upload
+  const handleWallpaperUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = await uploadThemeImage.mutateAsync({ file, type: 'wallpaper' });
+      await updatePrefs.mutateAsync({ chat_wallpaper_url: url });
+      toast({ title: '✅ تم حفظ خلفية الغرفة' });
+    } catch {
+      toast({ title: 'خطأ', variant: 'destructive' });
+    }
+  };
+
+  const chatWallpaper = prefs?.chat_wallpaper_url;
+  const chatOpacity = prefs?.chat_wallpaper_opacity ?? 0.3;
+  const chatBlur = prefs?.chat_wallpaper_blur ?? 8;
 
   return (
     <Layout>
@@ -377,6 +406,15 @@ export default function ChatRooms() {
                   >
                     <Search className="w-3.5 h-3.5" />
                   </button>
+                  {/* Wallpaper button */}
+                  <button
+                    onClick={() => wallpaperFileRef.current?.click()}
+                    className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)] transition-colors"
+                    title="جدار الغرفة"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                  </button>
+                  <input ref={wallpaperFileRef} type="file" accept="image/*" className="hidden" onChange={handleWallpaperUpload} />
                   {(isCEO || selectedRoom.created_by === user?.id) && (
                     <button
                       onClick={() => { deleteRoom(selectedRoom.id); setSelectedRoom(null); }}
@@ -431,7 +469,14 @@ export default function ChatRooms() {
               </AnimatePresence>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2" style={{ background: 'radial-gradient(ellipse at 50% 0%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative" style={{ background: 'radial-gradient(ellipse at 50% 0%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
+                {/* Chat Wallpaper */}
+                {chatWallpaper && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+                    <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity, filter: `blur(${chatBlur}px)` }} />
+                    <div className="absolute inset-0" style={{ background: prefs?.chat_wallpaper_overlay || 'rgba(0,0,0,0.5)' }} />
+                  </div>
+                )}
                 {msgsLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="w-6 h-6 border-2 border-[hsl(210,80%,52%/0.3)] border-t-[hsl(210,80%,52%)] rounded-full animate-spin" />
@@ -505,6 +550,9 @@ export default function ChatRooms() {
                                 }`}>
                                   {isAI ? '🧠 BatShark AI' : displayName}
                                 </span>
+                                {!isAI && getUserPosition(msg.user_name) && (
+                                  <span className="text-[9px] text-[hsl(220,10%,50%)]">{getUserPosition(msg.user_name)}</span>
+                                )}
                                 {isAdmin && !isAI && (
                                   <span className="text-[8px] bg-[hsl(43,65%,50%/0.2)] text-[hsl(43,65%,55%)] px-1 rounded">👑 CEO</span>
                                 )}
@@ -655,6 +703,20 @@ export default function ChatRooms() {
                 )}
               </AnimatePresence>
 
+              {/* Typing indicator */}
+              {isTyping && (
+                <div className="px-4 py-1.5 flex items-center gap-2">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover" />
+                  ) : (
+                    <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-[7px] font-bold`}>
+                      {getInitials(profile?.display_name || 'U')}
+                    </div>
+                  )}
+                  <span className="text-[10px] text-[hsl(220,10%,50%)] animate-pulse">يكتب الآن...</span>
+                </div>
+              )}
+
               {/* Input */}
               <div className="p-3 border-t border-[hsl(220,18%,22%)] flex items-center gap-2" style={{ background: 'hsl(220 20% 12%)' }}>
                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" />
@@ -666,7 +728,7 @@ export default function ChatRooms() {
                 </button>
                 <input
                   value={input}
-                  onChange={e => setInput(e.target.value)}
+                  onChange={e => { setInput(e.target.value); setIsTyping(e.target.value.length > 0); }}
                   onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
                   placeholder="اكتب رسالة... (اكتب @BatShark لاستدعاء AI)"
                   className="flex-1 bg-[hsl(220,18%,18%)] border border-[hsl(220,18%,25%)] rounded-xl px-4 py-2.5 text-sm text-[hsl(210,20%,90%)] placeholder:text-[hsl(220,10%,35%)] focus:outline-none focus:ring-1 focus:ring-[hsl(210,80%,52%/0.5)] focus:border-[hsl(210,80%,52%/0.3)]"
