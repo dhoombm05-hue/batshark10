@@ -293,9 +293,9 @@ export default function ChatRooms() {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Rooms Sidebar - hidden on mobile when a room is selected */}
-        <div className={`${selectedRoom ? 'hidden md:flex' : 'flex'} w-full md:w-72 border-l border-[hsl(220,18%,22%)] flex-col shrink-0`} style={{ background: 'linear-gradient(180deg, hsl(220 20% 13%), hsl(220 22% 9%))' }}>
-          <div className="p-3 border-b border-[hsl(220,18%,22%)] flex items-center justify-between">
-            <h3 className="font-heading font-bold text-sm text-[hsl(210,20%,90%)]">💬 الغرف</h3>
+        <div className={`${selectedRoom ? 'hidden md:flex' : 'flex'} w-full md:w-72 border-l border-[hsl(215,25%,22%)] flex-col shrink-0`} style={{ background: 'hsl(215 22% 14%)' }}>
+          <div className="p-3 border-b border-[hsl(215,25%,22%)] flex items-center justify-between" style={{ background: 'hsl(215 22% 16%)' }}>
+            <h3 className="font-heading font-bold text-sm text-white">💬 الغرف</h3>
             <Dialog open={newRoomOpen} onOpenChange={setNewRoomOpen}>
               <DialogTrigger asChild>
                 <button className="h-7 w-7 rounded-lg bg-[hsl(210,80%,52%/0.15)] hover:bg-[hsl(210,80%,52%/0.25)] flex items-center justify-center transition-colors">
@@ -331,8 +331,8 @@ export default function ChatRooms() {
               </div>
             ) : rooms.length === 0 ? (
               <div className="text-center py-8">
-                <MessageSquare className="w-8 h-8 text-[hsl(220,15%,30%)] mx-auto mb-2" />
-                <p className="text-xs text-[hsl(220,10%,45%)]">أنشئ أول غرفة نقاش</p>
+                <MessageSquare className="w-8 h-8 text-[hsl(215,20%,40%)] mx-auto mb-2" />
+                <p className="text-xs text-[hsl(215,15%,55%)]">أنشئ أول غرفة نقاش</p>
               </div>
             ) : (
               rooms.map(room => {
@@ -344,19 +344,19 @@ export default function ChatRooms() {
                     whileHover={{ x: -2 }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-right transition-all ${
                       isActive
-                        ? `bg-gradient-to-l ${ROOM_BG[room.type] || ROOM_BG.general} border border-[hsl(210,80%,52%/0.2)]`
-                        : 'hover:bg-[hsl(220,18%,18%)] border border-transparent'
+                        ? 'bg-[hsl(210,70%,22%)] border border-[hsl(210,80%,45%/0.35)] shadow-md'
+                        : 'hover:bg-[hsl(215,22%,18%)] border border-transparent'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isActive ? 'bg-[hsl(210,80%,52%/0.2)]' : 'bg-[hsl(220,18%,20%)]'}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isActive ? 'bg-[hsl(210,70%,30%)]' : 'bg-[hsl(215,22%,20%)]'}`}>
                       <span className={ROOM_COLORS[room.type] || 'text-[hsl(220,10%,50%)]'}>
                         {ROOM_ICONS[room.type] || <Hash className="w-3.5 h-3.5" />}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium truncate ${isActive ? 'text-white' : 'text-[hsl(210,20%,80%)]'}`}>{room.name}</p>
+                      <p className={`text-sm font-medium truncate ${isActive ? 'text-white font-bold' : 'text-[hsl(210,20%,85%)]'}`}>{room.name}</p>
                       {room.description && (
-                        <p className="text-[10px] text-[hsl(220,10%,45%)] truncate">{room.description}</p>
+                        <p className="text-[10px] text-[hsl(215,15%,55%)] truncate">{room.description}</p>
                       )}
                     </div>
                   </motion.button>
@@ -366,17 +366,17 @@ export default function ChatRooms() {
           </div>
 
           {/* User presence */}
-          <div className="p-3 border-t border-[hsl(220,18%,22%)]">
+          <div className="p-3 border-t border-[hsl(215,25%,22%)]" style={{ background: 'hsl(215 22% 16%)' }}>
             <div className="flex items-center gap-2">
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/10" style={{ filter: 'none' }} />
+                <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover ring-2 ring-[hsl(210,70%,40%/0.4)]" style={{ filter: 'none' }} />
               ) : (
                 <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-xs font-bold`}>
                   {getInitials(profile?.display_name || 'U')}
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-[hsl(210,20%,85%)] truncate">{isCurrentUserAdmin ? '👑 عبدالرحمن CEO' : profile?.display_name}</p>
+                <p className="text-xs font-bold text-white truncate">{isCurrentUserAdmin ? '👑 عبدالرحمن CEO' : profile?.display_name}</p>
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-[hsl(152,60%,45%)]">● متصل</span>
                   {isCurrentUserAdmin && <span className="text-[9px] bg-[hsl(25,85%,52%/0.2)] text-[hsl(25,85%,58%)] px-1.5 rounded">إدارة</span>}
