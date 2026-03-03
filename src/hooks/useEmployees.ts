@@ -22,6 +22,7 @@ export interface DBEmployee {
   feedback: string | null;
   projects: string[];
   admin_notes: string | null;
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -91,18 +92,15 @@ export function useUpdateEmployee() {
       oldValue?: any;
       reason?: string;
     }) => {
-      // Save exactly what the user entered — no modification
       const { error: updateError } = await supabase
         .from('employees' as any)
         .update({ [field]: value } as any)
         .eq('id', id);
       if (updateError) throw updateError;
 
-      // Get real user identity
       const { data: { session } } = await supabase.auth.getSession();
       const changedBy = await getCurrentUserName();
 
-      // Log audit with real user name
       const { error: auditError } = await supabase
         .from('audit_logs' as any)
         .insert({
@@ -116,7 +114,6 @@ export function useUpdateEmployee() {
         } as any);
       if (auditError) console.error('Audit log error:', auditError);
 
-      // Log to user_activity for performance tracking
       if (session?.user) {
         await logActivity({
           userId: session.user.id,
@@ -128,9 +125,41 @@ export function useUpdateEmployee() {
       }
     },
     onSuccess: () => {
-      // Invalidate all employee queries to force fresh data from DB
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['employee'] });
     },
+  });
+}
+
+export function useUploadEmployeeAvatar() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ employeeId, file }: { employeeId: string; file: File }) => {
+      const ext = file.name.split('.').pop();
+      const path = `employees/${employeeId}.${ext}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase
+        .from('employees' as any)
+        .update({ avatar_url: avatarUrl } as any)
+        .eq('id', employeeId);
+      if (updateError) throw updateError;
+
+      return avatarUrl;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['employee'] });
+      toast.success('تم تحديث الصورة');
+    },
+    onError: () => toast.error('فشل رفع الصورة'),
   });
 }

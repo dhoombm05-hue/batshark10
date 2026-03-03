@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useChatRooms, useChatMessages, type ChatRoom, type ChatMessage } from '@/hooks/useChatRooms';
+import { useEmployees } from '@/hooks/useEmployees';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,7 +60,6 @@ function getAvatarColor(name: string) {
   return colors[Math.abs(hash) % colors.length];
 }
 
-// Check if user has CEO/admin role based on name or role context
 function isAdminMessage(userName: string) {
   const adminKeywords = ['ceo', 'عبدالرحمن', 'admin', 'رئيس', 'مدير'];
   return adminKeywords.some(k => userName.toLowerCase().includes(k));
@@ -69,10 +69,23 @@ function stripMarkdown(md: string): string {
   return md.replace(/#{1,6}\s/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/- /g, '، ').replace(/\n+/g, '. ').replace(/[|]/g, '،').trim();
 }
 
+// Map employee names to avatar URLs
+function useEmployeeAvatarMap() {
+  const { data: employees } = useEmployees();
+  const map = new Map<string, string>();
+  employees?.forEach(emp => {
+    if (emp.avatar_url) {
+      map.set(emp.name, emp.avatar_url);
+    }
+  });
+  return map;
+}
+
 export default function ChatRooms() {
   const { rooms, loading: roomsLoading, createRoom, deleteRoom } = useChatRooms();
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const { messages, loading: msgsLoading, sendMessage, editMessage, deleteMessage, togglePin, addReaction } = useChatMessages(selectedRoom?.id || null);
+  const avatarMap = useEmployeeAvatarMap();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -203,9 +216,18 @@ export default function ChatRooms() {
     : messages;
 
   const pinnedMessages = messages.filter(m => m.is_pinned);
-
-  // Determine if current user is admin
   const isCurrentUserAdmin = isCEO || role === 'ceo' || role === 'coo';
+
+  // Get display name for sender - replace generic "الرئيس" with "عبدالرحمن CEO"
+  const getDisplayName = (userName: string) => {
+    if (userName === 'الرئيس' || userName === 'رئيس') return '👑 عبدالرحمن CEO';
+    return userName;
+  };
+
+  // Get avatar for a user
+  const getUserAvatar = (userName: string): string | null => {
+    return avatarMap.get(userName) || null;
+  };
 
   return (
     <Layout>
@@ -215,8 +237,8 @@ export default function ChatRooms() {
             <MessageSquare className="w-6 h-6 text-section-ai" />
           </div>
           <div>
-            <h1 className="text-xl font-heading font-bold text-foreground">💬 غرفة النقاشات</h1>
-            <p className="text-xs text-muted-foreground">منصة تواصل ذكية — مربوطة بالنظام بالكامل</p>
+            <h1 className="text-xl font-heading font-bold text-foreground">BatShark</h1>
+            <p className="text-[10px] text-muted-foreground tracking-wider uppercase">Economy Intelligence Network • Strategic Financial Communication Hub</p>
           </div>
         </div>
       </motion.div>
@@ -298,11 +320,15 @@ export default function ChatRooms() {
           {/* User presence */}
           <div className="p-3 border-t border-[hsl(220,18%,22%)]">
             <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-xs font-bold`}>
-                {getInitials(profile?.display_name || 'U')}
-              </div>
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover" />
+              ) : (
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-xs font-bold`}>
+                  {getInitials(profile?.display_name || 'U')}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-[hsl(210,20%,85%)] truncate">{profile?.display_name}</p>
+                <p className="text-xs font-medium text-[hsl(210,20%,85%)] truncate">{isCurrentUserAdmin ? '👑 عبدالرحمن CEO' : profile?.display_name}</p>
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-[hsl(152,60%,45%)]">● متصل</span>
                   {isCurrentUserAdmin && <span className="text-[9px] bg-[hsl(25,85%,52%/0.2)] text-[hsl(25,85%,58%)] px-1.5 rounded">إدارة</span>}
@@ -397,7 +423,7 @@ export default function ChatRooms() {
                     <p className="text-[10px] font-heading font-bold text-[hsl(43,65%,55%)] mb-1.5 flex items-center gap-1"><Pin className="w-3 h-3" /> رسائل مثبتة</p>
                     {pinnedMessages.map(m => (
                       <p key={m.id} className="text-xs text-[hsl(210,20%,80%)] truncate mb-0.5">
-                        <strong className="text-[hsl(43,65%,55%)]">{m.user_name}:</strong> {m.content.slice(0, 80)}
+                        <strong className="text-[hsl(43,65%,55%)]">{getDisplayName(m.user_name)}:</strong> {m.content.slice(0, 80)}
                       </p>
                     ))}
                   </motion.div>
@@ -415,7 +441,7 @@ export default function ChatRooms() {
                     <div className="w-16 h-16 rounded-2xl bg-[hsl(220,18%,18%)] flex items-center justify-center mb-3">
                       <MessageSquare className="w-7 h-7 text-[hsl(220,15%,30%)]" />
                     </div>
-                    <p className="text-sm text-[hsl(220,10%,45%)]">ابدأ المحادثة الآن!</p>
+                    <p className="text-sm text-[hsl(220,10%,45%)]">ابدأ المحادثة الآن</p>
                     <p className="text-[10px] text-[hsl(220,10%,35%)] mt-1">اكتب @BatShark لاستدعاء الذكاء الاصطناعي</p>
                   </div>
                 ) : (
@@ -427,6 +453,8 @@ export default function ChatRooms() {
                     const showAvatar = idx === 0 || filteredMessages[idx - 1]?.user_id !== msg.user_id;
                     const avatarColor = getAvatarColor(msg.user_name);
                     const reactions = msg.reactions || {};
+                    const userAvatarUrl = getUserAvatar(msg.user_name);
+                    const displayName = getDisplayName(msg.user_name);
 
                     return (
                       <motion.div
@@ -439,18 +467,25 @@ export default function ChatRooms() {
                         {/* Avatar */}
                         <div className="w-8 shrink-0">
                           {showAvatar && (
-                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${isAI ? 'from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)]' : avatarColor} flex items-center justify-center text-white text-[10px] font-bold ${isAdmin && !isAI ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`}>
-                              {isAI ? <Brain className="w-4 h-4" /> : getInitials(msg.user_name)}
-                            </div>
+                            isAI ? (
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] flex items-center justify-center text-white">
+                                <Brain className="w-4 h-4" />
+                              </div>
+                            ) : userAvatarUrl ? (
+                              <img src={userAvatarUrl} alt={msg.user_name} className={`w-8 h-8 rounded-lg object-cover ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`} />
+                            ) : (
+                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${avatarColor} flex items-center justify-center text-white text-[10px] font-bold ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`}>
+                                {getInitials(msg.user_name)}
+                              </div>
+                            )
                           )}
                         </div>
 
                         {/* Message */}
                         <div className={`max-w-[70%] min-w-[120px]`}>
-                          {/* Reply preview */}
                           {replyMsg && (
                             <div className="text-[10px] bg-[hsl(210,80%,52%/0.08)] rounded-t-lg px-3 py-1 border-r-2 border-[hsl(210,80%,52%/0.4)] text-[hsl(220,10%,55%)] mb-0.5">
-                              <span className="font-bold text-[hsl(210,80%,58%)]">{replyMsg.user_name}</span>: {replyMsg.content.slice(0, 50)}
+                              <span className="font-bold text-[hsl(210,80%,58%)]">{getDisplayName(replyMsg.user_name)}</span>: {replyMsg.content.slice(0, 50)}
                             </div>
                           )}
 
@@ -463,16 +498,15 @@ export default function ChatRooms() {
                                   ? 'bg-[hsl(210,80%,52%/0.15)] rounded-br-md'
                                   : 'bg-[hsl(220,18%,20%)] border border-[hsl(220,18%,25%)] rounded-bl-md'
                           } ${msg.is_pinned ? 'ring-1 ring-[hsl(43,65%,50%/0.3)]' : ''}`}>
-                            {/* Name + time */}
                             {showAvatar && (
                               <div className="flex items-center gap-2 mb-0.5">
                                 <span className={`text-[11px] font-heading font-bold ${
                                   isAI ? 'text-[hsl(190,80%,50%)]' : isAdmin ? 'text-[hsl(43,65%,55%)]' : 'text-[hsl(210,80%,65%)]'
                                 }`}>
-                                  {isAI ? '🧠 BatShark AI' : msg.user_name}
+                                  {isAI ? '🧠 BatShark AI' : displayName}
                                 </span>
                                 {isAdmin && !isAI && (
-                                  <span className="text-[8px] bg-[hsl(43,65%,50%/0.2)] text-[hsl(43,65%,55%)] px-1 rounded">👑 إدارة</span>
+                                  <span className="text-[8px] bg-[hsl(43,65%,50%/0.2)] text-[hsl(43,65%,55%)] px-1 rounded">👑 CEO</span>
                                 )}
                                 <span className="text-[9px] text-[hsl(220,10%,40%)]">
                                   {format(new Date(msg.created_at), 'hh:mm a', { locale: ar })}
@@ -482,7 +516,6 @@ export default function ChatRooms() {
                               </div>
                             )}
 
-                            {/* Content */}
                             {msg.message_type === 'image' && msg.file_url ? (
                               <div>
                                 <img src={msg.file_url} alt="صورة" className="rounded-lg max-w-full max-h-48 object-cover mb-1" loading="lazy" />
@@ -500,7 +533,6 @@ export default function ChatRooms() {
                               <p className="text-[13px] text-[hsl(210,20%,88%)] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                             )}
 
-                            {/* Listen button for AI messages */}
                             {isAI && (
                               <button
                                 onClick={() => speakText(msg.content)}
@@ -510,7 +542,6 @@ export default function ChatRooms() {
                               </button>
                             )}
 
-                            {/* Reactions */}
                             {Object.keys(reactions).length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1.5">
                                 {Object.entries(reactions).map(([emoji, users]) => (
@@ -553,7 +584,6 @@ export default function ChatRooms() {
                             )}
                           </div>
 
-                          {/* Reaction picker */}
                           <AnimatePresence>
                             {showReactions === msg.id && (
                               <motion.div
@@ -616,7 +646,7 @@ export default function ChatRooms() {
                   >
                     <Reply className="w-3.5 h-3.5 text-[hsl(210,80%,58%)]" />
                     <span className="text-xs text-[hsl(220,10%,55%)] flex-1 truncate">
-                      رد على <strong className="text-[hsl(210,80%,65%)]">{replyTo.user_name}</strong>: {replyTo.content.slice(0, 40)}
+                      رد على <strong className="text-[hsl(210,80%,65%)]">{getDisplayName(replyTo.user_name)}</strong>: {replyTo.content.slice(0, 40)}
                     </span>
                     <button onClick={() => setReplyTo(null)}>
                       <X className="w-3.5 h-3.5 text-[hsl(220,10%,45%)] hover:text-[hsl(0,72%,55%)]" />
@@ -656,8 +686,8 @@ export default function ChatRooms() {
                 <div className="w-20 h-20 rounded-2xl bg-[hsl(220,18%,16%)] flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="w-9 h-9 text-[hsl(220,15%,25%)]" />
                 </div>
-                <p className="text-sm text-[hsl(220,10%,50%)]">اختر غرفة للبدء بالمحادثة</p>
-                <p className="text-[10px] text-[hsl(220,10%,35%)] mt-1">أو أنشئ غرفة جديدة من القائمة</p>
+                <h3 className="text-sm font-heading font-bold text-[hsl(210,20%,70%)] mb-1">BatShark Communication Hub</h3>
+                <p className="text-[10px] text-[hsl(220,10%,40%)]">اختر غرفة للبدء أو أنشئ غرفة جديدة</p>
               </div>
             </div>
           )}

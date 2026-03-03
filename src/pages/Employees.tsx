@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Target, TrendingUp, Users, Loader2, RotateCcw, Archive, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Star, Target, TrendingUp, Users, Loader2, RotateCcw, Archive, ChevronDown, ChevronUp, Camera } from 'lucide-react';
 import Layout from '@/components/Layout';
 import PrintButton from '@/components/PrintButton';
-import { useEmployees } from '@/hooks/useEmployees';
+import { useEmployees, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
 import { usePerformanceScoring } from '@/hooks/usePerformanceScoring';
 import { usePerformanceCycles, useResetPerformanceCycle } from '@/hooks/usePerformanceCycles';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,10 @@ export default function Employees() {
   const { data: perfScores } = usePerformanceScoring();
   const { data: cycles } = usePerformanceCycles();
   const resetCycle = useResetPerformanceCycle();
+  const uploadAvatar = useUploadEmployeeAvatar();
   const [showArchive, setShowArchive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -48,8 +51,21 @@ export default function Employees() {
     );
   };
 
+  const handleAvatarUpload = async (employeeId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingId(employeeId);
+    await uploadAvatar.mutateAsync({ employeeId, file });
+    setUploadingId(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <Layout>
+      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => {
+        if (uploadingId) handleAvatarUpload(uploadingId, e);
+      }} />
+
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -90,22 +106,14 @@ export default function Employees() {
             <Target className="w-4 h-4 text-section-employees" /> تقييم أداء — الدورة الحالية
           </h3>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowArchive(!showArchive)}
-              className="text-xs"
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowArchive(!showArchive)} className="text-xs">
               <Archive className="w-3.5 h-3.5 ml-1" />
               سجل الدورات ({cycles?.length || 0})
               {showArchive ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
             </Button>
-            <Button
-              size="sm"
-              onClick={handleResetCycle}
+            <Button size="sm" onClick={handleResetCycle}
               disabled={resetCycle.isPending || !perfScores || perfScores.length === 0}
-              className="bg-section-employees hover:bg-section-employees/90 text-white text-xs"
-            >
+              className="bg-section-employees hover:bg-section-employees/90 text-white text-xs">
               <RotateCcw className="w-3.5 h-3.5 ml-1" />
               {resetCycle.isPending ? 'جاري...' : 'تحديث الدورة / إعادة احتساب'}
             </Button>
@@ -145,18 +153,12 @@ export default function Employees() {
       {/* Archived Cycles */}
       <AnimatePresence>
         {showArchive && cycles && cycles.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mb-6 overflow-hidden"
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
             <div className="bg-card rounded-xl border border-border p-5 shadow-card">
               <h3 className="text-sm font-heading text-foreground mb-3 flex items-center gap-2">
                 <Archive className="w-4 h-4 text-muted-foreground" /> سجل دورات الأداء المؤرشفة
               </h3>
               <div className="space-y-3">
-                {/* Group cycles by cycle_end */}
                 {(() => {
                   const grouped = new Map<string, typeof cycles>();
                   for (const c of cycles) {
@@ -200,8 +202,29 @@ export default function Employees() {
               className="block bg-card rounded-xl border border-border p-5 shadow-card hover:shadow-elevated hover:border-section-employees/30 transition-all duration-300 group">
               
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-section-employees/15 flex items-center justify-center shrink-0 ring-2 ring-section-employees/20">
-                  <span className="text-section-employees font-heading font-bold text-sm">{emp.name.charAt(0)}</span>
+                <div className="relative w-12 h-12 shrink-0">
+                  {emp.avatar_url ? (
+                    <img src={emp.avatar_url} alt={emp.name} className="w-12 h-12 rounded-full object-cover ring-2 ring-section-employees/20" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-section-employees/15 flex items-center justify-center ring-2 ring-section-employees/20">
+                      <span className="text-section-employees font-heading font-bold text-sm">{emp.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setUploadingId(emp.id);
+                      fileInputRef.current?.click();
+                    }}
+                    className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                  >
+                    {uploadingId === emp.id && uploadAvatar.isPending ? (
+                      <Loader2 className="w-3 h-3 text-primary-foreground animate-spin" />
+                    ) : (
+                      <Camera className="w-3 h-3 text-primary-foreground" />
+                    )}
+                  </button>
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-heading font-bold text-sm text-foreground group-hover:text-section-employees transition-colors truncate">{emp.name}</h3>

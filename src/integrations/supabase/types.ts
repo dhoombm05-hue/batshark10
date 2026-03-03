@@ -529,6 +529,7 @@ export type Database = {
           achievements: string[] | null
           admin_notes: string | null
           age: number | null
+          avatar_url: string | null
           bonus: number | null
           created_at: string
           department: string | null
@@ -551,6 +552,7 @@ export type Database = {
           achievements?: string[] | null
           admin_notes?: string | null
           age?: number | null
+          avatar_url?: string | null
           bonus?: number | null
           created_at?: string
           department?: string | null
@@ -573,6 +575,7 @@ export type Database = {
           achievements?: string[] | null
           admin_notes?: string | null
           age?: number | null
+          avatar_url?: string | null
           bonus?: number | null
           created_at?: string
           department?: string | null
