@@ -205,6 +205,9 @@ export function useUpdateField() {
     onSuccess: () => {
       queryClient.invalidateQueries();
     },
+    onError: (error: any) => {
+      console.error('Update failed:', error);
+    },
   });
 }
 

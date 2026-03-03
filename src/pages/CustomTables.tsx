@@ -90,9 +90,18 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
     if (col?.type === 'number' || col?.type === 'percentage') {
       newVal = Number(cellValue) || 0;
     }
+    if (newVal === row.data[editingCell.colId]) {
+      setEditingCell(null);
+      return;
+    }
     const newData = { ...row.data, [editingCell.colId]: newVal };
-    updateRow.mutate({ id: row.id, table_id: tableId, data: newData });
-    setEditingCell(null);
+    updateRow.mutate(
+      { id: row.id, table_id: tableId, data: newData },
+      {
+        onSuccess: () => setEditingCell(null),
+        onError: () => setEditingCell(null),
+      }
+    );
   };
 
   const handleAddRow = () => {
@@ -107,13 +116,25 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
 
   const handleRowNameSave = (row: CustomTableRow) => {
     if (!editingRowName) return;
+    if (rowNameValue === (row.data._row_name || '')) {
+      setEditingRowName(null);
+      return;
+    }
     const newData = { ...row.data, _row_name: rowNameValue };
-    updateRow.mutate({ id: row.id, table_id: tableId, data: newData });
-    setEditingRowName(null);
+    updateRow.mutate(
+      { id: row.id, table_id: tableId, data: newData },
+      {
+        onSuccess: () => setEditingRowName(null),
+        onError: () => setEditingRowName(null),
+      }
+    );
   };
 
   const handleColRename = (colId: string) => {
-    if (!colLabel.trim()) return;
+    if (!colLabel.trim()) {
+      setEditingColId(null);
+      return;
+    }
     const updated = columns.map(c => c.id === colId ? { ...c, label: colLabel } : c);
     onColumnsUpdate(updated);
     setEditingColId(null);

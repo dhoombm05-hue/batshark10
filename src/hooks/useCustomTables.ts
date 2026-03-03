@@ -97,6 +97,7 @@ export function useUpdateCustomTableColumns() {
       qc.invalidateQueries({ queryKey: ['custom-tables'] });
       toast.success('تم تحديث الأعمدة');
     },
+    onError: () => toast.error('فشل تحديث الأعمدة'),
   });
 }
 
@@ -128,7 +129,9 @@ export function useAddCustomTableRow() {
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['custom-table-rows', vars.table_id] });
+      toast.success('تمت إضافة الصف');
     },
+    onError: () => toast.error('فشل إضافة الصف'),
   });
 }
 
@@ -145,6 +148,7 @@ export function useUpdateCustomTableRow() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['custom-table-rows', vars.table_id] });
     },
+    onError: () => toast.error('فشل حفظ البيانات'),
   });
 }
 
@@ -160,6 +164,8 @@ export function useDeleteCustomTableRow() {
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['custom-table-rows', vars.table_id] });
+      toast.success('تم حذف الصف');
     },
+    onError: () => toast.error('فشل حذف الصف'),
   });
 }
