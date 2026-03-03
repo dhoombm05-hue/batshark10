@@ -260,9 +260,9 @@ export default function ChatRooms() {
   const chatBlur = prefs?.chat_wallpaper_blur ?? 8;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'linear-gradient(135deg, hsl(220 20% 11%), hsl(220 22% 8%))' }}>
+    <div className="fixed inset-0 z-50 flex flex-col md:fixed md:inset-0" style={{ background: 'linear-gradient(135deg, hsl(220 20% 11%), hsl(220 22% 8%))' }}>
       {/* Top bar */}
-      <div className="h-12 flex items-center justify-between px-4 border-b border-[hsl(220,18%,18%)] shrink-0" style={{ background: 'linear-gradient(90deg, hsl(220 20% 13%), hsl(220 20% 10%))' }}>
+      <div className="h-12 flex items-center justify-between px-3 md:px-4 border-b border-[hsl(220,18%,18%)] shrink-0" style={{ background: 'linear-gradient(90deg, hsl(220 20% 13%), hsl(220 20% 10%))' }}>
         <div className="flex items-center gap-3">
           <Link to="/" className="h-8 w-8 rounded-lg bg-[hsl(210,80%,52%/0.1)] hover:bg-[hsl(210,80%,52%/0.2)] flex items-center justify-center text-[hsl(210,80%,58%)] transition-colors">
             <ArrowRight className="w-4 h-4" />
@@ -292,8 +292,8 @@ export default function ChatRooms() {
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Rooms Sidebar */}
-        <div className="w-72 border-l border-[hsl(220,18%,22%)] flex flex-col shrink-0" style={{ background: 'linear-gradient(180deg, hsl(220 20% 13%), hsl(220 22% 9%))' }}>
+        {/* Rooms Sidebar - hidden on mobile when a room is selected */}
+        <div className={`${selectedRoom ? 'hidden md:flex' : 'flex'} w-full md:w-72 border-l border-[hsl(220,18%,22%)] flex-col shrink-0`} style={{ background: 'linear-gradient(180deg, hsl(220 20% 13%), hsl(220 22% 9%))' }}>
           <div className="p-3 border-b border-[hsl(220,18%,22%)] flex items-center justify-between">
             <h3 className="font-heading font-bold text-sm text-[hsl(210,20%,90%)]">💬 الغرف</h3>
             <Dialog open={newRoomOpen} onOpenChange={setNewRoomOpen}>
@@ -386,13 +386,17 @@ export default function ChatRooms() {
           </div>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        {/* Chat Area - hidden on mobile when no room selected */}
+        <div className={`${!selectedRoom ? 'hidden md:flex' : 'flex'} flex-1 flex-col min-w-0`}>
           {selectedRoom ? (
             <>
               {/* Header */}
-              <div className="px-4 py-2.5 border-b border-[hsl(220,18%,22%)] flex items-center justify-between" style={{ background: 'linear-gradient(90deg, hsl(220 20% 15%), hsl(220 20% 13%))' }}>
+              <div className="px-3 md:px-4 py-2.5 border-b border-[hsl(220,18%,22%)] flex items-center justify-between" style={{ background: 'linear-gradient(90deg, hsl(220 20% 15%), hsl(220 20% 13%))' }}>
                 <div className="flex items-center gap-2.5">
+                  {/* Back button on mobile */}
+                  <button onClick={() => setSelectedRoom(null)} className="md:hidden h-8 w-8 rounded-lg bg-[hsl(210,80%,52%/0.1)] hover:bg-[hsl(210,80%,52%/0.2)] flex items-center justify-center text-[hsl(210,80%,58%)] transition-colors">
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br ${ROOM_BG[selectedRoom.type] || ROOM_BG.general}`}>
                     <span className={ROOM_COLORS[selectedRoom.type]}>
                       {ROOM_ICONS[selectedRoom.type]}

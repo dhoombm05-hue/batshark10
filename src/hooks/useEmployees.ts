@@ -22,6 +22,7 @@ export interface DBEmployee {
   feedback: string | null;
   projects: string[];
   admin_notes: string | null;
+  video_url: string | null;
   avatar_url: string | null;
   created_at: string;
   updated_at: string;

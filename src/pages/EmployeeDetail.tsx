@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X, Camera } from 'lucide-react';
+import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X, Camera, Video, Download, Upload, Trash2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -67,10 +67,13 @@ export default function EmployeeDetail() {
   const uploadAvatar = useUploadEmployeeAvatar();
   const { toast } = useToast();
   const avatarFileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
 
   const [showForm, setShowForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
   const [history, setHistory] = useState<EvalRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -132,6 +135,33 @@ export default function EmployeeDetail() {
   useEffect(() => {
     if (emp) fetchHistory();
   }, [emp?.id]);
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !emp) return;
+    setVideoUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `employees/${emp.id}-video.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('documents').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+      const videoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      await updateEmployee.mutateAsync({ id: emp.id, field: 'video_url', value: videoUrl, oldValue: (emp as any).video_url || null });
+      toast({ title: '✅ تم رفع الفيديو بنجاح' });
+    } catch {
+      toast({ title: '❌ فشل رفع الفيديو', variant: 'destructive' });
+    } finally {
+      setVideoUploading(false);
+      if (videoFileRef.current) videoFileRef.current.value = '';
+    }
+  };
+
+  const handleDeleteVideo = async () => {
+    if (!emp) return;
+    await updateEmployee.mutateAsync({ id: emp.id, field: 'video_url', value: null, oldValue: (emp as any).video_url });
+    toast({ title: '🗑️ تم حذف الفيديو' });
+  };
 
   const handleSaveProfile = async () => {
     if (!emp) return;
@@ -261,6 +291,9 @@ export default function EmployeeDetail() {
             </div>
 
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={() => setShowVideo(!showVideo)}>
+                <Video className="w-4 h-4 ml-1" /> الفيديو
+              </Button>
               <PrintButton title={`طباعة تقرير ${emp.name}`} />
               <Button variant="outline" size="sm" onClick={() => {
                 if (editingProfile) {
@@ -283,6 +316,50 @@ export default function EmployeeDetail() {
           </div>
         </div>
       </motion.div>
+
+      {/* Video Section */}
+      <AnimatePresence>
+        {showVideo && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
+            <div className="bg-card rounded-xl border border-section-employees/20 p-5 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-heading text-foreground flex items-center gap-2">
+                  <Video className="w-4 h-4 text-section-employees" /> فيديو الموظف — {emp.name}
+                </h3>
+                <div className="flex gap-2">
+                  <input ref={videoFileRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+                  <Button variant="outline" size="sm" onClick={() => videoFileRef.current?.click()} disabled={videoUploading}>
+                    {videoUploading ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Upload className="w-4 h-4 ml-1" />}
+                    رفع فيديو
+                  </Button>
+                  {(emp as any).video_url && (
+                    <Button variant="outline" size="sm" className="text-destructive" onClick={handleDeleteVideo}>
+                      <Trash2 className="w-4 h-4 ml-1" /> حذف
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {(emp as any).video_url ? (
+                <div>
+                  <video controls className="w-full max-h-96 rounded-lg bg-black" src={(emp as any).video_url} />
+                  <div className="mt-3 flex justify-end">
+                    <a href={(emp as any).video_url} download target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm">
+                        <Download className="w-4 h-4 ml-1" /> تحميل الفيديو
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Video className="w-12 h-12 mb-3 opacity-30" />
+                  <p className="text-sm">لا يوجد فيديو — ارفع فيديو تعريفي للموظف</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Editable Profile Info - from DB */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}

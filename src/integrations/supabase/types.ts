@@ -547,6 +547,7 @@ export type Database = {
           salary: number | null
           slug: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           achievements?: string[] | null
@@ -570,6 +571,7 @@ export type Database = {
           salary?: number | null
           slug: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           achievements?: string[] | null
@@ -593,6 +595,7 @@ export type Database = {
           salary?: number | null
           slug?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
       }
