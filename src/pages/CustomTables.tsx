@@ -134,7 +134,7 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
   const handleAddColumn = () => {
     const newCol: CustomTableColumn = {
       id: `col_${Date.now()}`,
-      label: `عمود ${columns.length + 1}`,
+      label: '',
       type: 'text',
     };
     onColumnsUpdate([...columns, newCol]);
@@ -170,7 +170,7 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
                     </div>
                   ) : (
                     <div className="flex items-center gap-1">
-                      <span>{col.label}</span>
+                      <span className={col.label ? '' : 'italic text-muted-foreground/50'}>{col.label || 'بدون اسم'}</span>
                       {editingColType === col.id ? (
                         <select
                           autoFocus
@@ -347,7 +347,7 @@ export default function CustomTablesPage() {
   };
 
   const addNewColumn = () => {
-    setNewColumns(prev => [...prev, { id: `col_${Date.now()}`, label: `عمود ${prev.length + 1}`, type: 'text' }]);
+    setNewColumns(prev => [...prev, { id: `col_${Date.now()}`, label: '', type: 'text' }]);
   };
 
   const handleColumnsUpdate = useCallback((tableId: string, newCols: CustomTableColumn[]) => {
