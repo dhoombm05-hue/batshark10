@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   MessageSquare, Plus, Send, Hash, Lock, FolderKanban, Shield,
   Search, Reply, Paperclip, X, Trash2, Pin, PinOff,
-  Pencil, Check, SmilePlus, Brain, Volume2, Image as ImageIcon
+  Pencil, Check, SmilePlus, Brain, Volume2, Image as ImageIcon,
+  ArrowRight, Users as UsersIcon, Settings
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -259,20 +260,38 @@ export default function ChatRooms() {
   const chatBlur = prefs?.chat_wallpaper_blur ?? 8;
 
   return (
-    <Layout>
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-3">
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'linear-gradient(135deg, hsl(220 20% 11%), hsl(220 22% 8%))' }}>
+      {/* Top bar */}
+      <div className="h-12 flex items-center justify-between px-4 border-b border-[hsl(220,18%,18%)] shrink-0" style={{ background: 'linear-gradient(90deg, hsl(220 20% 13%), hsl(220 20% 10%))' }}>
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-[hsl(190,80%,45%/0.15)] to-[hsl(210,80%,52%/0.1)]">
-            <MessageSquare className="w-6 h-6 text-section-ai" />
-          </div>
-          <div>
-            <h1 className="text-xl font-heading font-bold text-foreground">BatShark</h1>
-            <p className="text-[10px] text-muted-foreground tracking-wider uppercase">Economy Intelligence Network • Strategic Financial Communication Hub</p>
+          <Link to="/" className="h-8 w-8 rounded-lg bg-[hsl(210,80%,52%/0.1)] hover:bg-[hsl(210,80%,52%/0.2)] flex items-center justify-center text-[hsl(210,80%,58%)] transition-colors">
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-[hsl(190,80%,50%)]" />
+            <h1 className="text-sm font-heading font-bold text-white">BatShark Hub</h1>
+            <span className="text-[9px] text-[hsl(220,10%,45%)] tracking-wider uppercase hidden sm:inline">Economy Intelligence Network</span>
           </div>
         </div>
-      </motion.div>
+        <div className="flex items-center gap-2">
+          {profile && (
+            <div className="flex items-center gap-2">
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/10" style={{ filter: 'none' }} />
+              ) : (
+                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(profile.display_name || 'U')} flex items-center justify-center text-white text-[9px] font-bold`}>
+                  {getInitials(profile.display_name || 'U')}
+                </div>
+              )}
+              <span className="text-[11px] text-[hsl(210,20%,80%)] hidden sm:inline">{isCurrentUserAdmin ? '👑 عبدالرحمن CEO' : profile.display_name}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(152,60%,45%)]" />
+            </div>
+          )}
+        </div>
+      </div>
 
-      <div className="flex rounded-2xl border border-border shadow-elevated overflow-hidden" style={{ height: 'calc(100vh - 180px)', background: 'linear-gradient(135deg, hsl(220 20% 14%), hsl(220 22% 11%))' }}>
+      {/* Main content */}
+      <div className="flex flex-1 overflow-hidden">
         {/* Rooms Sidebar */}
         <div className="w-72 border-l border-[hsl(220,18%,22%)] flex flex-col shrink-0" style={{ background: 'linear-gradient(180deg, hsl(220 20% 13%), hsl(220 22% 9%))' }}>
           <div className="p-3 border-b border-[hsl(220,18%,22%)] flex items-center justify-between">
@@ -755,6 +774,6 @@ export default function ChatRooms() {
           )}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
