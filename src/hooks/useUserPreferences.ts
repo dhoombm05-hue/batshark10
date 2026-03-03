@@ -22,9 +22,9 @@ const DEFAULTS: Partial<UserPreferences> = {
   custom_bg_url: null,
   section_backgrounds: {},
   chat_wallpaper_url: null,
-  chat_wallpaper_opacity: 0.3,
-  chat_wallpaper_blur: 8,
-  chat_wallpaper_overlay: 'rgba(0,0,0,0.5)',
+  chat_wallpaper_opacity: 0.5,
+  chat_wallpaper_blur: 0,
+  chat_wallpaper_overlay: 'rgba(0,0,0,0.3)',
 };
 
 export function useUserPreferences() {

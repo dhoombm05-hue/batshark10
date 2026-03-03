@@ -350,7 +350,7 @@ export default function ChatRooms() {
           <div className="p-3 border-t border-[hsl(220,18%,22%)]">
             <div className="flex items-center gap-2">
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover" />
+                <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/10" style={{ filter: 'none' }} />
               ) : (
                 <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-xs font-bold`}>
                   {getInitials(profile?.display_name || 'U')}
@@ -470,11 +470,11 @@ export default function ChatRooms() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative" style={{ background: 'radial-gradient(ellipse at 50% 0%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
-                {/* Chat Wallpaper */}
+                {/* Chat Wallpaper — blur only on background, never on avatars */}
                 {chatWallpaper && (
                   <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-                    <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity, filter: `blur(${chatBlur}px)` }} />
-                    <div className="absolute inset-0" style={{ background: prefs?.chat_wallpaper_overlay || 'rgba(0,0,0,0.5)' }} />
+                    <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity, filter: chatBlur > 0 ? `blur(${chatBlur}px)` : 'none' }} />
+                    <div className="absolute inset-0" style={{ background: prefs?.chat_wallpaper_overlay || 'rgba(0,0,0,0.4)' }} />
                   </div>
                 )}
                 {msgsLoading ? (
@@ -517,7 +517,7 @@ export default function ChatRooms() {
                                 <Brain className="w-4 h-4" />
                               </div>
                             ) : userAvatarUrl ? (
-                              <img src={userAvatarUrl} alt={msg.user_name} className={`w-8 h-8 rounded-lg object-cover ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`} />
+                              <img src={userAvatarUrl} alt={msg.user_name} className={`w-8 h-8 rounded-lg object-cover ring-1 ring-white/10 ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`} style={{ imageRendering: 'auto', filter: 'none' }} />
                             ) : (
                               <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${avatarColor} flex items-center justify-center text-white text-[10px] font-bold ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`}>
                                 {getInitials(msg.user_name)}
@@ -566,7 +566,7 @@ export default function ChatRooms() {
 
                             {msg.message_type === 'image' && msg.file_url ? (
                               <div>
-                                <img src={msg.file_url} alt="صورة" className="rounded-lg max-w-full max-h-48 object-cover mb-1" loading="lazy" />
+                                <img src={msg.file_url} alt="صورة" className="rounded-lg max-w-full max-h-64 object-contain mb-1" loading="lazy" style={{ imageRendering: 'auto', filter: 'none' }} />
                               </div>
                             ) : msg.message_type === 'file' && msg.file_url ? (
                               <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[hsl(220,18%,18%)] rounded-lg p-2 hover:bg-[hsl(220,18%,22%)] transition-colors">
