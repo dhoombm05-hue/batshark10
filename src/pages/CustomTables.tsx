@@ -12,6 +12,7 @@ import {
 import { useProjects } from '@/hooks/useProjects';
 import { usePageViewTracker } from '@/hooks/useAutoTracker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 const TABLE_TYPES = [
   { value: 'financial', label: '💰 مالي', color: 'text-success' },
@@ -83,51 +84,45 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
     setCellValue(String(currentValue ?? ''));
   };
 
-  const handleCellSave = (row: CustomTableRow) => {
+  const handleCellSave = async (row: CustomTableRow) => {
     if (!editingCell) return;
     const col = columns.find(c => c.id === editingCell.colId);
     let newVal: any = cellValue;
+
     if (col?.type === 'number' || col?.type === 'percentage') {
       newVal = Number(cellValue) || 0;
     }
+
     if (newVal === row.data[editingCell.colId]) {
       setEditingCell(null);
       return;
     }
+
     const newData = { ...row.data, [editingCell.colId]: newVal };
-    updateRow.mutate(
-      { id: row.id, table_id: tableId, data: newData },
-      {
-        onSuccess: () => setEditingCell(null),
-        onError: () => setEditingCell(null),
-      }
-    );
+    await updateRow.mutateAsync({ id: row.id, table_id: tableId, data: newData });
+    setEditingCell(null);
   };
 
-  const handleAddRow = () => {
+  const handleAddRow = async () => {
     const emptyData: Record<string, any> = { _row_name: `صف ${(rows?.length || 0) + 1}` };
-    columns.forEach(c => { 
+    columns.forEach(c => {
       if (c.type === 'number' || c.type === 'percentage') emptyData[c.id] = 0;
-      else if (c.type === 'formula') emptyData[c.id] = '';
-      else emptyData[c.id] = ''; 
+      else emptyData[c.id] = '';
     });
-    addRow.mutate({ table_id: tableId, data: emptyData });
+
+    await addRow.mutateAsync({ table_id: tableId, data: emptyData });
   };
 
-  const handleRowNameSave = (row: CustomTableRow) => {
+  const handleRowNameSave = async (row: CustomTableRow) => {
     if (!editingRowName) return;
     if (rowNameValue === (row.data._row_name || '')) {
       setEditingRowName(null);
       return;
     }
+
     const newData = { ...row.data, _row_name: rowNameValue };
-    updateRow.mutate(
-      { id: row.id, table_id: tableId, data: newData },
-      {
-        onSuccess: () => setEditingRowName(null),
-        onError: () => setEditingRowName(null),
-      }
-    );
+    await updateRow.mutateAsync({ id: row.id, table_id: tableId, data: newData });
+    setEditingRowName(null);
   };
 
   const handleColRename = async (colId: string) => {
@@ -159,6 +154,37 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
       type: 'text',
     };
     await onColumnsUpdate([...columns, newCol]);
+  };
+
+  const handleDeleteRow = async (rowId: string) => {
+    await deleteRow.mutateAsync({ id: rowId, table_id: tableId });
+  };
+
+  const handleManualSave = async () => {
+    try {
+      if (editingCell) {
+        const row = rows?.find(r => r.id === editingCell.rowId);
+        if (!row) return;
+        await handleCellSave(row);
+        return;
+      }
+
+      if (editingRowName) {
+        const row = rows?.find(r => r.id === editingRowName);
+        if (!row) return;
+        await handleRowNameSave(row);
+        return;
+      }
+
+      if (editingColId) {
+        await handleColRename(editingColId);
+        return;
+      }
+
+      toast.success('لا توجد تعديلات معلّقة، كل البيانات محفوظة');
+    } catch {
+      // رسائل الخطأ تظهر من mutation hooks
+    }
   };
 
   const columnSums: Record<string, number> = {};
@@ -193,10 +219,10 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
                     <div className="flex items-center gap-1">
                       <span className={col.label ? '' : 'italic text-muted-foreground/50'}>{col.label || 'بدون اسم'}</span>
                       {editingColType === col.id ? (
-                        <select
-                          autoFocus
-                          value={col.type}
-                          onChange={e => handleColTypeChange(col.id, e.target.value as CustomTableColumn['type'])}
+                          <select
+                            autoFocus
+                            value={col.type}
+                            onChange={e => void handleColTypeChange(col.id, e.target.value as CustomTableColumn['type'])}
                           onBlur={() => setEditingColType(null)}
                           className="bg-muted border border-border rounded px-1 py-0.5 text-[8px] text-foreground"
                         >
@@ -237,8 +263,8 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
                       autoFocus
                       value={rowNameValue}
                       onChange={e => setRowNameValue(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleRowNameSave(row); if (e.key === 'Escape') setEditingRowName(null); }}
-                      onBlur={() => handleRowNameSave(row)}
+                      onKeyDown={e => { if (e.key === 'Enter') void handleRowNameSave(row); if (e.key === 'Escape') setEditingRowName(null); }}
+                      onBlur={() => void handleRowNameSave(row)}
                       className="w-full bg-transparent border-b border-primary text-foreground text-[10px] outline-none text-center"
                     />
                   ) : (
@@ -268,8 +294,8 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
                           type={col.type === 'number' || col.type === 'percentage' ? 'number' : col.type === 'date' ? 'date' : 'text'}
                           value={cellValue}
                           onChange={e => setCellValue(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') handleCellSave(row); if (e.key === 'Escape') setEditingCell(null); }}
-                          onBlur={() => handleCellSave(row)}
+                          onKeyDown={e => { if (e.key === 'Enter') void handleCellSave(row); if (e.key === 'Escape') setEditingCell(null); }}
+                          onBlur={() => void handleCellSave(row)}
                           className="w-full bg-transparent outline-none text-sm text-foreground"
                         />
                       ) : (
@@ -285,7 +311,7 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
                   );
                 })}
                 <td className="p-1">
-                  <button onClick={() => deleteRow.mutate({ id: row.id, table_id: tableId })} className="text-muted-foreground hover:text-destructive transition-colors p-1">
+                  <button onClick={() => void handleDeleteRow(row.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </td>
@@ -317,8 +343,11 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
       </div>
 
       <div className="flex items-center gap-2">
-        <button onClick={handleAddRow} className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all flex items-center gap-1">
+        <button onClick={() => void handleAddRow()} className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all flex items-center gap-1">
           <Plus className="w-3 h-3" /> صف جديد
+        </button>
+        <button onClick={() => void handleManualSave()} className="text-xs px-3 py-1.5 rounded-lg bg-success/15 text-success border border-success/30 hover:bg-success/25 transition-all flex items-center gap-1">
+          <Save className="w-3 h-3" /> 💾 حفظ التعديلات
         </button>
         <span className="text-[10px] text-muted-foreground">💡 للمعادلات: اكتب =col_1+col_2 أو =SUM(col_1) في خلية "معادلة"</span>
       </div>
