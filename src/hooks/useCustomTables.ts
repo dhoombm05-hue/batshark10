@@ -83,6 +83,23 @@ export function useCreateCustomTable() {
   });
 }
 
+export function useUpdateCustomTableColumns() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; columns: CustomTableColumn[] }) => {
+      const { error } = await supabase
+        .from('custom_tables' as any)
+        .update({ columns: params.columns } as any)
+        .eq('id', params.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['custom-tables'] });
+      toast.success('تم تحديث الأعمدة');
+    },
+  });
+}
+
 export function useDeleteCustomTable() {
   const qc = useQueryClient();
   return useMutation({
