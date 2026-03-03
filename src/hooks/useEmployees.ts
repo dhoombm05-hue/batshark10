@@ -129,6 +129,7 @@ export function useUpdateEmployee() {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['employee'] });
     },
+    onError: () => toast.error('فشل حفظ بيانات الموظف في قاعدة البيانات'),
   });
 }
 

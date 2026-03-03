@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Table2, Save, X, FileSpreadsheet, Calculator, Pencil, Check, Settings2 } from 'lucide-react';
 import Layout from '@/components/Layout';
@@ -62,7 +62,7 @@ function evaluateFormula(formula: string, rowData: Record<string, any>, allRows:
 function TableEditor({ tableId, columns, onColumnsUpdate }: { 
   tableId: string; 
   columns: CustomTableColumn[];
-  onColumnsUpdate: (cols: CustomTableColumn[]) => void;
+  onColumnsUpdate: (cols: CustomTableColumn[]) => Promise<void>;
 }) {
   const { data: rows } = useCustomTableRows(tableId);
   const addRow = useAddCustomTableRow();
@@ -130,35 +130,35 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
     );
   };
 
-  const handleColRename = (colId: string) => {
+  const handleColRename = async (colId: string) => {
     if (!colLabel.trim()) {
       setEditingColId(null);
       return;
     }
     const updated = columns.map(c => c.id === colId ? { ...c, label: colLabel } : c);
-    onColumnsUpdate(updated);
+    await onColumnsUpdate(updated);
     setEditingColId(null);
   };
 
-  const handleColTypeChange = (colId: string, newType: CustomTableColumn['type']) => {
+  const handleColTypeChange = async (colId: string, newType: CustomTableColumn['type']) => {
     const updated = columns.map(c => c.id === colId ? { ...c, type: newType } : c);
-    onColumnsUpdate(updated);
+    await onColumnsUpdate(updated);
     setEditingColType(null);
   };
 
-  const handleDeleteColumn = (colId: string) => {
+  const handleDeleteColumn = async (colId: string) => {
     if (columns.length <= 1) return;
     const updated = columns.filter(c => c.id !== colId);
-    onColumnsUpdate(updated);
+    await onColumnsUpdate(updated);
   };
 
-  const handleAddColumn = () => {
+  const handleAddColumn = async () => {
     const newCol: CustomTableColumn = {
       id: `col_${Date.now()}`,
       label: '',
       type: 'text',
     };
-    onColumnsUpdate([...columns, newCol]);
+    await onColumnsUpdate([...columns, newCol]);
   };
 
   const columnSums: Record<string, number> = {};
@@ -183,11 +183,11 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
                         autoFocus
                         value={colLabel}
                         onChange={e => setColLabel(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleColRename(col.id); if (e.key === 'Escape') setEditingColId(null); }}
-                        onBlur={() => handleColRename(col.id)}
+                        onKeyDown={e => { if (e.key === 'Enter') void handleColRename(col.id); if (e.key === 'Escape') setEditingColId(null); }}
+                        onBlur={() => void handleColRename(col.id)}
                         className="bg-transparent border-b border-primary text-foreground text-[10px] outline-none w-full"
                       />
-                      <button onClick={() => handleColRename(col.id)}><Check className="w-3 h-3 text-success" /></button>
+                      <button onClick={() => void handleColRename(col.id)}><Check className="w-3 h-3 text-success" /></button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-1">
@@ -347,9 +347,11 @@ export default function CustomTablesPage() {
 
   const activeTable = tables?.find(t => t.id === activeTableId);
 
-  if (!activeTableId && tables && tables.length > 0) {
-    setActiveTableId(tables[0].id);
-  }
+  useEffect(() => {
+    if (!activeTableId && tables && tables.length > 0) {
+      setActiveTableId(tables[0].id);
+    }
+  }, [activeTableId, tables]);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -371,8 +373,8 @@ export default function CustomTablesPage() {
     setNewColumns(prev => [...prev, { id: `col_${Date.now()}`, label: '', type: 'text' }]);
   };
 
-  const handleColumnsUpdate = useCallback((tableId: string, newCols: CustomTableColumn[]) => {
-    updateColumns.mutate({ id: tableId, columns: newCols });
+  const handleColumnsUpdate = useCallback(async (tableId: string, newCols: CustomTableColumn[]) => {
+    await updateColumns.mutateAsync({ id: tableId, columns: newCols });
   }, [updateColumns]);
 
   return (

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentUserName, logActivity } from './useActivityLog';
+import { toast } from 'sonner';
 
 export interface DBProject {
   id: string;
@@ -207,6 +208,7 @@ export function useUpdateField() {
     },
     onError: (error: any) => {
       console.error('Update failed:', error);
+      toast.error('فشل حفظ التعديل في قاعدة البيانات');
     },
   });
 }
