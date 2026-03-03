@@ -1022,6 +1022,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          chat_wallpaper_blur: number
+          chat_wallpaper_opacity: number
+          chat_wallpaper_overlay: string | null
+          chat_wallpaper_url: string | null
+          created_at: string
+          custom_bg_url: string | null
+          id: string
+          section_backgrounds: Json
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_wallpaper_blur?: number
+          chat_wallpaper_opacity?: number
+          chat_wallpaper_overlay?: string | null
+          chat_wallpaper_url?: string | null
+          created_at?: string
+          custom_bg_url?: string | null
+          id?: string
+          section_backgrounds?: Json
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_wallpaper_blur?: number
+          chat_wallpaper_opacity?: number
+          chat_wallpaper_overlay?: string | null
+          chat_wallpaper_url?: string | null
+          created_at?: string
+          custom_bg_url?: string | null
+          id?: string
+          section_backgrounds?: Json
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
