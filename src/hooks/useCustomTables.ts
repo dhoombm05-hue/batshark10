@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
+import { logActivity } from '@/hooks/useActivityLog';
 export interface CustomTableColumn {
   id: string; // column_key (stable key used in formulas/UI)
   label: string;
@@ -88,18 +88,10 @@ export function useCustomTables() {
         columnsByTable.set(col.table_id, list);
       });
 
-      return tables.map((t: any) => {
-        const legacyColumns = Array.isArray(t.columns)
-          ? t.columns
-          : typeof t.columns === 'string'
-            ? JSON.parse(t.columns)
-            : [];
-
-        return {
-          ...t,
-          columns: columnsByTable.get(t.id) || legacyColumns,
-        };
-      }) as unknown as CustomTable[];
+      return tables.map((t: any) => ({
+        ...t,
+        columns: columnsByTable.get(t.id) || [],
+      })) as unknown as CustomTable[];
     },
   });
 }
@@ -194,6 +186,7 @@ export function useCreateCustomTable() {
       const createdTable = table as any;
       const columnPayload = params.columns.map((col, index) => ({
         table_id: createdTable.id,
+        column_key: col.id,
         column_name: col.label,
         column_type: col.type,
         width: col.width ?? null,
@@ -203,6 +196,14 @@ export function useCreateCustomTable() {
 
       const { error: columnsError } = await supabase.from('custom_table_columns' as any).insert(columnPayload as any);
       if (columnsError) throw columnsError;
+
+      await logActivity({
+        userId,
+        actionType: 'custom_table_create',
+        entityType: 'custom_table',
+        entityId: createdTable.id,
+        details: { name: params.name, table_type: params.table_type, columns_count: params.columns.length },
+      });
 
       return table;
     },
@@ -266,6 +267,14 @@ export function useUpdateCustomTableColumns() {
         .eq('id', params.id);
 
       if (syncLegacyError) throw syncLegacyError;
+
+      await logActivity({
+        userId,
+        actionType: 'custom_table_columns_update',
+        entityType: 'custom_table',
+        entityId: params.id,
+        details: { columns_count: params.columns.length },
+      });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['custom-tables'] });
@@ -281,8 +290,16 @@ export function useDeleteCustomTable() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const userId = await getAuthenticatedUserId();
       const { error } = await supabase.from('custom_tables' as any).delete().eq('id', id);
       if (error) throw error;
+
+      await logActivity({
+        userId,
+        actionType: 'custom_table_delete',
+        entityType: 'custom_table',
+        entityId: id,
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['custom-tables'] });
@@ -337,6 +354,14 @@ export function useAddCustomTableRow() {
         if (cellError) throw cellError;
       }
 
+      await logActivity({
+        userId,
+        actionType: 'custom_table_row_add',
+        entityType: 'custom_table_row',
+        entityId: createdRow.id,
+        details: { table_id: params.table_id },
+      });
+
       return insertedRow;
     },
     onSuccess: (_, vars) => {
@@ -389,6 +414,13 @@ export function useUpdateCustomTableRow() {
 
         if (cellsError) throw cellsError;
       }
+      await logActivity({
+        userId,
+        actionType: 'custom_table_row_update',
+        entityType: 'custom_table_row',
+        entityId: params.id,
+        details: { table_id: params.table_id },
+      });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['custom-table-rows', vars.table_id] });
@@ -404,8 +436,17 @@ export function useDeleteCustomTableRow() {
 
   return useMutation({
     mutationFn: async (params: { id: string; table_id: string }) => {
+      const userId = await getAuthenticatedUserId();
       const { error } = await supabase.from('custom_table_rows' as any).delete().eq('id', params.id);
       if (error) throw error;
+
+      await logActivity({
+        userId,
+        actionType: 'custom_table_row_delete',
+        entityType: 'custom_table_row',
+        entityId: params.id,
+        details: { table_id: params.table_id },
+      });
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['custom-table-rows', vars.table_id] });

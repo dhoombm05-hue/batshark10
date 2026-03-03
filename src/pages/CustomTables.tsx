@@ -149,7 +149,7 @@ function TableEditor({ tableId, columns, onColumnsUpdate }: {
 
   const handleAddColumn = async () => {
     const newCol: CustomTableColumn = {
-      id: `col_${Date.now()}`,
+      id: `col_${crypto.randomUUID()}`,
       label: '',
       type: 'text',
     };
@@ -370,8 +370,7 @@ export default function CustomTablesPage() {
   const [newType, setNewType] = useState('general');
   const [newProjectId, setNewProjectId] = useState('');
   const [newColumns, setNewColumns] = useState<CustomTableColumn[]>([
-    { id: 'col_1', label: 'البند', type: 'text' },
-    { id: 'col_2', label: 'القيمة', type: 'number' },
+    { id: `col_${crypto.randomUUID()}`, label: '', type: 'text' },
   ]);
 
   const activeTable = tables?.find(t => t.id === activeTableId);
@@ -393,13 +392,12 @@ export default function CustomTablesPage() {
     setShowCreate(false);
     setNewName('');
     setNewColumns([
-      { id: 'col_1', label: 'البند', type: 'text' },
-      { id: 'col_2', label: 'القيمة', type: 'number' },
+      { id: `col_${crypto.randomUUID()}`, label: '', type: 'text' },
     ]);
   };
 
   const addNewColumn = () => {
-    setNewColumns(prev => [...prev, { id: `col_${Date.now()}`, label: '', type: 'text' }]);
+    setNewColumns(prev => [...prev, { id: `col_${crypto.randomUUID()}`, label: '', type: 'text' }]);
   };
 
   const handleColumnsUpdate = useCallback(async (tableId: string, newCols: CustomTableColumn[]) => {
@@ -496,7 +494,7 @@ export default function CustomTablesPage() {
                 className={`w-full text-right p-3 rounded-xl border transition-all group ${activeTableId === t.id ? 'bg-primary/10 border-primary/30' : 'bg-card border-border hover:bg-muted/30'}`}>
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] ${typeInfo?.color}`}>{typeInfo?.label}</span>
-                  <button onClick={(e) => { e.stopPropagation(); deleteTable.mutate(t.id); }}
+                  <button onClick={async (e) => { e.stopPropagation(); await deleteTable.mutateAsync(t.id); }}
                     className="opacity-0 group-hover:opacity-100 text-destructive p-0.5"><Trash2 className="w-3 h-3" /></button>
                 </div>
                 <p className="text-sm font-heading font-bold text-foreground mt-1">{t.name}</p>
