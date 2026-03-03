@@ -2,9 +2,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare, Plus, Send, Hash, Lock, FolderKanban, Shield,
-  Search, Reply, Paperclip, X, Trash2, Users, Pin, PinOff,
-  Pencil, Check, SmilePlus, Image as ImageIcon, Brain
+  Search, Reply, Paperclip, X, Trash2, Pin, PinOff,
+  Pencil, Check, SmilePlus, Brain, Volume2
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +39,7 @@ const ROOM_BG: Record<string, string> = {
   admin: 'from-[hsl(25,85%,52%/0.1)] to-[hsl(25,85%,52%/0.03)]',
 };
 
-const QUICK_REACTIONS = ['👍', '❤️', '🔥', '⚡', '✅', '👏'];
+const QUICK_REACTIONS = ['👍', '❤️', '🔥', '⚡', '✅', '👏', '💡', '🎯'];
 
 function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2);
@@ -58,6 +59,16 @@ function getAvatarColor(name: string) {
   return colors[Math.abs(hash) % colors.length];
 }
 
+// Check if user has CEO/admin role based on name or role context
+function isAdminMessage(userName: string) {
+  const adminKeywords = ['ceo', 'عبدالرحمن', 'admin', 'رئيس', 'مدير'];
+  return adminKeywords.some(k => userName.toLowerCase().includes(k));
+}
+
+function stripMarkdown(md: string): string {
+  return md.replace(/#{1,6}\s/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/- /g, '، ').replace(/\n+/g, '. ').replace(/[|]/g, '،').trim();
+}
+
 export default function ChatRooms() {
   const { rooms, loading: roomsLoading, createRoom, deleteRoom } = useChatRooms();
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
@@ -74,9 +85,10 @@ export default function ChatRooms() {
   const [newRoomType, setNewRoomType] = useState('general');
   const [newRoomDesc, setNewRoomDesc] = useState('');
   const [showPinned, setShowPinned] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, isCEO, profile } = useAuthContext();
+  const { user, isCEO, profile, role } = useAuthContext();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -87,62 +99,71 @@ export default function ChatRooms() {
     if (!selectedRoom && rooms.length > 0) setSelectedRoom(rooms[0]);
   }, [rooms, selectedRoom]);
 
+  const speakText = useCallback((text: string) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(stripMarkdown(text));
+    utterance.lang = 'ar-SA';
+    utterance.rate = 1;
+    const voices = window.speechSynthesis.getVoices();
+    const arVoice = voices.find(v => v.lang.startsWith('ar'));
+    if (arVoice) utterance.voice = arVoice;
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
   const handleSend = useCallback(async () => {
     if (!input.trim()) return;
-    // Check for @BatShark mention
-    if (input.includes('@BatShark') || input.includes('@batshark')) {
-      const question = input.replace(/@[Bb]at[Ss]hark\s*/g, '').trim();
-      await sendMessage(input, replyTo?.id);
-      setInput('');
-      setReplyTo(null);
-      // Send AI query in chat
-      if (question) {
-        try {
-          const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/batshark-ai`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({
-              messages: [{ role: 'user', content: question }],
-              userName: profile?.display_name || 'المستخدم',
-            }),
-          });
-          if (resp.ok && resp.body) {
-            const reader = resp.body.getReader();
-            const decoder = new TextDecoder();
-            let aiResponse = '';
-            let buf = '';
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              buf += decoder.decode(value, { stream: true });
-              let idx: number;
-              while ((idx = buf.indexOf('\n')) !== -1) {
-                let line = buf.slice(0, idx);
-                buf = buf.slice(idx + 1);
-                if (line.endsWith('\r')) line = line.slice(0, -1);
-                if (!line.startsWith('data: ')) continue;
-                const json = line.slice(6).trim();
-                if (json === '[DONE]') break;
-                try {
-                  const c = JSON.parse(json).choices?.[0]?.delta?.content;
-                  if (c) aiResponse += c;
-                } catch {}
-              }
-            }
-            if (aiResponse) {
-              await sendMessage(`🧠 **BatShark AI:**\n\n${aiResponse}`, undefined, undefined, undefined, 'ai');
-            }
-          }
-        } catch { /* silent */ }
-      }
-      return;
-    }
+    const hasBatShark = input.includes('@BatShark') || input.includes('@batshark');
+    const question = hasBatShark ? input.replace(/@[Bb]at[Ss]hark\s*/g, '').trim() : '';
+    
     await sendMessage(input, replyTo?.id);
     setInput('');
     setReplyTo(null);
+
+    if (hasBatShark && question) {
+      setAiLoading(true);
+      try {
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/batshark-ai`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: question }],
+            userName: profile?.display_name || 'المستخدم',
+          }),
+        });
+        if (resp.ok && resp.body) {
+          const reader = resp.body.getReader();
+          const decoder = new TextDecoder();
+          let aiResponse = '';
+          let buf = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            let idx: number;
+            while ((idx = buf.indexOf('\n')) !== -1) {
+              let line = buf.slice(0, idx);
+              buf = buf.slice(idx + 1);
+              if (line.endsWith('\r')) line = line.slice(0, -1);
+              if (!line.startsWith('data: ')) continue;
+              const json = line.slice(6).trim();
+              if (json === '[DONE]') break;
+              try {
+                const c = JSON.parse(json).choices?.[0]?.delta?.content;
+                if (c) aiResponse += c;
+              } catch {}
+            }
+          }
+          if (aiResponse) {
+            await sendMessage(`🧠 **BatShark AI:**\n\n${aiResponse}`, undefined, undefined, undefined, 'ai');
+          }
+        }
+      } catch { /* silent */ }
+      setAiLoading(false);
+    }
   }, [input, replyTo, sendMessage, profile]);
 
   const handleEdit = useCallback(async () => {
@@ -183,6 +204,9 @@ export default function ChatRooms() {
 
   const pinnedMessages = messages.filter(m => m.is_pinned);
 
+  // Determine if current user is admin
+  const isCurrentUserAdmin = isCEO || role === 'ceo' || role === 'coo';
+
   return (
     <Layout>
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-3">
@@ -191,8 +215,8 @@ export default function ChatRooms() {
             <MessageSquare className="w-6 h-6 text-section-ai" />
           </div>
           <div>
-            <h1 className="text-xl font-heading font-bold text-foreground">غرفة النقاشات</h1>
-            <p className="text-xs text-muted-foreground">تواصل ذكي مع فريقك — في الوقت الفعلي</p>
+            <h1 className="text-xl font-heading font-bold text-foreground">💬 غرفة النقاشات</h1>
+            <p className="text-xs text-muted-foreground">منصة تواصل ذكية — مربوطة بالنظام بالكامل</p>
           </div>
         </div>
       </motion.div>
@@ -271,7 +295,7 @@ export default function ChatRooms() {
             )}
           </div>
 
-          {/* User presence area */}
+          {/* User presence */}
           <div className="p-3 border-t border-[hsl(220,18%,22%)]">
             <div className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-xs font-bold`}>
@@ -279,7 +303,10 @@ export default function ChatRooms() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-[hsl(210,20%,85%)] truncate">{profile?.display_name}</p>
-                <p className="text-[10px] text-[hsl(152,60%,45%)]">● متصل الآن</p>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-[hsl(152,60%,45%)]">● متصل</span>
+                  {isCurrentUserAdmin && <span className="text-[9px] bg-[hsl(25,85%,52%/0.2)] text-[hsl(25,85%,58%)] px-1.5 rounded">إدارة</span>}
+                </div>
               </div>
             </div>
           </div>
@@ -305,6 +332,11 @@ export default function ChatRooms() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  {aiLoading && (
+                    <span className="text-[10px] text-[hsl(190,80%,50%)] animate-pulse flex items-center gap-1">
+                      <Brain className="w-3 h-3" /> BatShark يفكر...
+                    </span>
+                  )}
                   {pinnedMessages.length > 0 && (
                     <button
                       onClick={() => setShowPinned(!showPinned)}
@@ -390,6 +422,7 @@ export default function ChatRooms() {
                   filteredMessages.map((msg, idx) => {
                     const isOwn = msg.user_id === user?.id;
                     const isAI = msg.message_type === 'ai';
+                    const isAdmin = isAdminMessage(msg.user_name);
                     const replyMsg = msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null;
                     const showAvatar = idx === 0 || filteredMessages[idx - 1]?.user_id !== msg.user_id;
                     const avatarColor = getAvatarColor(msg.user_name);
@@ -406,7 +439,7 @@ export default function ChatRooms() {
                         {/* Avatar */}
                         <div className="w-8 shrink-0">
                           {showAvatar && (
-                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${isAI ? 'from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)]' : avatarColor} flex items-center justify-center text-white text-[10px] font-bold`}>
+                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${isAI ? 'from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)]' : avatarColor} flex items-center justify-center text-white text-[10px] font-bold ${isAdmin && !isAI ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`}>
                               {isAI ? <Brain className="w-4 h-4" /> : getInitials(msg.user_name)}
                             </div>
                           )}
@@ -424,16 +457,23 @@ export default function ChatRooms() {
                           <div className={`rounded-2xl px-3.5 py-2 relative ${
                             isAI
                               ? 'bg-gradient-to-bl from-[hsl(190,80%,45%/0.12)] to-[hsl(210,80%,52%/0.06)] border border-[hsl(190,80%,45%/0.2)]'
-                              : isOwn
-                                ? 'bg-[hsl(210,80%,52%/0.15)] rounded-br-md'
-                                : 'bg-[hsl(220,18%,20%)] border border-[hsl(220,18%,25%)] rounded-bl-md'
+                              : isAdmin && !isOwn
+                                ? 'bg-gradient-to-bl from-[hsl(43,65%,50%/0.1)] to-[hsl(25,85%,52%/0.05)] border border-[hsl(43,65%,50%/0.2)] rounded-bl-md'
+                                : isOwn
+                                  ? 'bg-[hsl(210,80%,52%/0.15)] rounded-br-md'
+                                  : 'bg-[hsl(220,18%,20%)] border border-[hsl(220,18%,25%)] rounded-bl-md'
                           } ${msg.is_pinned ? 'ring-1 ring-[hsl(43,65%,50%/0.3)]' : ''}`}>
                             {/* Name + time */}
                             {showAvatar && (
                               <div className="flex items-center gap-2 mb-0.5">
-                                <span className={`text-[11px] font-heading font-bold ${isAI ? 'text-[hsl(190,80%,50%)]' : 'text-[hsl(210,80%,65%)]'}`}>
+                                <span className={`text-[11px] font-heading font-bold ${
+                                  isAI ? 'text-[hsl(190,80%,50%)]' : isAdmin ? 'text-[hsl(43,65%,55%)]' : 'text-[hsl(210,80%,65%)]'
+                                }`}>
                                   {isAI ? '🧠 BatShark AI' : msg.user_name}
                                 </span>
+                                {isAdmin && !isAI && (
+                                  <span className="text-[8px] bg-[hsl(43,65%,50%/0.2)] text-[hsl(43,65%,55%)] px-1 rounded">👑 إدارة</span>
+                                )}
                                 <span className="text-[9px] text-[hsl(220,10%,40%)]">
                                   {format(new Date(msg.created_at), 'hh:mm a', { locale: ar })}
                                 </span>
@@ -452,8 +492,22 @@ export default function ChatRooms() {
                                 <Paperclip className="w-4 h-4 text-[hsl(210,80%,58%)]" />
                                 <span className="text-xs text-[hsl(210,20%,80%)]">{msg.file_name || 'ملف مرفق'}</span>
                               </a>
+                            ) : isAI ? (
+                              <div className="prose prose-sm prose-invert max-w-none text-[13px] [&_p]:mb-1.5 [&_ul]:mb-1.5 [&_li]:text-[hsl(210,20%,88%)] [&_strong]:text-[hsl(190,80%,55%)] [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h3]:text-sm">
+                                <ReactMarkdown>{msg.content.replace(/^🧠 \*\*BatShark AI:\*\*\n\n/, '')}</ReactMarkdown>
+                              </div>
                             ) : (
                               <p className="text-[13px] text-[hsl(210,20%,88%)] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                            )}
+
+                            {/* Listen button for AI messages */}
+                            {isAI && (
+                              <button
+                                onClick={() => speakText(msg.content)}
+                                className="mt-1 flex items-center gap-1 text-[10px] text-[hsl(190,80%,45%)] hover:text-[hsl(190,80%,55%)] transition-colors"
+                              >
+                                <Volume2 className="w-3 h-3" /> استمع
+                              </button>
                             )}
 
                             {/* Reactions */}
@@ -476,7 +530,7 @@ export default function ChatRooms() {
                             )}
                           </div>
 
-                          {/* Actions (show on hover) */}
+                          {/* Actions */}
                           <div className="flex items-center gap-0.5 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => setReplyTo(msg)} className="text-[10px] text-[hsl(220,10%,45%)] hover:text-[hsl(210,80%,58%)] p-1 rounded transition-colors">
                               <Reply className="w-3 h-3" />
@@ -589,7 +643,7 @@ export default function ChatRooms() {
                 />
                 <button
                   onClick={handleSend}
-                  disabled={!input.trim()}
+                  disabled={!input.trim() || aiLoading}
                   className="h-9 w-9 rounded-xl bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] hover:from-[hsl(190,80%,50%)] hover:to-[hsl(210,80%,57%)] flex items-center justify-center text-white transition-all disabled:opacity-30 shrink-0"
                 >
                   <Send className="w-4 h-4" />
