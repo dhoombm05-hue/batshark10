@@ -454,6 +454,44 @@ export type Database = {
           },
         ]
       }
+      custom_table_versions: {
+        Row: {
+          data_snapshot: Json
+          id: string
+          notes: string | null
+          saved_at: string
+          saved_by: string
+          table_id: string
+          version_number: number
+        }
+        Insert: {
+          data_snapshot?: Json
+          id?: string
+          notes?: string | null
+          saved_at?: string
+          saved_by: string
+          table_id: string
+          version_number?: number
+        }
+        Update: {
+          data_snapshot?: Json
+          id?: string
+          notes?: string | null
+          saved_at?: string
+          saved_by?: string
+          table_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_table_versions_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "custom_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_tables: {
         Row: {
           columns: Json
