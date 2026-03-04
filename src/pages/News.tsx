@@ -117,7 +117,7 @@ export default function News() {
       toast({ title: '✅ تم نشر الخبر بنجاح' });
       setShowCreate(false);
       setTitle(''); setContent(''); setMediaUrl(''); setContentType('text');
-      setSelectedProject(''); setCategory('update'); setMediaPreview(null);
+      setSelectedProject('none'); setCategory('update'); setMediaPreview(null);
     } catch {
       toast({ title: 'خطأ في النشر', variant: 'destructive' });
     }
