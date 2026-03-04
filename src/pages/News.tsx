@@ -40,7 +40,7 @@ export default function News() {
   const [content, setContent] = useState('');
   const [contentType, setContentType] = useState('text');
   const [mediaUrl, setMediaUrl] = useState('');
-  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedProject, setSelectedProject] = useState<string>('none');
   const [category, setCategory] = useState('update');
   const [uploading, setUploading] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
