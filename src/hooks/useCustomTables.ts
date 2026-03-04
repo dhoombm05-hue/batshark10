@@ -118,10 +118,84 @@ export function useCustomTableRows(tableId: string) {
       if (columnsError) throw columnsError;
 
       const columnList = ((columns as any[]) || []) as DBColumn[];
+      const rowList = (rows as any[]) || [];
+
+      // ── Snapshot fallback: if normalized tables are empty, restore from latest version ──
+      if (rowList.length === 0 && columnList.length === 0) {
+        const { data: latestVersions } = await supabase
+          .from('custom_table_versions' as any)
+          .select('data_snapshot')
+          .eq('table_id', tableId)
+          .order('version_number', { ascending: false })
+          .limit(1);
+
+        const snapshot = (latestVersions as any[])?.[0]?.data_snapshot;
+        if (snapshot?.columns?.length > 0 || snapshot?.rows?.length > 0) {
+          // Restore normalized tables from snapshot
+          if (snapshot.columns?.length > 0) {
+            await supabase.from('custom_table_columns' as any).insert(
+              snapshot.columns.map((c: any) => ({ ...c, table_id: tableId }))
+            );
+          }
+          if (snapshot.rows?.length > 0) {
+            await supabase.from('custom_table_rows' as any).insert(
+              snapshot.rows.map((r: any) => ({ ...r, table_id: tableId }))
+            );
+          }
+          if (snapshot.cells?.length > 0) {
+            await supabase.from('custom_table_cells' as any).insert(
+              snapshot.cells.map((c: any) => ({ ...c, table_id: tableId }))
+            );
+          }
+
+          // Re-fetch after restore
+          const [{ data: restoredRows }, { data: restoredCols }] = await Promise.all([
+            supabase.from('custom_table_rows' as any)
+              .select('id, table_id, row_name, created_at, updated_at, position')
+              .eq('table_id', tableId).order('position', { ascending: true }),
+            supabase.from('custom_table_columns' as any)
+              .select('id, table_id, column_key, column_name, column_type, width, position')
+              .eq('table_id', tableId).order('position', { ascending: true }),
+          ]);
+
+          const restoredColumnList = ((restoredCols as any[]) || []) as DBColumn[];
+          const restoredRowList = (restoredRows as any[]) || [];
+
+          if (restoredRowList.length === 0) {
+            return [] as CustomTableRow[];
+          }
+
+          const colMap = new Map(restoredColumnList.map((c) => [c.id, c.column_key]));
+          const { data: restoredCells } = await supabase
+            .from('custom_table_cells' as any)
+            .select('row_id, column_id, cell_value')
+            .eq('table_id', tableId);
+
+          const dataByRow = new Map<string, Record<string, any>>();
+          restoredRowList.forEach((r: any) => dataByRow.set(r.id, { _row_name: r.row_name || '' }));
+          (restoredCells || []).forEach((cell: any) => {
+            const columnKey = colMap.get(cell.column_id);
+            if (!columnKey) return;
+            const rowData = dataByRow.get(cell.row_id);
+            if (!rowData) return;
+            rowData[columnKey] = normalizeCellValue(cell.cell_value);
+          });
+
+          return restoredRowList.map((r: any) => ({
+            id: r.id,
+            table_id: r.table_id,
+            data: dataByRow.get(r.id) || { _row_name: r.row_name || '' },
+            created_at: r.created_at,
+            updated_at: r.updated_at,
+          })) as CustomTableRow[];
+        }
+      }
+      // ── End snapshot fallback ──
+
       const columnMap = new Map(columnList.map((c) => [c.id, c.column_key]));
 
-      if (!rows || rows.length === 0 || columnList.length === 0) {
-        return (rows || []).map((r: any) => ({
+      if (rowList.length === 0 || columnList.length === 0) {
+        return rowList.map((r: any) => ({
           id: r.id,
           table_id: r.table_id,
           data: { _row_name: r.row_name || '' },
@@ -138,7 +212,7 @@ export function useCustomTableRows(tableId: string) {
       if (cellsError) throw cellsError;
 
       const dataByRow = new Map<string, Record<string, any>>();
-      (rows || []).forEach((r: any) => {
+      rowList.forEach((r: any) => {
         dataByRow.set(r.id, { _row_name: r.row_name || '' });
       });
 
@@ -150,7 +224,7 @@ export function useCustomTableRows(tableId: string) {
         rowData[columnKey] = normalizeCellValue(cell.cell_value);
       });
 
-      return (rows || []).map((r: any) => ({
+      return rowList.map((r: any) => ({
         id: r.id,
         table_id: r.table_id,
         data: dataByRow.get(r.id) || { _row_name: r.row_name || '' },
