@@ -10,6 +10,7 @@ import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useNews, useNewsReadStatus } from '@/hooks/useNews';
 import ThemeSettings from '@/components/ThemeSettings';
 import logo from '@/assets/batshark-logo-main.png';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ROLE_LABELS: Record<string, string> = {
   ceo: '👑 عبدالرحمن CEO',
@@ -49,8 +50,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { profile, role, isCEO, signOut } = useAuthContext();
   const { data: prefs } = useUserPreferences();
   const { data: allNews = [] } = useNews();
-  const { unreadCount } = useNewsReadStatus();
+  const { readIds, unreadCount } = useNewsReadStatus();
   const newsUnread = unreadCount(allNews.map(n => n.id));
+  const latestUnreadNews = allNews.find((item) => !readIds.includes(item.id));
 
   const currentTheme = prefs?.theme || 'light';
 
@@ -121,6 +123,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {!collapsed && latestUnreadNews && (
+            <Link
+              to="/news"
+              onClick={() => setMobileOpen(false)}
+              className="mb-2 flex items-center gap-2 rounded-lg border border-border bg-card/70 p-2 hover:bg-secondary/50 transition-colors"
+            >
+              <Avatar className="w-7 h-7">
+                <AvatarImage src={latestUnreadNews.author_avatar || undefined} />
+                <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                  {(latestUnreadNews.author_name || '؟').charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-foreground truncate">
+                  <span className="font-bold">📢 {latestUnreadNews.author_name}</span>
+                  <span className="text-muted-foreground"> نشر خبر جديد</span>
+                </p>
+              </div>
+              {newsUnread > 0 && (
+                <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {newsUnread}
+                </span>
+              )}
+            </Link>
+          )}
           {allNavItems.map((item) => {
             const active = location.pathname === item.path ||
               (item.path !== '/' && location.pathname.startsWith(item.path));
@@ -158,9 +185,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {!collapsed && <ThemeSettings />}
           {!collapsed && profile && (
             <div className="flex items-center gap-3 mt-1">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] flex items-center justify-center text-white font-heading font-bold text-xs shrink-0">
-                {profile.display_name.charAt(0)}
-              </div>
+              <Avatar className="w-9 h-9 rounded-xl">
+                <AvatarImage src={profile.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-heading font-bold rounded-xl">
+                  {profile.display_name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-heading font-bold text-white truncate">{profile.display_name}</p>
                 {role && <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[role] || role}</p>}

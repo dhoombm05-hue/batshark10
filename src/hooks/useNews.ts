@@ -9,6 +9,7 @@ export interface NewsItem {
   author_id: string;
   author_name: string;
   author_avatar: string | null;
+  author_job_title?: string | null;
   project_id: string | null;
   content_type: string;
   title: string;
@@ -36,6 +37,7 @@ export interface NewsComment {
   user_id: string;
   user_name: string;
   user_avatar: string | null;
+  user_job_title?: string | null;
   content: string;
   created_at: string;
 }
@@ -53,9 +55,33 @@ export function useNews(projectId?: string) {
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false });
       if (projectId) q = q.eq('project_id', projectId);
+
       const { data, error } = await q;
       if (error) throw error;
-      return data as NewsItem[];
+
+      const newsRows = (data || []) as NewsItem[];
+      const authorIds = [...new Set(newsRows.map(n => n.author_id).filter(Boolean))];
+
+      if (authorIds.length === 0) return newsRows;
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, avatar_url, job_title')
+        .in('user_id', authorIds);
+
+      if (profilesError) throw profilesError;
+
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+      return newsRows.map((item) => {
+        const profile = profileMap.get(item.author_id);
+        return {
+          ...item,
+          author_name: profile?.display_name || item.author_name || 'مستخدم',
+          author_avatar: profile?.avatar_url || item.author_avatar,
+          author_job_title: profile?.job_title || null,
+        };
+      });
     },
   });
 
@@ -67,6 +93,10 @@ export function useNews(projectId?: string) {
         queryClient.invalidateQueries({ queryKey: ['news'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'news_comments' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['news-comments'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['news'] });
         queryClient.invalidateQueries({ queryKey: ['news-comments'] });
       })
       .subscribe();
@@ -81,13 +111,11 @@ export function useNews(projectId?: string) {
       media_url?: string;
       media_file_name?: string;
       project_id?: string;
-      author_name: string;
-      author_avatar?: string;
     }) => {
+      if (!user?.id) throw new Error('يجب تسجيل الدخول قبل نشر خبر');
+
       const { data, error } = await supabase.from('news').insert({
-        author_id: user!.id,
-        author_name: params.author_name,
-        author_avatar: params.author_avatar || null,
+        author_id: user.id,
         title: params.title,
         content: params.content,
         content_type: params.content_type,
@@ -176,16 +204,39 @@ export function useNewsComments(newsId: string) {
         .eq('news_id', newsId)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return data as NewsComment[];
+
+      const comments = (data || []) as NewsComment[];
+      const userIds = [...new Set(comments.map(c => c.user_id).filter(Boolean))];
+      if (userIds.length === 0) return comments;
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, avatar_url, job_title')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      return comments.map((comment) => {
+        const profile = profileMap.get(comment.user_id);
+        return {
+          ...comment,
+          user_name: profile?.display_name || comment.user_name,
+          user_avatar: profile?.avatar_url || comment.user_avatar,
+          user_job_title: profile?.job_title || null,
+        };
+      });
     },
   });
 
   const addComment = useMutation({
-    mutationFn: async (params: { content: string; user_name: string; user_avatar?: string }) => {
+    mutationFn: async (params: { content: string; user_name?: string; user_avatar?: string }) => {
+      if (!user?.id) throw new Error('يجب تسجيل الدخول قبل التعليق');
+
       const { error } = await supabase.from('news_comments').insert({
         news_id: newsId,
-        user_id: user!.id,
-        user_name: params.user_name,
+        user_id: user.id,
+        user_name: params.user_name || 'مستخدم',
         user_avatar: params.user_avatar || null,
         content: params.content,
       } as any);
