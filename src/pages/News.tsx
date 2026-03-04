@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Layout from '@/components/Layout';
 import { useNews, useNewsReadStatus } from '@/hooks/useNews';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -12,11 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Newspaper, Plus, TrendingUp, Clock, FolderKanban, Image, Video, FileText, Twitter,
-  Sparkles, LayoutGrid, List, Bell
+  Sparkles, LayoutGrid, List, Bell, Upload, X
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import NewsCard from '@/components/NewsCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 
 type ViewMode = 'grid' | 'list';
 type ContentFilter = 'all' | 'text' | 'image' | 'video' | 'tweet';
@@ -41,8 +42,62 @@ export default function News() {
   const [mediaUrl, setMediaUrl] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [category, setCategory] = useState('update');
+  const [uploading, setUploading] = useState(false);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const unread = unreadCount(news.map(n => n.id));
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (!isImage && !isVideo) {
+      toast({ title: 'يرجى رفع صورة أو فيديو فقط', variant: 'destructive' });
+      return;
+    }
+
+    // Max 20MB
+    if (file.size > 20 * 1024 * 1024) {
+      toast({ title: 'الحد الأقصى لحجم الملف 20MB', variant: 'destructive' });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('news-media')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('news-media')
+        .getPublicUrl(fileName);
+
+      setMediaUrl(urlData.publicUrl);
+      setContentType(isImage ? 'image' : 'video');
+      setMediaPreview(URL.createObjectURL(file));
+      toast({ title: '✅ تم رفع الملف بنجاح' });
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'خطأ في رفع الملف', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const clearMedia = () => {
+    setMediaUrl('');
+    setMediaPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleCreate = async () => {
     if (!title.trim() || !content.trim()) {
@@ -61,7 +116,8 @@ export default function News() {
       });
       toast({ title: '✅ تم نشر الخبر بنجاح' });
       setShowCreate(false);
-      setTitle(''); setContent(''); setMediaUrl(''); setContentType('text'); setSelectedProject(''); setCategory('update');
+      setTitle(''); setContent(''); setMediaUrl(''); setContentType('text');
+      setSelectedProject(''); setCategory('update'); setMediaPreview(null);
     } catch {
       toast({ title: 'خطأ في النشر', variant: 'destructive' });
     }
@@ -69,20 +125,11 @@ export default function News() {
 
   // Filter & sort
   let filtered = [...news];
-
-  // Tab-based filtering
-  if (activeTab !== 'all') {
-    if (activeTab === 'by-project') {
-      if (filterProject !== 'all') {
-        filtered = filtered.filter(n => n.project_id === filterProject);
-      }
-    } else if (activeTab === 'by-type') {
-      if (filterType !== 'all') {
-        filtered = filtered.filter(n => n.content_type === filterType);
-      }
-    }
+  if (activeTab === 'by-project' && filterProject !== 'all') {
+    filtered = filtered.filter(n => n.project_id === filterProject);
+  } else if (activeTab === 'by-type' && filterType !== 'all') {
+    filtered = filtered.filter(n => n.content_type === filterType);
   }
-
   if (sortBy === 'popular') {
     filtered.sort((a, b) => (b.likes_count + b.comments_count) - (a.likes_count + a.comments_count));
   }
@@ -130,7 +177,6 @@ export default function News() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* View Toggle */}
               <div className="hidden sm:flex items-center bg-white/10 backdrop-blur-sm rounded-xl p-1 border border-white/10">
                 <button
                   onClick={() => setViewMode('list')}
@@ -146,7 +192,6 @@ export default function News() {
                 </button>
               </div>
 
-              {/* Sort */}
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
                 <SelectTrigger className="w-36 h-9 text-xs bg-white/10 border-white/10 text-white backdrop-blur-sm">
                   <SelectValue />
@@ -157,7 +202,6 @@ export default function News() {
                 </SelectContent>
               </Select>
 
-              {/* Create */}
               <Dialog open={showCreate} onOpenChange={setShowCreate}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="gap-1.5 bg-white text-[hsl(var(--primary))] hover:bg-white/90 font-bold shadow-lg shadow-black/10">
@@ -170,19 +214,65 @@ export default function News() {
                     <DialogTitle className="text-lg font-heading font-bold">نشر خبر جديد</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <Input
-                      placeholder="عنوان الخبر..."
-                      value={title}
-                      onChange={e => setTitle(e.target.value)}
-                      className="text-base font-bold"
-                    />
-                    <Textarea
-                      placeholder="اكتب محتوى الخبر هنا..."
-                      value={content}
-                      onChange={e => setContent(e.target.value)}
-                      rows={5}
-                      className="resize-none"
-                    />
+                    <Input placeholder="عنوان الخبر..." value={title} onChange={e => setTitle(e.target.value)} className="text-base font-bold" />
+                    <Textarea placeholder="اكتب محتوى الخبر هنا..." value={content} onChange={e => setContent(e.target.value)} rows={4} className="resize-none" />
+
+                    {/* File Upload Area */}
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-muted-foreground">رفع وسائط (صورة أو فيديو)</label>
+                      {mediaPreview ? (
+                        <div className="relative rounded-xl overflow-hidden border border-border">
+                          {contentType === 'image' ? (
+                            <img src={mediaPreview} alt="Preview" className="w-full max-h-48 object-cover" />
+                          ) : (
+                            <video src={mediaPreview} className="w-full max-h-48" controls />
+                          )}
+                          <button
+                            onClick={clearMedia}
+                            className="absolute top-2 left-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-lg"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                          className="w-full border-2 border-dashed border-border rounded-xl p-6 hover:border-primary/40 hover:bg-primary/5 transition-all flex flex-col items-center gap-2 text-muted-foreground"
+                        >
+                          {uploading ? (
+                            <span className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                          ) : (
+                            <Upload className="w-6 h-6" />
+                          )}
+                          <span className="text-xs font-bold">
+                            {uploading ? 'جاري الرفع...' : 'اضغط لرفع صورة أو فيديو'}
+                          </span>
+                          <span className="text-[10px]">الحد الأقصى 20MB</span>
+                        </button>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,video/*"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
+                    </div>
+
+                    {/* Or paste URL */}
+                    {!mediaPreview && (
+                      <Input
+                        placeholder="أو الصق رابط وسائط (URL)..."
+                        value={mediaUrl}
+                        onChange={e => {
+                          setMediaUrl(e.target.value);
+                          if (e.target.value) setContentType('image');
+                        }}
+                        className="text-xs"
+                      />
+                    )}
+
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold text-muted-foreground">نوع المحتوى</label>
@@ -209,21 +299,7 @@ export default function News() {
                         </Select>
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-muted-foreground">التصنيف</label>
-                      <Select value={category} onValueChange={setCategory}>
-                        <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="update">📢 تحديث</SelectItem>
-                          <SelectItem value="announcement">📣 إعلان</SelectItem>
-                          <SelectItem value="project">📁 مشروع</SelectItem>
-                          <SelectItem value="achievement">🏆 إنجاز</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {(contentType === 'image' || contentType === 'video') && (
-                      <Input placeholder="رابط الوسائط (URL)" value={mediaUrl} onChange={e => setMediaUrl(e.target.value)} />
-                    )}
+
                     <Button onClick={handleCreate} disabled={createNews.isPending} className="w-full h-11 font-bold text-sm gap-2">
                       {createNews.isPending ? (
                         <span className="flex items-center gap-2">
@@ -264,7 +340,6 @@ export default function News() {
             </TabsList>
           </div>
 
-          {/* Sub-filters for tabs */}
           <AnimatePresence mode="wait">
             {activeTab === 'by-project' && (
               <motion.div
@@ -299,7 +374,6 @@ export default function News() {
                 ))}
               </motion.div>
             )}
-
             {activeTab === 'by-type' && (
               <motion.div
                 key="type-filter"
@@ -326,7 +400,6 @@ export default function News() {
             )}
           </AnimatePresence>
 
-          {/* Content */}
           <TabsContent value="all" className="mt-4">
             <NewsFeed items={filtered} readIds={readIds} markAsRead={markAsRead} projects={projects} viewMode={viewMode} />
           </TabsContent>

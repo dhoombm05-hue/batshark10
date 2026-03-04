@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useNews, useNewsReadStatus } from '@/hooks/useNews';
 import ThemeSettings from '@/components/ThemeSettings';
 import logo from '@/assets/batshark-logo-main.png';
 
@@ -47,6 +48,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { profile, role, isCEO, signOut } = useAuthContext();
   const { data: prefs } = useUserPreferences();
+  const { data: allNews = [] } = useNews();
+  const { unreadCount } = useNewsReadStatus();
+  const newsUnread = unreadCount(allNews.map(n => n.id));
 
   const currentTheme = prefs?.theme || 'light';
 
@@ -136,7 +140,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 style={active ? { boxShadow: colors.glow } : undefined}
               >
                 <item.icon className={`w-5 h-5 shrink-0 ${active ? colors.text : ''}`} />
-                {!collapsed && <span className="font-body text-sm font-medium">{item.label}</span>}
+                {!collapsed && (
+                  <span className="font-body text-sm font-medium flex-1">{item.label}</span>
+                )}
+                {item.path === '/news' && newsUnread > 0 && (
+                  <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pulse">
+                    {newsUnread}
+                  </span>
+                )}
               </Link>
             );
           })}
