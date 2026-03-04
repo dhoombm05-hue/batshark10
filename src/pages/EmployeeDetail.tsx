@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X, Camera, Video, Download, Upload, Trash2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '@/components/Layout';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import PrintButton from '@/components/PrintButton';
 import { Slider } from '@/components/ui/slider';
@@ -61,6 +62,7 @@ const InfoField = ({ label, value, icon: Icon, editing, onChange, onSave }: {
 
 export default function EmployeeDetail() {
   const { id } = useParams();
+  const { isCEO } = useAuthContext();
   const { data: emp, isLoading: loadingEmp } = useEmployee(id || '');
   const { data: monthlyPerf } = useEmployeeMonthlyPerformance(emp?.id || '');
   const updateEmployee = useUpdateEmployee();
@@ -263,21 +265,25 @@ export default function EmployeeDetail() {
                   <span className="text-white font-heading font-bold text-3xl">{emp.name.charAt(0)}</span>
                 </div>
               )}
-              <button
-                onClick={() => avatarFileRef.current?.click()}
-                className="absolute -bottom-1 -left-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-              >
-                {uploadAvatar.isPending ? (
-                  <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
-                ) : (
-                  <Camera className="w-4 h-4 text-primary-foreground" />
-                )}
-              </button>
-              <input ref={avatarFileRef} type="file" accept="image/*" className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file && emp) await uploadAvatar.mutateAsync({ employeeId: emp.id, file });
-                }} />
+              {isCEO && (
+                <button
+                  onClick={() => avatarFileRef.current?.click()}
+                  className="absolute -bottom-1 -left-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                >
+                  {uploadAvatar.isPending ? (
+                    <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-primary-foreground" />
+                  )}
+                </button>
+              )}
+              {isCEO && (
+                <input ref={avatarFileRef} type="file" accept="image/*" className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file && emp) await uploadAvatar.mutateAsync({ employeeId: emp.id, file });
+                  }} />
+              )}
             </div>
 
             <div className="flex-1 min-w-0 pb-1">
@@ -295,23 +301,27 @@ export default function EmployeeDetail() {
                 <Video className="w-4 h-4 ml-1" /> الفيديو
               </Button>
               <PrintButton title={`طباعة تقرير ${emp.name}`} />
-              <Button variant="outline" size="sm" onClick={() => {
-                if (editingProfile) {
-                  handleSaveProfile();
-                } else {
-                  setEditingProfile(true);
-                }
-              }}
-                className={editingProfile ? 'border-section-employees/30 text-section-employees' : ''}>
-                {editingProfile ? <><Save className="w-4 h-4 ml-1" /> حفظ</> : <><Pencil className="w-4 h-4 ml-1" /> تعديل</>}
-              </Button>
+              {isCEO && (
+                <Button variant="outline" size="sm" onClick={() => {
+                  if (editingProfile) {
+                    handleSaveProfile();
+                  } else {
+                    setEditingProfile(true);
+                  }
+                }}
+                  className={editingProfile ? 'border-section-employees/30 text-section-employees' : ''}>
+                  {editingProfile ? <><Save className="w-4 h-4 ml-1" /> حفظ</> : <><Pencil className="w-4 h-4 ml-1" /> تعديل</>}
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => { setShowHistory(!showHistory); setShowForm(false); }}>
                 <History className="w-4 h-4 ml-1" /> السجل
               </Button>
-              <Button size="sm" className="bg-section-employees hover:bg-section-employees/90 text-white"
-                onClick={() => { setShowForm(!showForm); setShowHistory(false); }}>
-                <ClipboardCheck className="w-4 h-4 ml-1" /> تقييم جديد
-              </Button>
+              {isCEO && (
+                <Button size="sm" className="bg-section-employees hover:bg-section-employees/90 text-white"
+                  onClick={() => { setShowForm(!showForm); setShowHistory(false); }}>
+                  <ClipboardCheck className="w-4 h-4 ml-1" /> تقييم جديد
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -326,18 +336,20 @@ export default function EmployeeDetail() {
                 <h3 className="text-sm font-heading text-foreground flex items-center gap-2">
                   <Video className="w-4 h-4 text-section-employees" /> فيديو الموظف — {emp.name}
                 </h3>
-                <div className="flex gap-2">
-                  <input ref={videoFileRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
-                  <Button variant="outline" size="sm" onClick={() => videoFileRef.current?.click()} disabled={videoUploading}>
-                    {videoUploading ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Upload className="w-4 h-4 ml-1" />}
-                    رفع فيديو
-                  </Button>
-                  {(emp as any).video_url && (
-                    <Button variant="outline" size="sm" className="text-destructive" onClick={handleDeleteVideo}>
-                      <Trash2 className="w-4 h-4 ml-1" /> حذف
+                {isCEO && (
+                  <div className="flex gap-2">
+                    <input ref={videoFileRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+                    <Button variant="outline" size="sm" onClick={() => videoFileRef.current?.click()} disabled={videoUploading}>
+                      {videoUploading ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Upload className="w-4 h-4 ml-1" />}
+                      رفع فيديو
                     </Button>
-                  )}
-                </div>
+                    {(emp as any).video_url && (
+                      <Button variant="outline" size="sm" className="text-destructive" onClick={handleDeleteVideo}>
+                        <Trash2 className="w-4 h-4 ml-1" /> حذف
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
               {(emp as any).video_url ? (
                 <div>
@@ -364,13 +376,13 @@ export default function EmployeeDetail() {
       {/* Editable Profile Info - from DB */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <InfoField label="العمر" value={profileData.age} icon={Calendar} editing={editingProfile}
+        <InfoField label="العمر" value={profileData.age} icon={Calendar} editing={editingProfile && isCEO}
           onChange={v => setProfileData(p => ({ ...p, age: v }))} />
-        <InfoField label="القسم" value={profileData.department} icon={Briefcase} editing={editingProfile}
+        <InfoField label="القسم" value={profileData.department} icon={Briefcase} editing={editingProfile && isCEO}
           onChange={v => setProfileData(p => ({ ...p, department: v }))} />
-        <InfoField label="سنوات الخبرة" value={profileData.experience} icon={Award} editing={editingProfile}
+        <InfoField label="سنوات الخبرة" value={profileData.experience} icon={Award} editing={editingProfile && isCEO}
           onChange={v => setProfileData(p => ({ ...p, experience: v }))} />
-        <InfoField label="الراتب" value={profileData.salary} icon={DollarSign} editing={editingProfile}
+        <InfoField label="الراتب" value={profileData.salary} icon={DollarSign} editing={editingProfile && isCEO}
           onChange={v => setProfileData(p => ({ ...p, salary: v }))} />
       </motion.div>
 
@@ -543,7 +555,7 @@ export default function EmployeeDetail() {
           <h3 className="text-sm font-heading text-foreground mb-4">📝 تقييم النظام</h3>
 
           <div className={`p-4 rounded-lg mb-4 ${emp.performance >= 85 ? 'bg-success/10 border border-success/20' : emp.performance >= 70 ? 'bg-section-employees/10 border border-section-employees/20' : 'bg-destructive/10 border border-destructive/20'}`}>
-            {editingProfile ? (
+            {editingProfile && isCEO ? (
               <textarea value={profileData.adminNotes} onChange={e => setProfileData(p => ({ ...p, adminNotes: e.target.value }))}
                 className="w-full bg-transparent text-sm text-foreground resize-none focus:outline-none" rows={3} />
             ) : (
