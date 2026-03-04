@@ -44,7 +44,7 @@ export default function News() {
         content,
         content_type: contentType,
         media_url: mediaUrl || undefined,
-        project_id: selectedProject || undefined,
+        project_id: selectedProject && selectedProject !== 'none' ? selectedProject : undefined,
         author_name: profile?.display_name || 'مجهول',
         author_avatar: profile?.avatar_url || undefined,
       });
@@ -139,7 +139,7 @@ export default function News() {
                     <Select value={selectedProject} onValueChange={setSelectedProject}>
                       <SelectTrigger className="text-xs"><SelectValue placeholder="مشروع (اختياري)" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">بدون مشروع</SelectItem>
+                        <SelectItem value="none">بدون مشروع</SelectItem>
                         {projects.map(p => (
                           <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                         ))}
