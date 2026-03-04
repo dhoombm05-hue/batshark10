@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send,
-  ArrowRight, Image, Video, FileText, Twitter, ZoomIn, ZoomOut, X,
+  ArrowRight, Image, Video, FileText, Twitter, ZoomIn, ZoomOut, X, Crown,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -263,14 +263,28 @@ export default function NewsDetail() {
               {/* Author Header */}
               <div className="p-6 pb-4 flex items-start justify-between gap-3">
                 <div className="flex items-center gap-4">
-                  <Avatar className="w-14 h-14 ring-2 ring-border shadow-md">
-                    <AvatarImage src={item.author_avatar || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white text-lg font-bold">
-                      {item.author_name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative cursor-pointer" onClick={() => navigate('/employees')}>
+                    <Avatar className="w-14 h-14 ring-2 ring-primary/30 hover:ring-primary/60 transition-all shadow-md">
+                      <AvatarImage src={item.author_avatar || undefined} className="object-cover" />
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white text-lg font-bold">
+                        {item.author_name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {item.author_is_ceo && (
+                      <span className="absolute -bottom-0.5 -left-0.5 text-[hsl(var(--gold))]">
+                        <Crown className="w-4 h-4 fill-[hsl(var(--gold))]" />
+                      </span>
+                    )}
+                  </div>
                   <div>
-                    <h2 className="font-heading font-bold text-lg text-foreground">{item.author_name}</h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-heading font-bold text-lg text-foreground">{item.author_name}</h2>
+                      {item.author_is_ceo && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 border-[hsl(var(--gold))]/40 text-[hsl(var(--gold))]">
+                          <Crown className="w-2.5 h-2.5 fill-[hsl(var(--gold))]" /> CEO
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap mt-0.5">
                       {item.author_job_title && (
                         <>

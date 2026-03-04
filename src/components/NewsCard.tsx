@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send, ChevronDown, ChevronUp,
-  Image, Video, FileText, Twitter, Eye, ExternalLink
+  Image, Video, FileText, Twitter, Eye, ExternalLink, Crown
 } from 'lucide-react';
 import { useNewsReactions, useNewsComments, type NewsItem } from '@/hooks/useNews';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -33,6 +33,7 @@ interface Props {
 }
 
 export default function NewsCard({ item, isRead, onMarkRead, projects, compact }: Props) {
+  const navigate = useNavigate();
   const { user, profile: myProfile, isCEO } = useAuthContext();
   const { deleteNews } = useNews();
   const { data: reactions = [], toggleReaction } = useNewsReactions(item.id);
@@ -85,15 +86,20 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Avatar className="w-11 h-11 ring-2 ring-border">
-                <AvatarImage src={authorAvatar || undefined} />
+            <div className="relative cursor-pointer" onClick={() => navigate(`/employees`)}>
+              <Avatar className="w-12 h-12 ring-2 ring-primary/30 hover:ring-primary/60 transition-all shadow-md">
+                <AvatarImage src={authorAvatar || undefined} className="object-cover" />
                 <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white text-sm font-bold">
                   {authorName.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               {!isRead && (
                 <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-destructive rounded-full border-2 border-card animate-pulse" />
+              )}
+              {item.author_is_ceo && (
+                <span className="absolute -bottom-0.5 -left-0.5 text-[hsl(var(--gold))]">
+                  <Crown className="w-3.5 h-3.5 fill-[hsl(var(--gold))]" />
+                </span>
               )}
             </div>
             <div className="min-w-0">

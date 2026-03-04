@@ -10,6 +10,7 @@ export interface NewsItem {
   author_name: string;
   author_avatar: string | null;
   author_job_title?: string | null;
+  author_is_ceo?: boolean;
   project_id: string | null;
   content_type: string;
   title: string;
@@ -64,14 +65,15 @@ export function useNews(projectId?: string) {
 
       if (authorIds.length === 0) return newsRows;
 
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, display_name, avatar_url, job_title')
-        .in('user_id', authorIds);
+      const [{ data: profiles, error: profilesError }, { data: roles }] = await Promise.all([
+        supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', authorIds),
+        supabase.from('user_roles').select('user_id, role').in('user_id', authorIds).eq('role', 'ceo'),
+      ]);
 
       if (profilesError) throw profilesError;
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      const ceoSet = new Set((roles || []).map((r: any) => r.user_id));
 
       return newsRows.map((item) => {
         const profile = profileMap.get(item.author_id);
@@ -80,6 +82,7 @@ export function useNews(projectId?: string) {
           author_name: profile?.display_name || item.author_name || 'مستخدم',
           author_avatar: profile?.avatar_url || item.author_avatar,
           author_job_title: profile?.job_title || null,
+          author_is_ceo: ceoSet.has(item.author_id),
         };
       });
     },
