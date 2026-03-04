@@ -134,8 +134,10 @@ export default function ChatRooms() {
 
   const handleSend = useCallback(async () => {
     if (!input.trim()) return;
-    const hasBatShark = input.includes('@BatShark') || input.includes('@batshark');
-    const question = hasBatShark ? input.replace(/@[Bb]at[Ss]hark\s*/g, '').trim() : '';
+    // Detect AI triggers: @BatShark, @AI, ساعدني, يا AI, يا ذكاء
+    const aiTriggerPatterns = [/@BatShark/i, /@AI/i, /ساعدني\s*(يا)?\s*(AI|ذكاء)/i, /يا\s*(AI|ذكاء)/i];
+    const hasBatShark = aiTriggerPatterns.some(p => p.test(input));
+    const question = hasBatShark ? input.replace(/@[Bb]at[Ss]hark\s*/gi, '').replace(/@AI\s*/gi, '').replace(/ساعدني\s*(يا)?\s*(AI|ذكاء)?\s*/gi, '').replace(/يا\s*(AI|ذكاء)\s*/gi, '').trim() : '';
     
     await sendMessage(input, replyTo?.id);
     setInput('');
