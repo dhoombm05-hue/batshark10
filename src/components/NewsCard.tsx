@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ import { ar } from 'date-fns/locale';
 import { useNews } from '@/hooks/useNews';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const typeConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
   text: { icon: <FileText className="w-3 h-3" />, label: 'نص', color: 'bg-primary/10 text-primary' },
@@ -32,17 +34,38 @@ interface Props {
 }
 
 export default function NewsCard({ item, isRead, onMarkRead, projects, compact }: Props) {
-  const { user, profile, isCEO } = useAuthContext();
+  const { user, profile: myProfile, isCEO } = useAuthContext();
   const { deleteNews } = useNews();
   const { data: reactions = [], toggleReaction } = useNewsReactions(item.id);
   const { data: comments = [], addComment, deleteComment } = useNewsComments(item.id);
 
+  // Fetch real profile for author
+  const { data: authorProfile } = useQuery({
+    queryKey: ['profile', item.author_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name, avatar_url, job_title')
+        .eq('user_id', item.author_id)
+        .single();
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const authorName = authorProfile?.display_name || item.author_name;
+  const authorAvatar = authorProfile?.avatar_url || item.author_avatar;
+  const authorTitle = authorProfile?.job_title;
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
 
+  const markedRef = useRef(false);
   useEffect(() => {
-    if (!isRead) onMarkRead();
-  }, [isRead, onMarkRead]);
+    if (!isRead && !markedRef.current) {
+      markedRef.current = true;
+      onMarkRead();
+    }
+  }, [isRead]);
 
   const myReaction = reactions.find(r => r.user_id === user?.id);
   const likesCount = reactions.filter(r => r.reaction_type === 'like').length;
@@ -54,8 +77,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
     if (!commentText.trim()) return;
     await addComment.mutateAsync({
       content: commentText,
-      user_name: profile?.display_name || 'مجهول',
-      user_avatar: profile?.avatar_url || undefined,
+      user_name: myProfile?.display_name || 'مجهول',
+      user_avatar: myProfile?.avatar_url || undefined,
     });
     setCommentText('');
   };
@@ -78,9 +101,9 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
           <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar className="w-11 h-11 ring-2 ring-border">
-                <AvatarImage src={item.author_avatar || undefined} />
+                <AvatarImage src={authorAvatar || undefined} />
                 <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white text-sm font-bold">
-                  {item.author_name.charAt(0)}
+                  {authorName.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               {!isRead && (
@@ -89,7 +112,10 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-heading font-bold text-sm text-foreground">{item.author_name}</span>
+                <span className="font-heading font-bold text-sm text-foreground">{authorName}</span>
+                {authorTitle && (
+                  <span className="text-[10px] text-muted-foreground font-medium">• {authorTitle}</span>
+                )}
                 {item.is_pinned && (
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 border-[hsl(var(--gold))]/40 text-[hsl(var(--gold))]">
                     <Pin className="w-2.5 h-2.5" /> مثبت
@@ -231,9 +257,9 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
               {/* Add comment */}
               <div className="flex items-center gap-2">
                 <Avatar className="w-7 h-7">
-                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarImage src={myProfile?.avatar_url || undefined} />
                   <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
-                    {profile?.display_name?.charAt(0) || '؟'}
+                    {myProfile?.display_name?.charAt(0) || '؟'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 flex items-center gap-2">
