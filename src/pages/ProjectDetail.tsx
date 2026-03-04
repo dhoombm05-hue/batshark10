@@ -14,6 +14,7 @@ import ActivityFeed from '@/components/ActivityFeed';
 import { usePageViewTracker } from '@/hooks/useAutoTracker';
 import { useProject, useProjectMonthlyData, useProjectExpenses, useProjectAnalysis, useAddRecord, useDeleteRecord, useUpdateField } from '@/hooks/useProjects';
 import { useFinancialEngine } from '@/hooks/useFinancialEngine';
+import { useProjectJournalMetrics } from '@/hooks/useJournalMetrics';
 import { formatCurrency, formatPercent } from '@/data/mockData';
 import { toast } from 'sonner';
 
@@ -43,6 +44,15 @@ export default function ProjectDetail() {
   const deleteRecord = useDeleteRecord();
   const updateField = useUpdateField();
   const { recalculateProject } = useFinancialEngine();
+  const { data: journalMetrics } = useProjectJournalMetrics(project?.id || '');
+
+  // Journal-derived values (single source of truth)
+  const jRevenue = journalMetrics?.totalRevenue ?? Number(project?.total_revenue || 0);
+  const jExpenses = journalMetrics?.totalExpenses ?? Number(project?.total_expenses || 0);
+  const jProfit = journalMetrics?.netProfit ?? Number(project?.net_profit || 0);
+  const jGrowth = journalMetrics?.growthRate ?? Number(project?.growth_rate || 0);
+  const jMonthlyData = journalMetrics?.monthlyData;
+  const jExpenseBreakdown = journalMetrics?.expenseBreakdown;
 
   // Auto-track page view
   usePageViewTracker(project?.name, project?.id, project?.name);
@@ -130,23 +140,23 @@ export default function ProjectDetail() {
         </div>
       </motion.div>
 
-      {/* Editable Stats — override-aware */}
+      {/* Stats — Journal-derived (Single Source of Truth) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
-          <span className="text-xs text-muted-foreground">إجمالي الإيرادات</span>
-          <EditableField table="projects" recordId={project.id} field="total_revenue" value={project.total_revenue} type="number" formatter={formatCurrency} valueClassName="text-lg font-bold text-foreground" onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} onAfterSave={() => recalculateProject(project.id)} isOverridden={(project as any).override_total_revenue != null} entityName={project.name} section={project.name} />
+          <span className="text-xs text-muted-foreground">إجمالي الإيرادات <span className="text-[9px] text-primary">(من القيود)</span></span>
+          <p className="text-lg font-bold text-foreground">{formatCurrency(jRevenue)}</p>
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
-          <span className="text-xs text-muted-foreground">صافي الربح</span>
-          <EditableField table="projects" recordId={project.id} field="net_profit" value={project.net_profit} type="number" formatter={formatCurrency} valueClassName={`text-lg font-bold ${project.net_profit >= 0 ? 'text-success' : 'text-destructive'}`} onHistoryClick={() => setShowProjectHistory(true)} onRecalculate={handleRecalculate} onAfterSave={() => recalculateProject(project.id)} isOverridden={(project as any).override_net_profit != null} entityName={project.name} section={project.name} />
+          <span className="text-xs text-muted-foreground">صافي الربح <span className="text-[9px] text-primary">(من القيود)</span></span>
+          <p className={`text-lg font-bold ${jProfit >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(jProfit)}</p>
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
           <span className="text-xs text-muted-foreground">العملاء</span>
           <EditableField table="projects" recordId={project.id} field="client_count" value={project.client_count} type="number" formatter={(v) => Number(v).toLocaleString('ar-SA')} valueClassName="text-lg font-bold text-foreground" onAfterSave={() => recalculateProject(project.id)} entityName={project.name} section={project.name} />
         </div>
         <div className="bg-gradient-card rounded-xl border border-border p-4 shadow-card">
-          <span className="text-xs text-muted-foreground">نسبة النمو</span>
-          <EditableField table="projects" recordId={project.id} field="growth_rate" value={project.growth_rate} type="number" formatter={formatPercent} valueClassName={`text-lg font-bold ${project.growth_rate >= 0 ? 'text-success' : 'text-destructive'}`} onAfterSave={() => recalculateProject(project.id)} isOverridden={(project as any).override_growth_rate != null} entityName={project.name} section={project.name} />
+          <span className="text-xs text-muted-foreground">نسبة النمو <span className="text-[9px] text-primary">(من القيود)</span></span>
+          <p className={`text-lg font-bold ${jGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>{formatPercent(jGrowth)}</p>
         </div>
       </div>
 
@@ -166,7 +176,7 @@ export default function ProjectDetail() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={monthlyData || []}>
+            <BarChart data={jMonthlyData && jMonthlyData.length > 0 ? jMonthlyData : (monthlyData || [])}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,18%)" />
               <XAxis dataKey="month" tick={{ fill: 'hsl(215,15%,55%)', fontSize: 10 }} />
               <YAxis tick={{ fill: 'hsl(215,15%,55%)', fontSize: 10 }} />
@@ -242,11 +252,11 @@ export default function ProjectDetail() {
           </div>
         </div>
         <ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={monthlyData || []}>
+          <AreaChart data={jMonthlyData && jMonthlyData.length > 0 ? jMonthlyData : (monthlyData || [])}>
             <defs>
               <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={project.net_profit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={project.net_profit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'} stopOpacity={0} />
+                <stop offset="5%" stopColor={jProfit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={jProfit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(222,25%,18%)" />
@@ -254,7 +264,7 @@ export default function ProjectDetail() {
             <YAxis tick={{ fill: 'hsl(215,15%,55%)', fontSize: 10 }} />
             <Tooltip content={<CustomTooltip />} />
             <Area type="monotone" dataKey="profit" name="الربح"
-              stroke={project.net_profit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'}
+              stroke={jProfit >= 0 ? 'hsl(152,60%,45%)' : 'hsl(0,72%,51%)'}
               fill="url(#profitGrad)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
