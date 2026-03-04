@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Table2, Save, X, FileSpreadsheet, Calculator, Pencil, Check, History, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Table2, Save, X, FileSpreadsheet, Calculator, Pencil, Check, History, AlertCircle, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import Layout from '@/components/Layout';
 import AskMeDialog from '@/components/AskMeDialog';
 import {
@@ -12,8 +12,8 @@ import {
 import { useTableVersions, useSaveTableVersion, type TableVersion } from '@/hooks/useTableVersions';
 import { useProjects } from '@/hooks/useProjects';
 import { usePageViewTracker } from '@/hooks/useAutoTracker';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
 const TABLE_TYPES = [
   { value: 'financial', label: '💰 مالي', color: 'text-success' },
   { value: 'operational', label: '⚙️ تشغيلي', color: 'text-primary' },
@@ -341,8 +341,13 @@ export default function CustomTablesPage() {
   const deleteTable = useDeleteCustomTable();
   const updateColumns = useUpdateCustomTableColumns();
   const saveVersion = useSaveTableVersion();
+  const queryClient = useQueryClient();
 
   const [activeTableId, setActiveTableId] = useState<string | null>(null);
+
+  // Fetch latest version for active table to show last saved time
+  const { data: activeVersions } = useTableVersions(activeTableId || '');
+  const lastSavedAt = activeVersions?.[0]?.saved_at;
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState('general');
@@ -456,11 +461,10 @@ export default function CustomTablesPage() {
         );
       }
 
-      // Invalidate caches
-      const { QueryClient } = await import('@tanstack/react-query');
-      // Use window reload for simplicity since we changed everything
-      toast.success('✅ تم استعادة النسخة — جاري إعادة التحميل');
-      setTimeout(() => window.location.reload(), 500);
+      // Invalidate caches for smooth reload
+      await queryClient.invalidateQueries({ queryKey: ['custom-tables'] });
+      await queryClient.invalidateQueries({ queryKey: ['custom-table-rows', activeTableId] });
+      toast.success('✅ تم استعادة النسخة بنجاح');
     } catch {
       toast.error('❌ فشل استعادة النسخة');
     }
@@ -613,15 +617,20 @@ export default function CustomTablesPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Save Status Indicator */}
+                  {/* Save Status Indicator with last saved time */}
                   <div className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-lg border ${statusInfo.color}`}>
                     {statusInfo.icon}
                     <span>{statusInfo.label}</span>
+                    {lastSavedAt && saveStatus === 'saved' && (
+                      <span className="text-muted-foreground mr-1">
+                        ({new Date(lastSavedAt).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })})
+                      </span>
+                    )}
                   </div>
-                  {/* Manual Save Button */}
+                  {/* Save & Freeze Button */}
                   <button onClick={() => void handleFullSave(false)} disabled={saveVersion.isPending}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-success/15 text-success border border-success/30 hover:bg-success/25 transition-all disabled:opacity-50">
-                    <Save className="w-3.5 h-3.5" /> 💾 حفظ الجدول
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-all disabled:opacity-50">
+                    <Lock className="w-3.5 h-3.5" /> 💾 حفظ وتثبيت الجدول
                   </button>
                   {/* Version History Button */}
                   <button onClick={() => setShowVersionHistory(true)}
