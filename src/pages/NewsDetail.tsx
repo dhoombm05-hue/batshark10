@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { useNews, useNewsReactions, useNewsComments, useNewsReadStatus, type NewsItem } from '@/hooks/useNews';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -202,15 +202,20 @@ export default function NewsDetail() {
   const { user, isCEO } = useAuthContext();
   const { data: news = [], deleteNews } = useNews();
   const { data: projects = [] } = useProjects();
-  const { markAsRead } = useNewsReadStatus();
+  const { readIds, markAsRead } = useNewsReadStatus();
   const [showViewer, setShowViewer] = useState(false);
+  const markReadRef = useRef<string | null>(null);
 
   const item = news.find(n => n.id === id);
 
-  // Mark as read
-  if (item && id) {
+  useEffect(() => {
+    if (!id || !item) return;
+    if (readIds.includes(id)) return;
+    if (markReadRef.current === id) return;
+
+    markReadRef.current = id;
     markAsRead.mutate(id);
-  }
+  }, [id, item, readIds]);
 
   if (!item) {
     return (
