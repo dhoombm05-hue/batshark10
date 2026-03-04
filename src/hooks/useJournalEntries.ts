@@ -156,7 +156,10 @@ export function useCreateJournalEntry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
       queryClient.invalidateQueries({ queryKey: ['all-journal-lines'] });
-      toast.success('تم حفظ القيد المحاسبي');
+      queryClient.invalidateQueries({ queryKey: ['journal-derived-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['project'] });
+      toast.success('تم حفظ القيد المحاسبي — تم تحديث جميع البيانات المالية');
     },
   });
 }
@@ -175,7 +178,9 @@ export function useDeleteJournalEntry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
       queryClient.invalidateQueries({ queryKey: ['all-journal-lines'] });
-      toast.success('تم حذف القيد');
+      queryClient.invalidateQueries({ queryKey: ['journal-derived-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('تم حذف القيد — تم تحديث البيانات المالية');
     },
   });
 }

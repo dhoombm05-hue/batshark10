@@ -9,9 +9,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import Layout from '@/components/Layout';
 import HealthScore from '@/components/HealthScore';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { useProjects, useProjectMonthlyData } from '@/hooks/useProjects';
+import { useProjects } from '@/hooks/useProjects';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useFinancialEngine, computeCompanyMetrics } from '@/hooks/useFinancialEngine';
+import { useFinancialEngine } from '@/hooks/useFinancialEngine';
+import { useJournalDerivedMetrics } from '@/hooks/useJournalMetrics';
 import { formatCurrency, formatPercent } from '@/data/mockData';
 import { toast } from 'sonner';
 import logo from '@/assets/batshark-logo-main.png';
@@ -63,12 +64,14 @@ const SectionCard = ({ to, icon: Icon, label, desc, bgColor, textColor, borderCo
 
 export default function Dashboard() {
   const { profile } = useAuthContext();
-  const { data: dbProjects, isLoading } = useProjects();
+  const { data: dbProjects, isLoading: loadingProjects } = useProjects();
   const { data: dbEmployees } = useEmployees();
   const { recalculateAll } = useFinancialEngine();
+  const { data: journalData, isLoading: loadingJournal } = useJournalDerivedMetrics();
 
-  // Compute metrics from real DB data
-  const metrics = dbProjects ? computeCompanyMetrics(dbProjects) : null;
+  // Use journal-derived metrics as the SINGLE SOURCE OF TRUTH
+  const metrics = journalData?.companyMetrics || null;
+  const isLoading = loadingProjects || loadingJournal;
 
   const handleRecalcAll = async () => {
     try {
@@ -185,19 +188,26 @@ export default function Dashboard() {
             className="lg:col-span-2"
           >
             <div className="space-y-2 mt-2">
-              {dbProjects?.map(p => (
-                <div key={p.id} className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-white/70 shadow-sm">
-                  <span className="text-foreground font-semibold">{p.name}</span>
-                  <div className="flex items-center gap-2">
-                    <span className={Number(p.net_profit) >= 0 ? 'text-success font-bold' : 'text-destructive font-bold'}>{formatCurrency(Number(p.net_profit))}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                      p.status === 'profitable' ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
-                    }`}>
-                      {p.status === 'profitable' ? 'مربح' : p.status === 'loss' ? 'خسارة' : 'متعادل'}
-                    </span>
+              {dbProjects?.map(p => {
+                // Use journal-derived metrics for each project
+                const jm = journalData?.companyMetrics.projectMetrics.get(p.id);
+                const revenue = jm?.totalRevenue ?? Number(p.total_revenue);
+                const profit = jm?.netProfit ?? Number(p.net_profit);
+                const status = jm?.status ?? p.status;
+                return (
+                  <div key={p.id} className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-white/70 shadow-sm">
+                    <span className="text-foreground font-semibold">{p.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={profit >= 0 ? 'text-success font-bold' : 'text-destructive font-bold'}>{formatCurrency(profit)}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                        status === 'profitable' ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
+                      }`}>
+                        {status === 'profitable' ? 'مربح' : status === 'loss' ? 'خسارة' : 'متعادل'}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {(!dbProjects || dbProjects.length === 0) && (
                 <p className="text-xs text-muted-foreground text-center py-2">لا توجد مشاريع</p>
               )}
@@ -308,21 +318,22 @@ export default function Dashboard() {
             <h3 className="text-sm font-heading font-bold text-foreground mb-4">📊 ملخص أداء المشاريع</h3>
             <div className="space-y-3">
               {dbProjects?.map(p => {
-                const profitPercent = Number(p.total_revenue) > 0
-                  ? Math.round((Number(p.net_profit) / Number(p.total_revenue)) * 100)
-                  : 0;
+                const jm = journalData?.companyMetrics.projectMetrics.get(p.id);
+                const revenue = jm?.totalRevenue ?? Number(p.total_revenue);
+                const profit = jm?.netProfit ?? Number(p.net_profit);
+                const profitPercent = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
                 return (
                   <div key={p.id} className="flex items-center gap-3">
                     <span className="text-xs text-foreground w-28 truncate font-medium">{p.name}</span>
                     <div className="flex-1 h-3 bg-secondary/50 rounded-full overflow-hidden">
                       <motion.div
-                        className={`h-full rounded-full ${Number(p.net_profit) >= 0 ? 'bg-success' : 'bg-destructive'}`}
+                        className={`h-full rounded-full ${profit >= 0 ? 'bg-success' : 'bg-destructive'}`}
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min(Math.abs(profitPercent), 100)}%` }}
                         transition={{ duration: 1 }}
                       />
                     </div>
-                    <span className={`text-xs font-bold w-14 text-left ${Number(p.net_profit) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    <span className={`text-xs font-bold w-14 text-left ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
                       {profitPercent}%
                     </span>
                   </div>
