@@ -131,20 +131,23 @@ export function useCustomTableRows(tableId: string) {
 
         const snapshot = (latestVersions as any[])?.[0]?.data_snapshot;
         if (snapshot?.columns?.length > 0 || snapshot?.rows?.length > 0) {
-          // Restore normalized tables from snapshot
+          // Use upsert to prevent duplicates from concurrent queryFn calls
           if (snapshot.columns?.length > 0) {
-            await supabase.from('custom_table_columns' as any).insert(
-              snapshot.columns.map((c: any) => ({ ...c, table_id: tableId }))
+            await supabase.from('custom_table_columns' as any).upsert(
+              snapshot.columns.map((c: any) => ({ ...c, table_id: tableId })) as any,
+              { onConflict: 'id' }
             );
           }
           if (snapshot.rows?.length > 0) {
-            await supabase.from('custom_table_rows' as any).insert(
-              snapshot.rows.map((r: any) => ({ ...r, table_id: tableId }))
+            await supabase.from('custom_table_rows' as any).upsert(
+              snapshot.rows.map((r: any) => ({ ...r, table_id: tableId })) as any,
+              { onConflict: 'id' }
             );
           }
           if (snapshot.cells?.length > 0) {
-            await supabase.from('custom_table_cells' as any).insert(
-              snapshot.cells.map((c: any) => ({ ...c, table_id: tableId }))
+            await supabase.from('custom_table_cells' as any).upsert(
+              snapshot.cells.map((c: any) => ({ ...c, table_id: tableId })) as any,
+              { onConflict: 'id' }
             );
           }
 
