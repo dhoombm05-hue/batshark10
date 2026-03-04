@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
-  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare
+  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -28,6 +28,7 @@ const navItems = [
   { path: '/ai', label: 'اسأل BatShark', icon: Brain, color: 'section-ai' },
   { path: '/documents', label: 'مركز الملفات', icon: FolderOpen, color: 'section-finance' },
   { path: '/chat', label: 'غرفة النقاشات', icon: MessageSquare, color: 'section-ai' },
+  { path: '/news', label: 'الأخبار', icon: Newspaper, color: 'section-revenue' },
 ];
 
 const colorMap: Record<string, { text: string; bg: string; glow: string }> = {
