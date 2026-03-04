@@ -71,23 +71,75 @@ function stripMarkdown(md: string): string {
   return md.replace(/#{1,6}\s/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/- /g, '، ').replace(/\n+/g, '. ').replace(/[|]/g, '،').trim();
 }
 
-// Map employee names to avatar URLs and positions
-function useEmployeeMap() {
+// Build avatar and info maps by user_id using profiles + employees
+function useUserAvatarMap() {
   const { data: employees } = useEmployees();
-  const avatarMap = new Map<string, string>();
-  const positionMap = new Map<string, string>();
+  const [profileMap, setProfileMap] = useState<Map<string, { avatar_url: string | null; display_name: string; position?: string }>>(new Map());
+  
+  // Fetch all profiles for user_id → avatar mapping
+  useEffect(() => {
+    supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').then(({ data }) => {
+      const map = new Map<string, { avatar_url: string | null; display_name: string; position?: string }>();
+      (data || []).forEach((p: any) => {
+        map.set(p.user_id, { avatar_url: p.avatar_url, display_name: p.display_name, position: p.job_title });
+      });
+      setProfileMap(map);
+    });
+  }, []);
+
+  // Build employee name → avatar/position map as fallback
+  const employeeAvatarMap = new Map<string, string>();
+  const employeePositionMap = new Map<string, string>();
   employees?.forEach(emp => {
-    if (emp.avatar_url) avatarMap.set(emp.name, emp.avatar_url);
-    positionMap.set(emp.name, emp.position);
+    if (emp.avatar_url) employeeAvatarMap.set(emp.name, emp.avatar_url);
+    employeePositionMap.set(emp.name, emp.position);
   });
-  return { avatarMap, positionMap };
+
+  // Also map profile display_name → employee avatar (for cases like "الرئيس" → employee photo)
+  const profileToEmployeeAvatar = new Map<string, string>();
+  const profileToEmployeePosition = new Map<string, string>();
+  profileMap.forEach((profile, userId) => {
+    // Try to find matching employee by partial name match
+    employees?.forEach(emp => {
+      if (emp.avatar_url && (
+        emp.name.includes(profile.display_name) ||
+        profile.display_name.includes(emp.name.split(' ')[0]) ||
+        emp.name.split(' ')[0] === profile.display_name
+      )) {
+        profileToEmployeeAvatar.set(userId, emp.avatar_url);
+        profileToEmployeePosition.set(userId, emp.position);
+      }
+    });
+  });
+
+  // Combined lookup: try profile avatar → profile-to-employee → employee name match
+  const getAvatarByUserId = (userId: string, userName: string): string | null => {
+    const profile = profileMap.get(userId);
+    if (profile?.avatar_url) return profile.avatar_url;
+    if (profileToEmployeeAvatar.has(userId)) return profileToEmployeeAvatar.get(userId)!;
+    return employeeAvatarMap.get(userName) || null;
+  };
+
+  const getDisplayNameByUserId = (userId: string, userName: string): string => {
+    const profile = profileMap.get(userId);
+    return profile?.display_name || userName;
+  };
+
+  const getPositionByUserId = (userId: string, userName: string): string | null => {
+    const profile = profileMap.get(userId);
+    if (profile?.position) return profile.position;
+    if (profileToEmployeePosition.has(userId)) return profileToEmployeePosition.get(userId)!;
+    return employeePositionMap.get(userName) || null;
+  };
+
+  return { getAvatarByUserId, getDisplayNameByUserId, getPositionByUserId };
 }
 
 export default function ChatRooms() {
   const { rooms, loading: roomsLoading, createRoom, deleteRoom } = useChatRooms();
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const { messages, loading: msgsLoading, sendMessage, editMessage, deleteMessage, togglePin, addReaction } = useChatMessages(selectedRoom?.id || null);
-  const { avatarMap, positionMap } = useEmployeeMap();
+  const { getAvatarByUserId, getDisplayNameByUserId, getPositionByUserId } = useUserAvatarMap();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -228,20 +280,24 @@ export default function ChatRooms() {
   const pinnedMessages = messages.filter(m => m.is_pinned);
   const isCurrentUserAdmin = isCEO || role === 'ceo' || role === 'coo';
 
-  // Get display name for sender - replace generic "الرئيس" with "عبدالرحمن CEO"
-  const getDisplayName = (userName: string) => {
+  // Get display name for sender using user_id lookup
+  const getDisplayName = (userName: string, userId?: string) => {
+    if (userId) {
+      const fullName = getDisplayNameByUserId(userId, userName);
+      if (fullName && fullName !== userName) return fullName;
+    }
     if (userName === 'الرئيس' || userName === 'رئيس') return '👑 عبدالرحمن CEO';
     return userName;
   };
 
-  // Get avatar for a user
-  const getUserAvatar = (userName: string): string | null => {
-    return avatarMap.get(userName) || null;
+  // Get avatar for a user by user_id
+  const getUserAvatar = (userId: string, userName: string): string | null => {
+    return getAvatarByUserId(userId, userName);
   };
 
-  // Get position for a user
-  const getUserPosition = (userName: string): string | null => {
-    return positionMap.get(userName) || null;
+  // Get position for a user by user_id
+  const getUserPosition = (userId: string, userName: string): string | null => {
+    return getPositionByUserId(userId, userName);
   };
 
   // Handle chat wallpaper upload
@@ -486,7 +542,7 @@ export default function ChatRooms() {
                     <p className="text-[10px] font-heading font-bold text-[hsl(43,65%,55%)] mb-1.5 flex items-center gap-1"><Pin className="w-3 h-3" /> رسائل مثبتة</p>
                     {pinnedMessages.map(m => (
                       <p key={m.id} className="text-xs text-[hsl(210,20%,80%)] truncate mb-0.5">
-                        <strong className="text-[hsl(43,65%,55%)]">{getDisplayName(m.user_name)}:</strong> {m.content.slice(0, 80)}
+                        <strong className="text-[hsl(43,65%,55%)]">{getDisplayName(m.user_name, m.user_id)}:</strong> {m.content.slice(0, 80)}
                       </p>
                     ))}
                   </motion.div>
@@ -523,8 +579,8 @@ export default function ChatRooms() {
                     const showAvatar = idx === 0 || filteredMessages[idx - 1]?.user_id !== msg.user_id;
                     const avatarColor = getAvatarColor(msg.user_name);
                     const reactions = msg.reactions || {};
-                    const userAvatarUrl = getUserAvatar(msg.user_name);
-                    const displayName = getDisplayName(msg.user_name);
+                    const userAvatarUrl = getUserAvatar(msg.user_id, msg.user_name);
+                    const displayName = getDisplayName(msg.user_name, msg.user_id);
 
                     return (
                       <motion.div
@@ -542,10 +598,10 @@ export default function ChatRooms() {
                                 <Brain className="w-4 h-4" />
                               </div>
                             ) : userAvatarUrl ? (
-                              <img src={userAvatarUrl} alt={msg.user_name} className={`w-8 h-8 rounded-lg object-cover ring-1 ring-white/10 ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`} style={{ imageRendering: 'auto', filter: 'none' }} />
+                              <img src={userAvatarUrl} alt={displayName} className={`w-8 h-8 rounded-lg object-cover ring-1 ring-white/10 ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`} style={{ imageRendering: 'auto', filter: 'none' }} />
                             ) : (
-                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${avatarColor} flex items-center justify-center text-white text-[10px] font-bold ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`}>
-                                {getInitials(msg.user_name)}
+                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${avatarColor} flex items-center justify-center ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`}>
+                                <UsersIcon className="w-4 h-4 text-white/80" />
                               </div>
                             )
                           )}
@@ -555,7 +611,7 @@ export default function ChatRooms() {
                         <div className={`max-w-[70%] min-w-[120px]`}>
                           {replyMsg && (
                             <div className="text-[10px] bg-[hsl(210,80%,52%/0.08)] rounded-t-lg px-3 py-1 border-r-2 border-[hsl(210,80%,52%/0.4)] text-[hsl(220,10%,55%)] mb-0.5">
-                              <span className="font-bold text-[hsl(210,80%,58%)]">{getDisplayName(replyMsg.user_name)}</span>: {replyMsg.content.slice(0, 50)}
+                              <span className="font-bold text-[hsl(210,80%,58%)]">{getDisplayName(replyMsg.user_name, replyMsg.user_id)}</span>: {replyMsg.content.slice(0, 50)}
                             </div>
                           )}
 
@@ -575,8 +631,8 @@ export default function ChatRooms() {
                                 }`}>
                                   {isAI ? '🧠 BatShark AI' : displayName}
                                 </span>
-                                {!isAI && getUserPosition(msg.user_name) && (
-                                  <span className="text-[9px] text-[hsl(220,10%,50%)]">{getUserPosition(msg.user_name)}</span>
+                                {!isAI && getUserPosition(msg.user_id, msg.user_name) && (
+                                  <span className="text-[9px] text-[hsl(220,10%,50%)]">{getUserPosition(msg.user_id, msg.user_name)}</span>
                                 )}
                                 {isAdmin && !isAI && (
                                   <span className="text-[8px] bg-[hsl(43,65%,50%/0.2)] text-[hsl(43,65%,55%)] px-1 rounded">👑 CEO</span>
@@ -719,7 +775,7 @@ export default function ChatRooms() {
                   >
                     <Reply className="w-3.5 h-3.5 text-[hsl(210,80%,58%)]" />
                     <span className="text-xs text-[hsl(220,10%,55%)] flex-1 truncate">
-                      رد على <strong className="text-[hsl(210,80%,65%)]">{getDisplayName(replyTo.user_name)}</strong>: {replyTo.content.slice(0, 40)}
+                      رد على <strong className="text-[hsl(210,80%,65%)]">{getDisplayName(replyTo.user_name, replyTo.user_id)}</strong>: {replyTo.content.slice(0, 40)}
                     </span>
                     <button onClick={() => setReplyTo(null)}>
                       <X className="w-3.5 h-3.5 text-[hsl(220,10%,45%)] hover:text-[hsl(0,72%,55%)]" />
@@ -731,14 +787,21 @@ export default function ChatRooms() {
               {/* Typing indicator */}
               {isTyping && (
                 <div className="px-4 py-1.5 flex items-center gap-2">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover" />
-                  ) : (
-                    <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-[7px] font-bold`}>
-                      {getInitials(profile?.display_name || 'U')}
-                    </div>
-                  )}
-                  <span className="text-[10px] text-[hsl(220,10%,50%)] animate-pulse">يكتب الآن...</span>
+                  {(() => {
+                    const typingAvatar = user ? getUserAvatar(user.id, profile?.display_name || '') : null;
+                    return typingAvatar ? (
+                      <img src={typingAvatar} alt="" className="w-5 h-5 rounded-full object-cover ring-1 ring-white/10" style={{ filter: 'none' }} />
+                    ) : profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover ring-1 ring-white/10" style={{ filter: 'none' }} />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[hsl(210,80%,45%)] to-[hsl(210,80%,52%)] flex items-center justify-center">
+                        <UsersIcon className="w-3 h-3 text-white/80" />
+                      </div>
+                    );
+                  })()}
+                  <span className="text-[10px] text-[hsl(220,10%,50%)]">
+                    <strong className="text-[hsl(210,80%,65%)]">{profile?.display_name || 'مستخدم'}</strong> يكتب الآن...
+                  </span>
                 </div>
               )}
 
