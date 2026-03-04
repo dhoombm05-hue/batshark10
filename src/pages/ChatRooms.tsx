@@ -71,52 +71,36 @@ function stripMarkdown(md: string): string {
   return md.replace(/#{1,6}\s/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/- /g, '، ').replace(/\n+/g, '. ').replace(/[|]/g, '،').trim();
 }
 
-// Build avatar and info maps by user_id using profiles + employees
+// Build avatar and info maps by user_id using profiles + roles
 function useUserAvatarMap() {
   const { data: employees } = useEmployees();
   const [profileMap, setProfileMap] = useState<Map<string, { avatar_url: string | null; display_name: string; position?: string }>>(new Map());
-  
-  // Fetch all profiles for user_id → avatar mapping
+  const [ceoSet, setCeoSet] = useState<Set<string>>(new Set());
+
+  // Fetch all profiles + CEO roles once
   useEffect(() => {
-    supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').then(({ data }) => {
+    Promise.all([
+      supabase.from('profiles').select('user_id, display_name, avatar_url, job_title'),
+      supabase.from('user_roles').select('user_id, role').eq('role', 'ceo'),
+    ]).then(([{ data: profiles }, { data: roles }]) => {
       const map = new Map<string, { avatar_url: string | null; display_name: string; position?: string }>();
-      (data || []).forEach((p: any) => {
+      (profiles || []).forEach((p: any) => {
         map.set(p.user_id, { avatar_url: p.avatar_url, display_name: p.display_name, position: p.job_title });
       });
       setProfileMap(map);
+      setCeoSet(new Set((roles || []).map((r: any) => r.user_id)));
     });
   }, []);
 
-  // Build employee name → avatar/position map as fallback
+  // Employee fallback maps
   const employeeAvatarMap = new Map<string, string>();
-  const employeePositionMap = new Map<string, string>();
   employees?.forEach(emp => {
     if (emp.avatar_url) employeeAvatarMap.set(emp.name, emp.avatar_url);
-    employeePositionMap.set(emp.name, emp.position);
   });
 
-  // Also map profile display_name → employee avatar (for cases like "الرئيس" → employee photo)
-  const profileToEmployeeAvatar = new Map<string, string>();
-  const profileToEmployeePosition = new Map<string, string>();
-  profileMap.forEach((profile, userId) => {
-    // Try to find matching employee by partial name match
-    employees?.forEach(emp => {
-      if (emp.avatar_url && (
-        emp.name.includes(profile.display_name) ||
-        profile.display_name.includes(emp.name.split(' ')[0]) ||
-        emp.name.split(' ')[0] === profile.display_name
-      )) {
-        profileToEmployeeAvatar.set(userId, emp.avatar_url);
-        profileToEmployeePosition.set(userId, emp.position);
-      }
-    });
-  });
-
-  // Combined lookup: try profile avatar → profile-to-employee → employee name match
   const getAvatarByUserId = (userId: string, userName: string): string | null => {
     const profile = profileMap.get(userId);
     if (profile?.avatar_url) return profile.avatar_url;
-    if (profileToEmployeeAvatar.has(userId)) return profileToEmployeeAvatar.get(userId)!;
     return employeeAvatarMap.get(userName) || null;
   };
 
@@ -127,19 +111,19 @@ function useUserAvatarMap() {
 
   const getPositionByUserId = (userId: string, userName: string): string | null => {
     const profile = profileMap.get(userId);
-    if (profile?.position) return profile.position;
-    if (profileToEmployeePosition.has(userId)) return profileToEmployeePosition.get(userId)!;
-    return employeePositionMap.get(userName) || null;
+    return profile?.position || null;
   };
 
-  return { getAvatarByUserId, getDisplayNameByUserId, getPositionByUserId };
+  const isCeoUser = (userId: string): boolean => ceoSet.has(userId);
+
+  return { getAvatarByUserId, getDisplayNameByUserId, getPositionByUserId, isCeoUser };
 }
 
 export default function ChatRooms() {
   const { rooms, loading: roomsLoading, createRoom, deleteRoom } = useChatRooms();
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const { messages, loading: msgsLoading, sendMessage, editMessage, deleteMessage, togglePin, addReaction } = useChatMessages(selectedRoom?.id || null);
-  const { getAvatarByUserId, getDisplayNameByUserId, getPositionByUserId } = useUserAvatarMap();
+  const { getAvatarByUserId, getDisplayNameByUserId, getPositionByUserId, isCeoUser } = useUserAvatarMap();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -284,9 +268,10 @@ export default function ChatRooms() {
   const getDisplayName = (userName: string, userId?: string) => {
     if (userId) {
       const fullName = getDisplayNameByUserId(userId, userName);
+      const isCeo = isCeoUser(userId);
+      if (isCeo) return `👑 ${fullName}`;
       if (fullName && fullName !== userName) return fullName;
     }
-    if (userName === 'الرئيس' || userName === 'رئيس') return '👑 عبدالرحمن CEO';
     return userName;
   };
 
@@ -574,7 +559,7 @@ export default function ChatRooms() {
                   filteredMessages.map((msg, idx) => {
                     const isOwn = msg.user_id === user?.id;
                     const isAI = msg.message_type === 'ai';
-                    const isAdmin = isAdminMessage(msg.user_name);
+                    const isAdmin = isCeoUser(msg.user_id);
                     const replyMsg = msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null;
                     const showAvatar = idx === 0 || filteredMessages[idx - 1]?.user_id !== msg.user_id;
                     const avatarColor = getAvatarColor(msg.user_name);
