@@ -20,6 +20,7 @@ import SetupCEO from "./pages/SetupCEO";
 import DocumentCenter from "./pages/DocumentCenter";
 import CustomTables from "./pages/CustomTables";
 import ChatRooms from "./pages/ChatRooms";
+import News from "./pages/News";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/documents" element={<ProtectedRoute><DocumentCenter /></ProtectedRoute>} />
             <Route path="/tables" element={<ProtectedRoute><CustomTables /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><ChatRooms /></ProtectedRoute>} />
+            <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />

@@ -836,6 +836,176 @@ export type Database = {
           },
         ]
       }
+      news: {
+        Row: {
+          author_avatar: string | null
+          author_id: string
+          author_name: string
+          comments_count: number
+          content: string
+          content_type: string
+          created_at: string
+          dislikes_count: number
+          id: string
+          is_pinned: boolean
+          likes_count: number
+          media_file_name: string | null
+          media_url: string | null
+          news_number: number
+          project_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_id: string
+          author_name?: string
+          comments_count?: number
+          content?: string
+          content_type?: string
+          created_at?: string
+          dislikes_count?: number
+          id?: string
+          is_pinned?: boolean
+          likes_count?: number
+          media_file_name?: string | null
+          media_url?: string | null
+          news_number?: number
+          project_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          author_avatar?: string | null
+          author_id?: string
+          author_name?: string
+          comments_count?: number
+          content?: string
+          content_type?: string
+          created_at?: string
+          dislikes_count?: number
+          id?: string
+          is_pinned?: boolean
+          likes_count?: number
+          media_file_name?: string | null
+          media_url?: string | null
+          news_number?: number
+          project_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          news_id: string
+          updated_at: string
+          user_avatar: string | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          news_id: string
+          updated_at?: string
+          user_avatar?: string | null
+          user_id: string
+          user_name?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          news_id?: string
+          updated_at?: string
+          user_avatar?: string | null
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_comments_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          news_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          news_id: string
+          reaction_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          news_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_reactions_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_read_status: {
+        Row: {
+          id: string
+          news_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          news_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          news_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_read_status_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_cycles: {
         Row: {
           created_at: string
