@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send, ChevronDown, ChevronUp,
-  Image, Video, FileText, Twitter, Eye
+  Image, Video, FileText, Twitter, Eye, ExternalLink
 } from 'lucide-react';
 import { useNewsReactions, useNewsComments, type NewsItem } from '@/hooks/useNews';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -204,6 +205,17 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
             {item.comments_count > 0 && <span>{item.comments_count}</span>}
             {showComments ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </Button>
+          <div className="flex-1" />
+          <Link to={`/news/${item.id}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
+            >
+              <ExternalLink className="w-4 h-4" />
+              عرض المنشور
+            </Button>
+          </Link>
         </div>
 
         {/* Comments */}
