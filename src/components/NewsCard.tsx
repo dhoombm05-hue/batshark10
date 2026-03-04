@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send, ChevronDown, ChevronUp,
-  Image, Video, FileText, Twitter, MoreHorizontal, Eye
+  Image, Video, FileText, Twitter, Eye
 } from 'lucide-react';
 import { useNewsReactions, useNewsComments, type NewsItem } from '@/hooks/useNews';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -15,8 +15,6 @@ import { ar } from 'date-fns/locale';
 import { useNews } from '@/hooks/useNews';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 
 const typeConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
   text: { icon: <FileText className="w-3 h-3" />, label: 'نص', color: 'bg-primary/10 text-primary' },
@@ -39,23 +37,10 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
   const { data: reactions = [], toggleReaction } = useNewsReactions(item.id);
   const { data: comments = [], addComment, deleteComment } = useNewsComments(item.id);
 
-  // Fetch real profile for author
-  const { data: authorProfile } = useQuery({
-    queryKey: ['profile', item.author_id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('display_name, avatar_url, job_title')
-        .eq('user_id', item.author_id)
-        .single();
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const authorName = authorProfile?.display_name || item.author_name;
-  const authorAvatar = authorProfile?.avatar_url || item.author_avatar;
-  const authorTitle = authorProfile?.job_title;
+  const authorName = item.author_name;
+  const authorAvatar = item.author_avatar;
+  const authorTitle = item.author_job_title;
+  
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
 
@@ -238,7 +223,12 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
                   </Avatar>
                   <div className="flex-1 bg-muted/50 rounded-xl p-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground">{c.user_name}</span>
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-foreground">{c.user_name}</span>
+                        {c.user_job_title && (
+                          <p className="text-[10px] text-muted-foreground leading-none mt-0.5">{c.user_job_title}</p>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] text-muted-foreground">
                           {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: ar })}

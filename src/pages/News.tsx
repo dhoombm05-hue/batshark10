@@ -111,8 +111,6 @@ export default function News() {
         content_type: contentType,
         media_url: mediaUrl || undefined,
         project_id: selectedProject && selectedProject !== 'none' ? selectedProject : undefined,
-        author_name: profile?.display_name || 'مجهول',
-        author_avatar: profile?.avatar_url || undefined,
       });
       toast({ title: '✅ تم نشر الخبر بنجاح' });
       setShowCreate(false);
