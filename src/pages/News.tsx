@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Newspaper, Plus, TrendingUp, Clock, FolderKanban, Image, Video, FileText, Twitter,
-  Sparkles, LayoutGrid, List, Bell, Upload, X
+  Sparkles, LayoutGrid, List, Bell, Upload, X, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import NewsCard from '@/components/NewsCard';
@@ -45,6 +45,16 @@ export default function News() {
   const [uploading, setUploading] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialogScrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollUp, setShowScrollUp] = useState(false);
+  const [showScrollDown, setShowScrollDown] = useState(true);
+
+  const handleDialogScroll = () => {
+    const el = dialogScrollRef.current;
+    if (!el) return;
+    setShowScrollUp(el.scrollTop > 50);
+    setShowScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 50);
+  };
 
   const unread = unreadCount(news.map(n => n.id));
 
@@ -207,11 +217,16 @@ export default function News() {
                     نشر خبر
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg" dir="rtl">
+                <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" dir="rtl">
                   <DialogHeader>
                     <DialogTitle className="text-lg font-heading font-bold">نشر خبر جديد</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
+                  <div className="relative flex-1 min-h-0">
+                    <div
+                      ref={dialogScrollRef}
+                      className="overflow-y-auto max-h-[60vh] space-y-4 px-1 py-1 scroll-smooth"
+                      onScroll={handleDialogScroll}
+                    >
                     <Input placeholder="عنوان الخبر..." value={title} onChange={e => setTitle(e.target.value)} className="text-base font-bold" />
                     <Textarea placeholder="اكتب محتوى الخبر هنا..." value={content} onChange={e => setContent(e.target.value)} rows={4} className="resize-none" />
 
@@ -311,6 +326,37 @@ export default function News() {
                         </>
                       )}
                     </Button>
+                    </div>
+
+                    {/* Scroll helper buttons */}
+                    <AnimatePresence>
+                      {showScrollUp && (
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          onClick={() => dialogScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                          className="absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
+                          title="أعلى"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+                    <AnimatePresence>
+                      {showScrollDown && (
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          onClick={() => dialogScrollRef.current?.scrollTo({ top: dialogScrollRef.current.scrollHeight, behavior: 'smooth' })}
+                          className="absolute bottom-2 left-2 z-10 w-8 h-8 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
+                          title="أسفل"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </DialogContent>
               </Dialog>
