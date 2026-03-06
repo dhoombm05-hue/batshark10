@@ -182,11 +182,11 @@ export default function BatSharkRobot() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed bottom-24 left-6 z-50 w-80 bg-card border border-border rounded-2xl shadow-elevated overflow-hidden"
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 w-80 bg-card border border-border rounded-2xl shadow-elevated overflow-hidden"
           >
             {/* Header */}
             <div className="p-3 border-b border-border flex items-center gap-2 relative overflow-hidden" style={{ background: 'var(--gradient-ai)' }}>
