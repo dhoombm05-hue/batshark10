@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, X, Sparkles, ArrowLeft, Volume2 } from 'lucide-react';
+import { X, Sparkles, ArrowLeft, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import assistantLogo from '@/assets/batshark-assistant.png';
 
 const GUIDE_RESPONSES: Record<string, { answer: string; route?: string }> = {
   'قيد': { answer: 'القيود المحاسبية موجودة في مختبر النمذجة! تعال أوريك.', route: '/lab' },
@@ -20,7 +21,6 @@ function stripMarkdown(md: string): string {
   return md.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').trim();
 }
 
-// Animated typing dots
 function TypingDots() {
   return (
     <div className="flex items-center gap-1 py-2">
@@ -41,6 +41,7 @@ export default function BatSharkRobot() {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState<{ answer: string; route?: string } | null>(null);
   const [isThinking, setIsThinking] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
   const handleAsk = useCallback(() => {
@@ -48,8 +49,6 @@ export default function BatSharkRobot() {
     setIsThinking(true);
     const q = question.toLowerCase();
     setQuestion('');
-
-    // Simulate a brief thinking delay for realism
     setTimeout(() => {
       const match = Object.entries(GUIDE_RESPONSES).find(([key]) => q.includes(key));
       if (match) {
@@ -84,43 +83,136 @@ export default function BatSharkRobot() {
 
   return (
     <>
-      {/* Floating Robot Button with glow */}
-      <motion.button
-        onClick={() => setOpen(!open)}
-        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] text-white flex items-center justify-center hover:scale-110 transition-transform"
-        style={{ boxShadow: open ? '0 0 24px 6px hsl(190 80% 50% / 0.4)' : '0 4px 20px hsl(210 80% 40% / 0.3)' }}
-        whileHover={{ scale: 1.12 }}
-        whileTap={{ scale: 0.92 }}
-        animate={{ y: [0, -5, 0] }}
-        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-      >
-        {open ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
-        {/* Glow ring when open */}
-        {open && (
-          <motion.span
-            className="absolute inset-0 rounded-full border-2 border-primary/40"
-            animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-          />
-        )}
-      </motion.button>
+      {/* Floating Assistant Button */}
+      <div className="fixed bottom-6 left-6 z-50 flex flex-col items-center gap-2">
+        {/* Hover tooltip */}
+        <AnimatePresence>
+          {isHovered && !open && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.9 }}
+              className="bg-card border border-border rounded-xl px-3 py-2 shadow-elevated text-xs font-medium text-foreground whitespace-nowrap"
+            >
+              💬 اسأل BatShark AI
+            </motion.div>
+          )}
+        </AnimatePresence>
 
+        <motion.button
+          onClick={() => setOpen(!open)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className="relative w-16 h-16 rounded-full flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          animate={{
+            y: open ? 0 : [0, -5, 0],
+          }}
+          transition={{
+            y: { repeat: open ? 0 : Infinity, duration: 3, ease: 'easeInOut' },
+          }}
+        >
+          {/* Outer glow ring */}
+          <motion.span
+            className="absolute inset-[-4px] rounded-full"
+            style={{
+              background: 'linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(var(--accent) / 0.2))',
+              filter: 'blur(8px)',
+            }}
+            animate={{
+              scale: [1, 1.15, 1],
+              opacity: [0.5, 0.8, 0.5],
+            }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+          />
+
+          {/* Pulse ring on open */}
+          {open && (
+            <motion.span
+              className="absolute inset-[-6px] rounded-full border-2 border-primary/40"
+              animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            />
+          )}
+
+          {/* Main button circle */}
+          <div
+            className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary/30 shadow-elevated flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, hsl(var(--card)), hsl(var(--secondary)))',
+              boxShadow: open
+                ? '0 0 24px 6px hsl(190 80% 50% / 0.35), 0 4px 16px hsl(210 80% 40% / 0.2)'
+                : '0 4px 20px hsl(210 80% 40% / 0.25), 0 0 12px hsl(190 80% 50% / 0.15)',
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {open ? (
+                <motion.div
+                  key="close"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <X className="w-6 h-6 text-primary" />
+                </motion.div>
+              ) : (
+                <motion.img
+                  key="logo"
+                  src={assistantLogo}
+                  alt="BatShark AI"
+                  className="w-11 h-11 object-contain"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Thinking indicator on the button */}
+          <AnimatePresence>
+            {isThinking && !open && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="absolute -top-1 -right-1 flex gap-0.5"
+              >
+                {[0, 1, 2].map(i => (
+                  <motion.span
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-primary"
+                    animate={{ y: [0, -3, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.1 }}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      </div>
+
+      {/* Chat Panel */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             className="fixed bottom-24 left-6 z-50 w-80 bg-card border border-border rounded-2xl shadow-elevated overflow-hidden"
           >
-            {/* Header with animated gradient */}
+            {/* Header */}
             <div className="p-3 border-b border-border flex items-center gap-2 relative overflow-hidden" style={{ background: 'var(--gradient-ai)' }}>
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
                 animate={{ x: ['-100%', '100%'] }}
                 transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
               />
-              <Bot className="w-5 h-5 text-white relative z-10" />
+              <img src={assistantLogo} alt="BatShark" className="w-7 h-7 object-contain relative z-10 rounded-full bg-white/20 p-0.5" />
               <span className="font-heading font-bold text-sm text-white relative z-10">مساعد BatShark</span>
               <Sparkles className="w-3.5 h-3.5 text-white/60 mr-auto relative z-10" />
             </div>
@@ -128,15 +220,18 @@ export default function BatSharkRobot() {
             <div className="p-4 space-y-3">
               {isThinking ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-4">
-                  {/* Robot thinking animation */}
                   <motion.div
-                    className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3"
+                    className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 overflow-hidden"
                     animate={{ boxShadow: ['0 0 0px hsl(190 80% 50% / 0)', '0 0 20px hsl(190 80% 50% / 0.3)', '0 0 0px hsl(190 80% 50% / 0)'] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
                   >
-                    <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1.2 }}>
-                      <Bot className="w-6 h-6 text-primary" />
-                    </motion.div>
+                    <motion.img
+                      src={assistantLogo}
+                      alt="thinking"
+                      className="w-9 h-9 object-contain"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.2 }}
+                    />
                   </motion.div>
                   <TypingDots />
                   <span className="text-[10px] text-muted-foreground mt-1">يفكر...</span>
@@ -157,7 +252,7 @@ export default function BatSharkRobot() {
                     )}
                     <button
                       onClick={() => speakAnswer(response.answer)}
-                      className="h-10 w-10 rounded-lg bg-section-ai/10 hover:bg-section-ai/20 flex items-center justify-center text-section-ai transition-colors"
+                      className="h-10 w-10 rounded-lg bg-accent/10 hover:bg-accent/20 flex items-center justify-center text-accent transition-colors"
                     >
                       <Volume2 className="w-4 h-4" />
                     </button>
@@ -191,7 +286,7 @@ export default function BatSharkRobot() {
                     {['قيد محاسبي', 'مشروع', 'موظف', 'تحليل', 'نقاش', 'جدول'].map(q => (
                       <button
                         key={q}
-                        onClick={() => { setQuestion(q); }}
+                        onClick={() => setQuestion(q)}
                         className="text-[10px] px-2 py-1 rounded-md bg-secondary/40 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20"
                       >
                         {q}
