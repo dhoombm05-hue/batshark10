@@ -104,13 +104,21 @@ export default function BatSharkRobot() {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className="relative w-16 h-16 rounded-full flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
-          animate={{
-            y: open ? 0 : [0, -5, 0],
-          }}
+          whileHover={{ scale: 1.18, rotate: [0, -5, 5, 0] }}
+          whileTap={{ scale: 0.85 }}
+          animate={
+            open
+              ? { y: 0, rotate: 0, scale: 1 }
+              : {
+                  y: [0, -8, 0, -4, 0],
+                  rotate: [0, -2, 2, -1, 0],
+                  scale: [1, 1.04, 1, 1.02, 1],
+                }
+          }
           transition={{
-            y: { repeat: open ? 0 : Infinity, duration: 3, ease: 'easeInOut' },
+            y: { repeat: open ? 0 : Infinity, duration: 4, ease: 'easeInOut' },
+            rotate: { repeat: open ? 0 : Infinity, duration: 4, ease: 'easeInOut' },
+            scale: { repeat: open ? 0 : Infinity, duration: 4, ease: 'easeInOut' },
           }}
         >
           {/* Outer glow ring */}
