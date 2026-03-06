@@ -121,18 +121,28 @@ export default function BatSharkRobot() {
             scale: { repeat: open ? 0 : Infinity, duration: 4, ease: 'easeInOut' },
           }}
         >
-          {/* Outer glow ring */}
+          {/* Outer glow ring - breathing */}
           <motion.span
-            className="absolute inset-[-4px] rounded-full"
+            className="absolute inset-[-6px] rounded-full"
             style={{
-              background: 'linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(var(--accent) / 0.2))',
-              filter: 'blur(8px)',
+              background: 'radial-gradient(circle, hsl(var(--primary) / 0.35), hsl(var(--accent) / 0.15), transparent)',
+              filter: 'blur(10px)',
             }}
             animate={{
-              scale: [1, 1.15, 1],
-              opacity: [0.5, 0.8, 0.5],
+              scale: [1, 1.25, 1, 1.15, 1],
+              opacity: [0.4, 0.9, 0.4, 0.7, 0.4],
             }}
-            transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+            transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+          />
+
+          {/* Second rotating glow ring */}
+          <motion.span
+            className="absolute inset-[-3px] rounded-full border border-primary/20"
+            animate={{ rotate: [0, 360] }}
+            transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
+            style={{
+              background: 'conic-gradient(from 0deg, transparent, hsl(var(--primary) / 0.15), transparent, hsl(var(--accent) / 0.1), transparent)',
+            }}
           />
 
           {/* Pulse ring on open */}
