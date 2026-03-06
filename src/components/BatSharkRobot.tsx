@@ -83,121 +83,72 @@ export default function BatSharkRobot() {
 
   return (
     <>
-      {/* Floating Assistant Button */}
-      <div className="fixed bottom-6 left-6 z-50 flex flex-col items-center gap-2">
-        {/* Hover tooltip */}
-        <AnimatePresence>
-          {isHovered && !open && (
-            <motion.div
-              initial={{ opacity: 0, y: 8, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.9 }}
-              className="bg-card border border-border rounded-xl px-3 py-2 shadow-elevated text-xs font-medium text-foreground whitespace-nowrap"
-            >
-              💬 اسأل BatShark AI
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+      {/* Floating Bat - Top Center, flying freely */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center">
         <motion.button
           onClick={() => setOpen(!open)}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className="relative w-16 h-16 rounded-full flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
-          whileHover={{ scale: 1.18, rotate: [0, -5, 5, 0] }}
+          className="relative flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
+          whileHover={{ scale: 1.25 }}
           whileTap={{ scale: 0.85 }}
           animate={
             open
               ? { y: 0, rotate: 0, scale: 1 }
               : {
-                  y: [0, -8, 0, -4, 0],
-                  rotate: [0, -2, 2, -1, 0],
-                  scale: [1, 1.04, 1, 1.02, 1],
+                  y: [0, -14, 0, -8, 0, -5, 0],
+                  rotate: [0, -3, 3, -2, 2, 0],
+                  scale: [1, 1.08, 0.97, 1.05, 1],
                 }
           }
           transition={{
-            y: { repeat: open ? 0 : Infinity, duration: 4, ease: 'easeInOut' },
-            rotate: { repeat: open ? 0 : Infinity, duration: 4, ease: 'easeInOut' },
-            scale: { repeat: open ? 0 : Infinity, duration: 4, ease: 'easeInOut' },
+            y: { repeat: open ? 0 : Infinity, duration: 5, ease: 'easeInOut' },
+            rotate: { repeat: open ? 0 : Infinity, duration: 5, ease: 'easeInOut' },
+            scale: { repeat: open ? 0 : Infinity, duration: 5, ease: 'easeInOut' },
           }}
         >
-          {/* Outer glow ring - breathing */}
+          {/* Subtle shadow beneath the bat */}
           <motion.span
-            className="absolute inset-[-6px] rounded-full"
-            style={{
-              background: 'radial-gradient(circle, hsl(var(--primary) / 0.35), hsl(var(--accent) / 0.15), transparent)',
-              filter: 'blur(10px)',
-            }}
-            animate={{
-              scale: [1, 1.25, 1, 1.15, 1],
-              opacity: [0.4, 0.9, 0.4, 0.7, 0.4],
-            }}
-            transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+            className="absolute bottom-[-8px] w-10 h-3 rounded-full bg-foreground/10 blur-md"
+            animate={{ scaleX: [1, 0.7, 1], opacity: [0.3, 0.15, 0.3] }}
+            transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
           />
 
-          {/* Second rotating glow ring */}
-          <motion.span
-            className="absolute inset-[-3px] rounded-full border border-primary/20"
-            animate={{ rotate: [0, 360] }}
-            transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
-            style={{
-              background: 'conic-gradient(from 0deg, transparent, hsl(var(--primary) / 0.15), transparent, hsl(var(--accent) / 0.1), transparent)',
-            }}
-          />
+          <AnimatePresence mode="wait">
+            {open ? (
+              <motion.div
+                key="close"
+                initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.25 }}
+                className="w-12 h-12 rounded-full bg-card border border-border shadow-elevated flex items-center justify-center"
+              >
+                <X className="w-5 h-5 text-primary" />
+              </motion.div>
+            ) : (
+              <motion.img
+                key="bat"
+                src={assistantLogo}
+                alt="BatShark AI"
+                className="w-16 h-16 object-contain drop-shadow-lg"
+                style={{ filter: 'drop-shadow(0 4px 12px hsl(210 80% 40% / 0.3))' }}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              />
+            )}
+          </AnimatePresence>
 
-          {/* Pulse ring on open */}
-          {open && (
-            <motion.span
-              className="absolute inset-[-6px] rounded-full border-2 border-primary/40"
-              animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-            />
-          )}
-
-          {/* Main button circle */}
-          <div
-            className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary/30 shadow-elevated flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(135deg, hsl(var(--card)), hsl(var(--secondary)))',
-              boxShadow: open
-                ? '0 0 24px 6px hsl(190 80% 50% / 0.35), 0 4px 16px hsl(210 80% 40% / 0.2)'
-                : '0 4px 20px hsl(210 80% 40% / 0.25), 0 0 12px hsl(190 80% 50% / 0.15)',
-            }}
-          >
-            <AnimatePresence mode="wait">
-              {open ? (
-                <motion.div
-                  key="close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <X className="w-6 h-6 text-primary" />
-                </motion.div>
-              ) : (
-                <motion.img
-                  key="logo"
-                  src={assistantLogo}
-                  alt="BatShark AI"
-                  className="w-11 h-11 object-contain"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                />
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Thinking indicator on the button */}
+          {/* Thinking dots */}
           <AnimatePresence>
             {isThinking && !open && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                className="absolute -top-1 -right-1 flex gap-0.5"
+                className="absolute -bottom-3 flex gap-0.5"
               >
                 {[0, 1, 2].map(i => (
                   <motion.span
@@ -211,6 +162,20 @@ export default function BatSharkRobot() {
             )}
           </AnimatePresence>
         </motion.button>
+
+        {/* Hover tooltip */}
+        <AnimatePresence>
+          {isHovered && !open && (
+            <motion.div
+              initial={{ opacity: 0, y: -5, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -5, scale: 0.9 }}
+              className="mt-1 bg-card border border-border rounded-xl px-3 py-1.5 shadow-elevated text-xs font-medium text-foreground whitespace-nowrap"
+            >
+              💬 اسأل BatShark AI
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Chat Panel */}
