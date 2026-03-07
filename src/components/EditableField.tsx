@@ -4,6 +4,7 @@ import { Pencil, Check, X, History, RotateCcw, Lock, Unlock } from 'lucide-react
 import { useUpdateField } from '@/hooks/useProjects';
 import { useFinancialEngine } from '@/hooks/useFinancialEngine';
 import { logActivityImpact } from '@/hooks/useActivityImpact';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface EditableFieldProps {

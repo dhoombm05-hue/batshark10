@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pencil, Trash2, History, Check, X } from 'lucide-react';
 import { useUpdateField, useDeleteRecord, type DBExpense } from '@/hooks/useProjects';
 import { useFinancialEngine } from '@/hooks/useFinancialEngine';
+import { useAuthContext } from '@/contexts/AuthContext';
 import AuditLogDialog from './AuditLogDialog';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/data/mockData';

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pencil, Check, X, Lock, Unlock } from 'lucide-react';
 import { useUpdateField } from '@/hooks/useProjects';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface ManualOverrideFieldProps {
