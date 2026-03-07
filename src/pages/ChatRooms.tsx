@@ -817,7 +817,7 @@ export default function ChatRooms() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 50%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
+            <div className="flex-1 flex items-center justify-center" style={{ background: 'hsl(220 20% 13%)' }}>
               <div className="text-center">
                 <div className="w-20 h-20 rounded-2xl bg-[hsl(220,18%,16%)] flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="w-9 h-9 text-[hsl(220,15%,25%)]" />
