@@ -105,10 +105,18 @@ function useUserAvatarMap() {
     if (profile?.avatar_url) return profile.avatar_url;
     // Direct match
     if (employeeAvatarMap.has(userName)) return employeeAvatarMap.get(userName)!;
-    // Fuzzy match (CEO name may differ between profile and employees table)
+    // Fuzzy match by display name
     const displayName = profile?.display_name || userName;
     for (const [empName, empAvatar] of employeeAvatarMap.entries()) {
       if (empName.includes(displayName) || displayName.includes(empName)) return empAvatar;
+    }
+    // CEO role fallback — if user is CEO, find CEO employee (first employee with عبدالرحمن or position-based)
+    if (ceoSet.has(userId) && employees?.length) {
+      const ceoEmp = employees.find(e => e.avatar_url && (e.position?.includes('رئيس') || e.slug === '1'));
+      if (ceoEmp?.avatar_url) return ceoEmp.avatar_url;
+      // Last resort: first employee with avatar that wasn't matched
+      const firstWithAvatar = employees.find(e => e.avatar_url);
+      if (firstWithAvatar?.avatar_url) return firstWithAvatar.avatar_url;
     }
     return null;
   };
