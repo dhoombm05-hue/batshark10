@@ -20,6 +20,7 @@ export default function ExpenseRow({ expense }: ExpenseRowProps) {
   const updateField = useUpdateField();
   const deleteRecord = useDeleteRecord();
   const { recalculateProject } = useFinancialEngine();
+  const { isCEO } = useAuthContext();
 
   const handleSave = () => {
     const updates: Promise<void>[] = [];
