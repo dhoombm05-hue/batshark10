@@ -170,8 +170,16 @@ export default function ChatRooms() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const hasAutoSelected = useRef(false);
   useEffect(() => {
-    if (!selectedRoom && rooms.length > 0) setSelectedRoom(rooms[0]);
+    // Only auto-select on first load (desktop), not when user explicitly goes back on mobile
+    if (!hasAutoSelected.current && !selectedRoom && rooms.length > 0) {
+      const isMobile = window.innerWidth < 768;
+      if (!isMobile) {
+        setSelectedRoom(rooms[0]);
+      }
+      hasAutoSelected.current = true;
+    }
   }, [rooms, selectedRoom]);
 
   const speakText = useCallback((text: string) => {
