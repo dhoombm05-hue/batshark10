@@ -79,14 +79,30 @@ export function usePerformanceScoring() {
           }
         }
 
-        // Score: starts from 0, builds up with activity
-        const activityScore = Math.min(userActivities.length * 2, 30);
-        const weeklyScore = Math.min(weeklyActivities.length * 5, 25);
-        const monthlyScore = Math.min(monthlyActivities.length * 1.5, 20);
-        const diversityScore = (updates > 0 ? 5 : 0) + (creates > 0 ? 5 : 0) + (deletes > 0 ? 5 : 0);
-        const impactScore = Math.min(financialImpact > 0 ? 10 : 0, 10);
+        // Strict governance scoring — very hard to reach 100%
+        // Activity volume (max 20): needs 50+ actions for full marks
+        const activityScore = Math.min(userActivities.length * 0.4, 20);
+        // Weekly consistency (max 15): needs 15+ actions/week
+        const weeklyScore = Math.min(weeklyActivities.length * 1, 15);
+        // Monthly depth (max 15): needs 50+ actions/month
+        const monthlyScore = Math.min(monthlyActivities.length * 0.3, 15);
+        // Diversity of work (max 15): must do ALL types + minimum thresholds
+        const diversityScore = 
+          (updates >= 10 ? 5 : updates >= 3 ? 2 : 0) + 
+          (creates >= 5 ? 5 : creates >= 2 ? 2 : 0) + 
+          (deletes >= 3 ? 5 : deletes >= 1 ? 1 : 0);
+        // Financial impact (max 20): scaled by actual monetary value
+        const impactScore = Math.min(
+          financialImpact >= 100000 ? 20 :
+          financialImpact >= 50000 ? 15 :
+          financialImpact >= 10000 ? 10 :
+          financialImpact >= 1000 ? 5 :
+          financialImpact > 0 ? 2 : 0, 20);
+        // Consistency bonus (max 15): active across multiple days
+        const activeDays = new Set(userActivities.map((a: any) => new Date(a.created_at).toDateString())).size;
+        const consistencyScore = Math.min(activeDays * 1, 15);
 
-        const score = Math.min(Math.round(activityScore + weeklyScore + monthlyScore + diversityScore + impactScore), 100);
+        const score = Math.min(Math.round(activityScore + weeklyScore + monthlyScore + diversityScore + impactScore + consistencyScore), 100);
 
         userMap.set(profile.user_id, {
           userId: profile.user_id,
