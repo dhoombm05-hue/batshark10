@@ -840,6 +840,14 @@ export default function ChatRooms() {
           )}
         </div>
       </div>
+      {selectedRoom && (
+        <RoomSettingsDialog
+          open={roomSettingsOpen}
+          onOpenChange={setRoomSettingsOpen}
+          roomId={selectedRoom.id}
+          roomName={selectedRoom.name}
+        />
+      )}
     </div>
   );
 }
