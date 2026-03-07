@@ -74,7 +74,7 @@ export function useNews(projectId?: string) {
       if (profilesError) throw profilesError;
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
-      const ceoSet = new Set((roles || []).map((r: any) => r.user_id));
+      const ceoSet = new Set((roles || []).filter((r: any) => r.role === 'ceo').map((r: any) => r.user_id));
       const empList = employees || [];
 
       return newsRows.map((item) => {
