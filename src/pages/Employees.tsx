@@ -242,14 +242,19 @@ export default function Employees() {
                 </div>
                 {/* Performance Circle Button */}
                 {(() => {
-                  const ps = perfScores?.find(p => 
-                    p.displayName === emp.name || 
-                    emp.name.includes(p.displayName) || 
-                    p.displayName.includes(emp.name)
+                  const matchPs = (name: string) => perfScores?.find(p => 
+                    p.displayName === name || name.includes(p.displayName) || p.displayName.includes(name)
                   );
-                  const lastCycle = cycles?.find(c => 
-                    c.display_name === ps?.displayName
-                  );
+                  let ps = matchPs(emp.name);
+                  // If no match found, this might be CEO (profile name differs from employee name)
+                  if (!ps && perfScores) {
+                    const matchedIds = new Set(
+                      empList.filter(e => e !== emp && matchPs(e.name)).map(e => matchPs(e.name)!.userId)
+                    );
+                    const unmatched = perfScores.filter(p => !matchedIds.has(p.userId));
+                    if (unmatched.length === 1) ps = unmatched[0];
+                  }
+                  const lastCycle = ps ? cycles?.find(c => c.display_name === ps!.displayName) : undefined;
                   if (!ps) return null;
                   return (
                     <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>

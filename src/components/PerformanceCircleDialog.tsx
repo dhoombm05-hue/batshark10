@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Activity, TrendingUp, TrendingDown, FileEdit, Plus, Trash2, DollarSign, Calendar, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Activity, TrendingUp, TrendingDown, FileEdit, Plus, Trash2, DollarSign, Calendar, AlertTriangle, CheckCircle, Clock, ChevronUp, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import type { UserPerformanceScore } from '@/hooks/usePerformanceScoring';
@@ -139,6 +140,7 @@ export function PerformanceAlertBanner({ score, previousScore, name }: { score: 
 
 export default function PerformanceCircleDialog({ score, previousScore }: Props) {
   const [open, setOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const color = getScoreColor(score.score);
   const totalMax = Math.max(score.updates, score.creates, score.deletes, 1);
   const hasDrop = previousScore !== undefined && score.score < previousScore;
@@ -165,7 +167,7 @@ export default function PerformanceCircleDialog({ score, previousScore }: Props)
           )}
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-md" dir="rtl">
+      <DialogContent className="max-w-md max-h-[85vh] flex flex-col" dir="rtl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Activity className="w-5 h-5 text-primary" />
@@ -173,67 +175,90 @@ export default function PerformanceCircleDialog({ score, previousScore }: Props)
           </DialogTitle>
         </DialogHeader>
 
-        {/* Alert */}
-        {hasDrop && previousScore !== undefined && (
-          <PerformanceAlertBanner score={score.score} previousScore={previousScore} name={score.displayName} />
-        )}
+        {/* Scrollable content with scroll buttons */}
+        <div className="relative flex-1 min-h-0">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="absolute top-0 left-1/2 -translate-x-1/2 z-10 h-7 w-7 rounded-full shadow-md opacity-80 hover:opacity-100"
+            onClick={() => scrollRef.current?.scrollBy({ top: -150, behavior: 'smooth' })}
+          >
+            <ChevronUp className="w-4 h-4" />
+          </Button>
 
-        {/* Circle */}
-        <div className="flex justify-center py-4">
-          <CircleChart score={score.score} size={160} />
-        </div>
+          <div ref={scrollRef} className="overflow-y-auto max-h-[65vh] px-1 py-6 space-y-4 scroll-smooth">
+            {/* Alert */}
+            {hasDrop && previousScore !== undefined && (
+              <PerformanceAlertBanner score={score.score} previousScore={previousScore} name={score.displayName} />
+            )}
 
-        {/* Cycle Info */}
-        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-4">
-          <Clock className="w-3.5 h-3.5" />
-          <span>بداية الدورة: {cycleDate}</span>
-          <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
-          <span>الترتيب: <b className="text-foreground">#{score.rank}</b></span>
-        </div>
-
-        {/* Segments */}
-        <div className="space-y-3 bg-secondary/20 rounded-xl p-4 border border-border">
-          <h4 className="text-xs font-bold text-foreground mb-2">📊 تفصيل العمليات</h4>
-          {SEGMENTS.map(seg => {
-            const val = seg.key === 'financialImpact'
-              ? (score.financialImpact > 0 ? Math.min(Math.round(score.financialImpact / 1000), 100) : 0)
-              : score[seg.key];
-            const max = seg.key === 'financialImpact' ? 100 : totalMax;
-            return (
-              <SegmentBar key={seg.key} value={seg.key === 'financialImpact' ? score.financialImpact : val}
-                max={max} color={seg.color} label={seg.label} icon={seg.icon} />
-            );
-          })}
-        </div>
-
-        {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          {[
-            { label: 'إجمالي العمليات', value: score.totalActions, icon: Activity },
-            { label: 'هذا الأسبوع', value: score.weeklyActions, icon: Calendar },
-            { label: 'هذا الشهر', value: score.monthlyActions, icon: TrendingUp },
-          ].map(s => (
-            <div key={s.label} className="bg-card border border-border rounded-lg p-3 text-center">
-              <s.icon className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-              <p className="text-lg font-heading font-bold text-foreground">{s.value}</p>
-              <p className="text-[9px] text-muted-foreground">{s.label}</p>
+            {/* Circle */}
+            <div className="flex justify-center py-4">
+              <CircleChart score={score.score} size={160} />
             </div>
-          ))}
-        </div>
 
-        {/* Trend indicator */}
-        {previousScore !== undefined && (
-          <div className={`flex items-center justify-center gap-2 mt-3 text-xs font-medium rounded-lg p-2 ${
-            score.score >= previousScore
-              ? 'bg-success/10 text-success'
-              : 'bg-destructive/10 text-destructive'
-          }`}>
-            {score.score >= previousScore
-              ? <><TrendingUp className="w-4 h-4" /> أداء مستقر أو متحسن</>
-              : <><TrendingDown className="w-4 h-4" /> تراجع بمقدار {previousScore - score.score}% عن الدورة السابقة</>
-            }
+            {/* Cycle Info */}
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Clock className="w-3.5 h-3.5" />
+              <span>بداية الدورة: {cycleDate}</span>
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+              <span>الترتيب: <b className="text-foreground">#{score.rank}</b></span>
+            </div>
+
+            {/* Segments */}
+            <div className="space-y-3 bg-secondary/20 rounded-xl p-4 border border-border">
+              <h4 className="text-xs font-bold text-foreground mb-2">📊 تفصيل العمليات</h4>
+              {SEGMENTS.map(seg => {
+                const val = seg.key === 'financialImpact'
+                  ? (score.financialImpact > 0 ? Math.min(Math.round(score.financialImpact / 1000), 100) : 0)
+                  : score[seg.key];
+                const max = seg.key === 'financialImpact' ? 100 : totalMax;
+                return (
+                  <SegmentBar key={seg.key} value={seg.key === 'financialImpact' ? score.financialImpact : val}
+                    max={max} color={seg.color} label={seg.label} icon={seg.icon} />
+                );
+              })}
+            </div>
+
+            {/* Summary Stats */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'إجمالي العمليات', value: score.totalActions, icon: Activity },
+                { label: 'هذا الأسبوع', value: score.weeklyActions, icon: Calendar },
+                { label: 'هذا الشهر', value: score.monthlyActions, icon: TrendingUp },
+              ].map(s => (
+                <div key={s.label} className="bg-card border border-border rounded-lg p-3 text-center">
+                  <s.icon className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
+                  <p className="text-lg font-heading font-bold text-foreground">{s.value}</p>
+                  <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Trend indicator */}
+            {previousScore !== undefined && (
+              <div className={`flex items-center justify-center gap-2 text-xs font-medium rounded-lg p-2 ${
+                score.score >= previousScore
+                  ? 'bg-success/10 text-success'
+                  : 'bg-destructive/10 text-destructive'
+              }`}>
+                {score.score >= previousScore
+                  ? <><TrendingUp className="w-4 h-4" /> أداء مستقر أو متحسن</>
+                  : <><TrendingDown className="w-4 h-4" /> تراجع بمقدار {previousScore - score.score}% عن الدورة السابقة</>
+                }
+              </div>
+            )}
           </div>
-        )}
+
+          <Button
+            variant="secondary"
+            size="icon"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 h-7 w-7 rounded-full shadow-md opacity-80 hover:opacity-100"
+            onClick={() => scrollRef.current?.scrollBy({ top: 150, behavior: 'smooth' })}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
