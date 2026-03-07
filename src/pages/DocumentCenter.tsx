@@ -45,7 +45,7 @@ function formatFileSize(bytes: number) {
 }
 
 export default function DocumentCenter() {
-  const { profile } = useAuthContext();
+  const { profile, isCEO } = useAuthContext();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState('all');
