@@ -5,7 +5,7 @@ import {
   MessageSquare, Plus, Send, Hash, Lock, FolderKanban, Shield,
   Search, Reply, Paperclip, X, Trash2, Pin, PinOff,
   Pencil, Check, SmilePlus, Brain, Volume2, Image as ImageIcon,
-  ArrowRight, Users as UsersIcon, Settings
+  ArrowRight, Users as UsersIcon, Settings, User
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
