@@ -7,6 +7,7 @@ import PrintButton from '@/components/PrintButton';
 import { useEmployees, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
 import { usePerformanceScoring } from '@/hooks/usePerformanceScoring';
 import { usePerformanceCycles, useResetPerformanceCycle } from '@/hooks/usePerformanceCycles';
+import PerformanceCircleDialog, { PerformanceAlertBanner } from '@/components/PerformanceCircleDialog';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/data/mockData';
 
@@ -194,6 +195,15 @@ export default function Employees() {
         )}
       </AnimatePresence>
 
+      {/* Performance Drop Alerts */}
+      {perfScores && cycles && perfScores.map(ps => {
+        const lastCycle = cycles.find(c => c.display_name === ps.displayName);
+        if (!lastCycle || ps.score >= lastCycle.final_score) return null;
+        const drop = lastCycle.final_score - ps.score;
+        if (drop < 5) return null;
+        return <PerformanceAlertBanner key={ps.userId} score={ps.score} previousScore={lastCycle.final_score} name={ps.displayName} />;
+      })}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {empList.map((emp, i) => (
           <motion.div key={emp.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -230,6 +240,17 @@ export default function Employees() {
                   <h3 className="font-heading font-bold text-sm text-foreground group-hover:text-section-employees transition-colors truncate">{emp.name}</h3>
                   <p className="text-xs text-muted-foreground">{emp.position}</p>
                 </div>
+                {/* Performance Circle Button */}
+                {(() => {
+                  const ps = perfScores?.find(p => p.displayName === emp.name);
+                  const lastCycle = cycles?.find(c => c.display_name === emp.name);
+                  if (!ps) return null;
+                  return (
+                    <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                      <PerformanceCircleDialog score={ps} previousScore={lastCycle?.final_score} />
+                    </div>
+                  );
+                })()}
                 <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-section-employees transition-colors shrink-0" />
               </div>
 
