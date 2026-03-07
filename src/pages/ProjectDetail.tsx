@@ -37,6 +37,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function ProjectDetail() {
   const { id } = useParams();
+  const { isCEO } = useAuthContext();
   const { data: project, isLoading: loadingProject } = useProject(id || '');
   const { data: monthlyData } = useProjectMonthlyData(project?.id || '');
   const { data: expenses } = useProjectExpenses(project?.id || '');

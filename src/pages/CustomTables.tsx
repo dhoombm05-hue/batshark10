@@ -335,6 +335,7 @@ function TableEditor({ tableId, columns, onColumnsUpdate, onDirtyChange }: {
 // ─── Main Page ───
 export default function CustomTablesPage() {
   usePageViewTracker('الجداول المخصصة');
+  const { isCEO } = useAuthContext();
 
   const { data: tables, isLoading } = useCustomTables();
   const { data: projects } = useProjects();
