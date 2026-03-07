@@ -213,7 +213,7 @@ export default function PerformanceCircleDialog({ score, previousScore }: Props)
               {SEGMENTS.map(seg => {
                 const val = seg.key === 'financialImpact'
                   ? (score.financialImpact > 0 ? Math.min(Math.round(score.financialImpact / 1000), 100) : 0)
-                  : score[seg.key];
+                  : (score as any)[seg.key] ?? 0;
                 const max = seg.key === 'financialImpact' ? 100 : totalMax;
                 return (
                   <SegmentBar key={seg.key} value={seg.key === 'financialImpact' ? score.financialImpact : val}
