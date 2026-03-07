@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send,
-  ArrowRight, Image, Video, FileText, Twitter, ZoomIn, ZoomOut, X, Crown,
+  ArrowRight, Image, Video, FileText, Twitter, ZoomIn, ZoomOut, X, Crown, User,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
