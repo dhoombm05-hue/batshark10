@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useChatRooms, useChatMessages, type ChatRoom, type ChatMessage } from '@/hooks/useChatRooms';
 import RoomSettingsDialog from '@/components/RoomSettingsDialog';
+import { useRoomSettings } from '@/hooks/useRoomSettings';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences, useUpdatePreferences, useUploadThemeImage } from '@/hooks/useUserPreferences';
@@ -288,22 +289,26 @@ export default function ChatRooms() {
     return getPositionByUserId(userId, userName);
   };
 
-  // Handle chat wallpaper upload
+  // Handle chat wallpaper upload — saves to room settings (shared for all members)
+  const { settings: roomSettings, upsertSettings } = useRoomSettings(selectedRoom?.id || null);
+
   const handleWallpaperUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !selectedRoom) return;
     try {
-      const url = await uploadThemeImage.mutateAsync({ file, type: 'wallpaper' });
-      await updatePrefs.mutateAsync({ chat_wallpaper_url: url });
-      toast({ title: '✅ تم حفظ خلفية الغرفة' });
+      const path = `room-wallpapers/${selectedRoom.id}/${Date.now()}_${file.name}`;
+      const { error: uploadErr } = await supabase.storage.from('documents').upload(path, file);
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+      await upsertSettings(selectedRoom.id, { wallpaper_url: urlData.publicUrl, wallpaper_opacity: 0.35 });
+      toast({ title: '✅ تم حفظ خلفية الغرفة — تظهر لجميع الأعضاء' });
     } catch {
-      toast({ title: 'خطأ', variant: 'destructive' });
+      toast({ title: 'خطأ في رفع الخلفية', variant: 'destructive' });
     }
   };
 
-  const chatWallpaper = prefs?.chat_wallpaper_url;
-  const chatOpacity = prefs?.chat_wallpaper_opacity ?? 0.3;
-  const chatBlur = prefs?.chat_wallpaper_blur ?? 8;
+  const chatWallpaper = roomSettings?.wallpaper_url || prefs?.chat_wallpaper_url;
+  const chatOpacity = roomSettings?.wallpaper_url ? (roomSettings.wallpaper_opacity ?? 0.35) : (prefs?.chat_wallpaper_opacity ?? 0.3);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col md:fixed md:inset-0" style={{ background: 'linear-gradient(135deg, hsl(220 20% 11%), hsl(220 22% 8%))' }}>
@@ -475,15 +480,19 @@ export default function ChatRooms() {
                   >
                     <Search className="w-3.5 h-3.5" />
                   </button>
-                  {/* Wallpaper button */}
-                  <button
-                    onClick={() => wallpaperFileRef.current?.click()}
-                    className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)] transition-colors"
-                    title="جدار الغرفة"
-                  >
-                    <ImageIcon className="w-3.5 h-3.5" />
-                  </button>
-                  <input ref={wallpaperFileRef} type="file" accept="image/*" className="hidden" onChange={handleWallpaperUpload} />
+                  {/* Wallpaper button — CEO only */}
+                  {isCEO && (
+                    <>
+                      <button
+                        onClick={() => wallpaperFileRef.current?.click()}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)] hover:text-[hsl(43,65%,55%)] transition-colors"
+                        title="🖼 تغيير خلفية الغرفة"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                      </button>
+                      <input ref={wallpaperFileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleWallpaperUpload} />
+                    </>
+                  )}
                   {(isCEO || selectedRoom.created_by === user?.id) && (
                     <>
                       <button
