@@ -582,7 +582,7 @@ export default function ChatRooms() {
                     const isAI = msg.message_type === 'ai';
                     const isAdmin = isCeoUser(msg.user_id);
                     const replyMsg = msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null;
-                    const showAvatar = idx === 0 || filteredMessages[idx - 1]?.user_id !== msg.user_id;
+                    const showAvatar = true; // Always show avatar with every message (WhatsApp/Slack style)
                     const avatarColor = getAvatarColor(msg.user_name);
                     const reactions = msg.reactions || {};
                     const userAvatarUrl = getUserAvatar(msg.user_id, msg.user_name);
