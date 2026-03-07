@@ -536,11 +536,11 @@ export default function ChatRooms() {
               </AnimatePresence>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative" style={{ background: 'radial-gradient(ellipse at 50% 0%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
-                {/* Chat Wallpaper — blur only on background, never on avatars */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative" style={{ background: 'hsl(220 20% 13%)' }}>
+                {/* Chat Wallpaper — solid, no blur/glass */}
                 {chatWallpaper && (
                   <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-                    <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity, filter: chatBlur > 0 ? `blur(${chatBlur}px)` : 'none' }} />
+                    <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity }} />
                     <div className="absolute inset-0" style={{ background: prefs?.chat_wallpaper_overlay || 'rgba(0,0,0,0.4)' }} />
                   </div>
                 )}
@@ -601,14 +601,14 @@ export default function ChatRooms() {
                             </div>
                           )}
 
-                          <div className={`rounded-2xl px-3.5 py-2 relative ${
+                          <div className={`rounded-2xl px-3.5 py-2.5 relative shadow-md ${
                             isAI
-                              ? 'bg-gradient-to-bl from-[hsl(190,80%,45%/0.12)] to-[hsl(210,80%,52%/0.06)] border border-[hsl(190,80%,45%/0.2)]'
+                              ? 'bg-[hsl(190,60%,15%)] border border-[hsl(190,80%,30%/0.4)]'
                               : isAdmin && !isOwn
-                                ? 'bg-gradient-to-bl from-[hsl(43,65%,50%/0.1)] to-[hsl(25,85%,52%/0.05)] border border-[hsl(43,65%,50%/0.2)] rounded-bl-md'
+                                ? 'bg-[hsl(35,40%,16%)] border border-[hsl(43,65%,40%/0.3)] rounded-bl-md'
                                 : isOwn
-                                  ? 'bg-[hsl(210,80%,52%/0.15)] rounded-br-md'
-                                  : 'bg-[hsl(220,18%,20%)] border border-[hsl(220,18%,25%)] rounded-bl-md'
+                                  ? 'bg-[hsl(210,60%,22%)] rounded-br-md'
+                                  : 'bg-[hsl(220,20%,18%)] border border-[hsl(220,18%,24%)] rounded-bl-md'
                           } ${msg.is_pinned ? 'ring-1 ring-[hsl(43,65%,50%/0.3)]' : ''}`}>
                             {showAvatar && (
                               <div className="flex items-center gap-2 mb-0.5">
@@ -817,7 +817,7 @@ export default function ChatRooms() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 50%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
+            <div className="flex-1 flex items-center justify-center" style={{ background: 'hsl(220 20% 13%)' }}>
               <div className="text-center">
                 <div className="w-20 h-20 rounded-2xl bg-[hsl(220,18%,16%)] flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="w-9 h-9 text-[hsl(220,15%,25%)]" />
