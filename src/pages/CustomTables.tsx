@@ -517,9 +517,12 @@ export default function CustomTablesPage() {
               <p className="text-sm text-muted-foreground">جداول ذكية مع معادلات تلقائية — أقوى من Excel</p>
             </div>
           </div>
-          <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm">
-            <Plus className="w-4 h-4" /> جدول جديد
-          </button>
+          <div className="flex items-center gap-2">
+            <PrintButton title="طباعة الجدول" />
+            <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm">
+              <Plus className="w-4 h-4" /> جدول جديد
+            </button>
+          </div>
         </div>
       </div>
 
