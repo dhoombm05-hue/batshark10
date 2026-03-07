@@ -67,14 +67,14 @@ export function useNews(projectId?: string) {
 
       const [{ data: profiles, error: profilesError }, { data: roles }, { data: employees }] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', authorIds),
-        supabase.from('user_roles').select('user_id, role').in('user_id', authorIds).eq('role', 'ceo'),
-        supabase.from('employees').select('name, avatar_url'),
+        supabase.from('user_roles').select('user_id, role').in('user_id', authorIds),
+        supabase.from('employees').select('name, avatar_url, slug, position'),
       ]);
 
       if (profilesError) throw profilesError;
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
-      const ceoSet = new Set((roles || []).map((r: any) => r.user_id));
+      const ceoSet = new Set((roles || []).filter((r: any) => r.role === 'ceo').map((r: any) => r.user_id));
       const empList = employees || [];
 
       return newsRows.map((item) => {
@@ -90,7 +90,13 @@ export function useNews(projectId?: string) {
               displayName.includes(e.name)
             )
           );
-          if (matchedEmp) avatar = (matchedEmp as any).avatar_url;
+          if (matchedEmp) {
+            avatar = (matchedEmp as any).avatar_url;
+          } else if (ceoSet.has(item.author_id)) {
+            // CEO role fallback
+            const ceoEmp = empList.find((e: any) => e.avatar_url && ((e as any).slug === '1' || (e as any).position?.includes('رئيس')));
+            if (ceoEmp) avatar = (ceoEmp as any).avatar_url;
+          }
         }
         return {
           ...item,
@@ -227,15 +233,17 @@ export function useNewsComments(newsId: string) {
       const userIds = [...new Set(comments.map(c => c.user_id).filter(Boolean))];
       if (userIds.length === 0) return comments;
 
-      const [{ data: profiles, error: profilesError }, { data: employees }] = await Promise.all([
+      const [{ data: profiles, error: profilesError }, { data: employees }, { data: roles }] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', userIds),
-        supabase.from('employees').select('name, avatar_url'),
+        supabase.from('employees').select('name, avatar_url, slug, position'),
+        supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
       ]);
 
       if (profilesError) throw profilesError;
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
       const empList = employees || [];
+      const ceoUserIds = new Set((roles || []).filter((r: any) => r.role === 'ceo').map((r: any) => r.user_id));
       
       return comments.map((comment) => {
         const profile = profileMap.get(comment.user_id);
@@ -249,7 +257,12 @@ export function useNewsComments(newsId: string) {
               displayName.includes(e.name)
             )
           );
-          if (matchedEmp) avatar = (matchedEmp as any).avatar_url;
+          if (matchedEmp) {
+            avatar = (matchedEmp as any).avatar_url;
+          } else if (ceoUserIds.has(comment.user_id)) {
+            const ceoEmp = empList.find((e: any) => e.avatar_url && ((e as any).slug === '1' || (e as any).position?.includes('رئيس')));
+            if (ceoEmp) avatar = (ceoEmp as any).avatar_url;
+          }
         }
         return {
           ...comment,
