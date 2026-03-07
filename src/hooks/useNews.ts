@@ -257,7 +257,12 @@ export function useNewsComments(newsId: string) {
               displayName.includes(e.name)
             )
           );
-          if (matchedEmp) avatar = (matchedEmp as any).avatar_url;
+          if (matchedEmp) {
+            avatar = (matchedEmp as any).avatar_url;
+          } else if (ceoUserIds.has(comment.user_id)) {
+            const ceoEmp = empList.find((e: any) => e.avatar_url && ((e as any).slug === '1' || (e as any).position?.includes('رئيس')));
+            if (ceoEmp) avatar = (ceoEmp as any).avatar_url;
+          }
         }
         return {
           ...comment,
