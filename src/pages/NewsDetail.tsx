@@ -122,8 +122,8 @@ function PostComments({ newsId }: { newsId: string }) {
       <div className="flex items-start gap-3">
         <Avatar className="w-9 h-9 mt-0.5">
           <AvatarImage src={profile?.avatar_url || undefined} />
-          <AvatarFallback className="text-xs bg-primary/10 text-primary font-bold">
-            {profile?.display_name?.charAt(0) || '؟'}
+          <AvatarFallback className="bg-primary/10 text-primary">
+            <User className="w-4 h-4" />
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 flex items-center gap-2">
