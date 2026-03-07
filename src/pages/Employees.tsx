@@ -207,7 +207,7 @@ export default function Employees() {
                     <img src={emp.avatar_url} alt={emp.name} className="w-12 h-12 rounded-full object-cover ring-2 ring-section-employees/20" />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-section-employees/15 flex items-center justify-center ring-2 ring-section-employees/20">
-                      <span className="text-section-employees font-heading font-bold text-sm">{emp.name.charAt(0)}</span>
+                      <Users className="w-5 h-5 text-section-employees" />
                     </div>
                   )}
                   <button

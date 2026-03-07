@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { UserPlus, Shield, Trash2, Users, AlertCircle, Check } from 'lucide-react';
+import { UserPlus, Shield, Trash2, Users, AlertCircle, Check, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
@@ -173,8 +173,8 @@ export default function UserManagement() {
               {users.map(u => (
                 <div key={u.user_id} className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-heading font-bold">
-                      {u.display_name.charAt(0)}
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                      <User className="w-5 h-5" />
                     </div>
                     <div>
                       <p className="font-heading font-bold text-foreground text-sm">{u.display_name}</p>

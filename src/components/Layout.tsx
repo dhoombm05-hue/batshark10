@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
-  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail
+  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -132,8 +132,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               <Avatar className="w-7 h-7">
                 <AvatarImage src={latestUnreadNews.author_avatar || undefined} />
-                <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
-                  {(latestUnreadNews.author_name || '؟').charAt(0)}
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  <User className="w-3.5 h-3.5" />
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
@@ -188,8 +188,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3 mt-1">
               <Avatar className="w-9 h-9 rounded-xl">
                 <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-heading font-bold rounded-xl">
-                  {profile.display_name.charAt(0)}
+                <AvatarFallback className="bg-primary/10 text-primary rounded-xl">
+                  <User className="w-4 h-4" />
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">

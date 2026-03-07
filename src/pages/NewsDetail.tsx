@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send,
-  ArrowRight, Image, Video, FileText, Twitter, ZoomIn, ZoomOut, X, Crown,
+  ArrowRight, Image, Video, FileText, Twitter, ZoomIn, ZoomOut, X, Crown, User,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -122,8 +122,8 @@ function PostComments({ newsId }: { newsId: string }) {
       <div className="flex items-start gap-3">
         <Avatar className="w-9 h-9 mt-0.5">
           <AvatarImage src={profile?.avatar_url || undefined} />
-          <AvatarFallback className="text-xs bg-primary/10 text-primary font-bold">
-            {profile?.display_name?.charAt(0) || '؟'}
+          <AvatarFallback className="bg-primary/10 text-primary">
+            <User className="w-4 h-4" />
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 flex items-center gap-2">
@@ -158,7 +158,7 @@ function PostComments({ newsId }: { newsId: string }) {
             >
               <Avatar className="w-9 h-9 mt-0.5">
                 <AvatarImage src={c.user_avatar || undefined} />
-                <AvatarFallback className="text-xs bg-secondary font-bold">{c.user_name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="bg-secondary"><User className="w-4 h-4 text-muted-foreground" /></AvatarFallback>
               </Avatar>
               <div className="flex-1 bg-muted/40 rounded-2xl p-3.5">
                 <div className="flex items-center justify-between gap-2">
@@ -266,8 +266,8 @@ export default function NewsDetail() {
                   <div className="relative cursor-pointer" onClick={() => navigate('/employees')}>
                     <Avatar className="w-14 h-14 ring-2 ring-primary/30 hover:ring-primary/60 transition-all shadow-md">
                       <AvatarImage src={item.author_avatar || undefined} className="object-cover" />
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white text-lg font-bold">
-                        {item.author_name.charAt(0)}
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white">
+                        <User className="w-6 h-6" />
                       </AvatarFallback>
                     </Avatar>
                     {item.author_is_ceo && (

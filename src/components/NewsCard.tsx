@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send, ChevronDown, ChevronUp,
-  Image, Video, FileText, Twitter, Eye, ExternalLink, Crown
+  Image, Video, FileText, Twitter, Eye, ExternalLink, Crown, User
 } from 'lucide-react';
 import { useNewsReactions, useNewsComments, type NewsItem } from '@/hooks/useNews';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -89,8 +89,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
             <div className="relative cursor-pointer" onClick={() => navigate(`/employees`)}>
               <Avatar className="w-12 h-12 ring-2 ring-primary/30 hover:ring-primary/60 transition-all shadow-md">
                 <AvatarImage src={authorAvatar || undefined} className="object-cover" />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white text-sm font-bold">
-                  {authorName.charAt(0)}
+                <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white">
+                  <User className="w-5 h-5" />
                 </AvatarFallback>
               </Avatar>
               {!isRead && (
@@ -237,7 +237,7 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
                 <div key={c.id} className="flex items-start gap-2">
                   <Avatar className="w-7 h-7">
                     <AvatarImage src={c.user_avatar || undefined} />
-                    <AvatarFallback className="text-[10px] bg-secondary font-bold">{c.user_name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-secondary"><User className="w-3.5 h-3.5 text-muted-foreground" /></AvatarFallback>
                   </Avatar>
                   <div className="flex-1 bg-muted/50 rounded-xl p-2.5">
                     <div className="flex items-center justify-between">
@@ -266,8 +266,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
               <div className="flex items-center gap-2">
                 <Avatar className="w-7 h-7">
                   <AvatarImage src={myProfile?.avatar_url || undefined} />
-                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
-                    {myProfile?.display_name?.charAt(0) || '؟'}
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <User className="w-3.5 h-3.5" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 flex items-center gap-2">
