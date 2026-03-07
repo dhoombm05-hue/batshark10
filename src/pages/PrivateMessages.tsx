@@ -307,8 +307,8 @@ function NewConversationDialog({ onStart }: { onStart: (userId: string) => void 
             >
               <Avatar className="h-9 w-9">
                 <AvatarImage src={u.avatar_url || ''} />
-                <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(u.display_name || '')} text-white text-xs`}>
-                  {getInitials(u.display_name || '?')}
+                <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(u.display_name || '')} text-white`}>
+                  <User className="w-4 h-4" />
                 </AvatarFallback>
               </Avatar>
               <div>
