@@ -224,20 +224,31 @@ export function useNewsComments(newsId: string) {
       const userIds = [...new Set(comments.map(c => c.user_id).filter(Boolean))];
       if (userIds.length === 0) return comments;
 
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, display_name, avatar_url, job_title')
-        .in('user_id', userIds);
+      const [{ data: profiles, error: profilesError }, { data: employees }] = await Promise.all([
+        supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', userIds),
+        supabase.from('employees').select('name, avatar_url'),
+      ]);
 
       if (profilesError) throw profilesError;
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      const empList = employees || [];
+      
       return comments.map((comment) => {
         const profile = profileMap.get(comment.user_id);
+        let avatar = profile?.avatar_url || comment.user_avatar;
+        if (!avatar && profile?.display_name) {
+          const matchedEmp = empList.find((e: any) => 
+            e.name === profile.display_name || 
+            e.name.includes(profile.display_name) || 
+            profile.display_name.includes(e.name)
+          );
+          if (matchedEmp) avatar = (matchedEmp as any).avatar_url;
+        }
         return {
           ...comment,
           user_name: profile?.display_name || comment.user_name,
-          user_avatar: profile?.avatar_url || comment.user_avatar,
+          user_avatar: avatar,
           user_job_title: profile?.job_title || null,
         };
       });

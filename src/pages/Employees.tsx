@@ -245,12 +245,30 @@ export default function Employees() {
                   const ps = perfScores?.find(p => 
                     p.displayName === emp.name || 
                     emp.name.includes(p.displayName) || 
-                    p.displayName.includes(emp.name)
+                    p.displayName.includes(emp.name) ||
+                    emp.name.split(' ')[0] === p.displayName.split(' ')[0]
+                  ) || (
+                    // Fallback: match by rank order if employee is CEO
+                    perfScores?.find(p => {
+                      const empIdx = empList.indexOf(emp);
+                      const psForEmp = perfScores.filter(ps2 => 
+                        !empList.some(e2 => e2 !== emp && (
+                          ps2.displayName === e2.name || 
+                          e2.name.includes(ps2.displayName) || 
+                          ps2.displayName.includes(e2.name)
+                        ))
+                      );
+                      return psForEmp.length === 1 ? psForEmp[0] === p : false;
+                    })
                   );
-                  const lastCycle = cycles?.find(c => 
-                    c.display_name === ps?.displayName
-                  );
+                  const lastCycle = ps ? cycles?.find(c => c.display_name === ps.displayName) : undefined;
                   if (!ps) return null;
+                  return (
+                    <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                      <PerformanceCircleDialog score={ps} previousScore={lastCycle?.final_score} />
+                    </div>
+                  );
+                })()}
                   return (
                     <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
                       <PerformanceCircleDialog score={ps} previousScore={lastCycle?.final_score} />
