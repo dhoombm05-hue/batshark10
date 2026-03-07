@@ -246,13 +246,19 @@ export default function Employees() {
                     p.displayName === name || name.includes(p.displayName) || p.displayName.includes(name)
                   );
                   let ps = matchPs(emp.name);
-                  // If no match found, this might be CEO (profile name differs from employee name)
-                  if (!ps && perfScores) {
-                    const matchedIds = new Set(
-                      empList.filter(e => e !== emp && matchPs(e.name)).map(e => matchPs(e.name)!.userId)
-                    );
-                    const unmatched = perfScores.filter(p => !matchedIds.has(p.userId));
-                    if (unmatched.length === 1) ps = unmatched[0];
+                  // If no match found, try to assign unmatched perfScores to unmatched employees
+                  if (!ps && perfScores && perfScores.length > 0) {
+                    const allMatchedIds = new Set<string>();
+                    for (const e of empList) {
+                      const m = matchPs(e.name);
+                      if (m) allMatchedIds.add(m.userId);
+                    }
+                    const unmatchedScores = perfScores.filter(p => !allMatchedIds.has(p.userId));
+                    const unmatchedEmps = empList.filter(e => !matchPs(e.name));
+                    const myIdx = unmatchedEmps.indexOf(emp);
+                    if (myIdx >= 0 && myIdx < unmatchedScores.length) {
+                      ps = unmatchedScores[myIdx];
+                    }
                   }
                   const lastCycle = ps ? cycles?.find(c => c.display_name === ps!.displayName) : undefined;
                   if (!ps) return null;
