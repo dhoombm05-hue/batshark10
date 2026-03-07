@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Table2, Save, X, FileSpreadsheet, Calculator, Pencil, Check, History, AlertCircle, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { useAuthContext } from '@/contexts/AuthContext';
 import AskMeDialog from '@/components/AskMeDialog';
 import {
   useCustomTables, useCustomTableRows, useCreateCustomTable,
