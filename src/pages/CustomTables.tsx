@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Table2, Save, X, FileSpreadsheet, Calculator, Pencil, Check, History, AlertCircle, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import Layout from '@/components/Layout';
+import PrintButton from '@/components/PrintButton';
 import { useAuthContext } from '@/contexts/AuthContext';
 import AskMeDialog from '@/components/AskMeDialog';
 import {
@@ -109,7 +110,7 @@ function TableEditor({ tableId, columns, onColumnsUpdate, onDirtyChange }: {
   const addRow = useAddCustomTableRow();
   const updateRow = useUpdateCustomTableRow();
   const deleteRow = useDeleteCustomTableRow();
-  const { isCEO } = useAuthContext();
+  
   const [editingCell, setEditingCell] = useState<{ rowId: string; colId: string } | null>(null);
   const [cellValue, setCellValue] = useState('');
   const [editingColId, setEditingColId] = useState<string | null>(null);
@@ -226,18 +227,16 @@ function TableEditor({ tableId, columns, onColumnsUpdate, onDirtyChange }: {
                           ({COL_TYPES.find(t => t.value === col.type)?.label})
                         </button>
                       )}
-                        {isCEO && (
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                            <button onClick={() => { setEditingColId(col.id); setColLabel(col.label); }}>
-                              <Pencil className="w-2.5 h-2.5 text-muted-foreground hover:text-primary" />
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                          <button onClick={() => { setEditingColId(col.id); setColLabel(col.label); }}>
+                            <Pencil className="w-2.5 h-2.5 text-muted-foreground hover:text-primary" />
+                          </button>
+                          {columns.length > 1 && (
+                            <button onClick={() => handleDeleteColumn(col.id)}>
+                              <Trash2 className="w-2.5 h-2.5 text-muted-foreground hover:text-destructive" />
                             </button>
-                            {columns.length > 1 && (
-                              <button onClick={() => handleDeleteColumn(col.id)}>
-                                <Trash2 className="w-2.5 h-2.5 text-muted-foreground hover:text-destructive" />
-                              </button>
-                            )}
-                          </div>
-                        )}
+                          )}
+                        </div>
                     </div>
                   )}
                 </th>
@@ -518,9 +517,12 @@ export default function CustomTablesPage() {
               <p className="text-sm text-muted-foreground">جداول ذكية مع معادلات تلقائية — أقوى من Excel</p>
             </div>
           </div>
-          <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm">
-            <Plus className="w-4 h-4" /> جدول جديد
-          </button>
+          <div className="flex items-center gap-2">
+            <PrintButton title="طباعة الجدول" />
+            <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm">
+              <Plus className="w-4 h-4" /> جدول جديد
+            </button>
+          </div>
         </div>
       </div>
 
