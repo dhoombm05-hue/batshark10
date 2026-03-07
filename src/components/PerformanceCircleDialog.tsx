@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Activity, TrendingUp, TrendingDown, FileEdit, Plus, Trash2, DollarSign, Calendar, AlertTriangle, CheckCircle, Clock, ChevronUp, ChevronDown } from 'lucide-react';
+import { Activity, TrendingUp, TrendingDown, FileEdit, Plus, Trash2, DollarSign, Calendar, AlertTriangle, CheckCircle, Clock, ChevronUp, ChevronDown, Newspaper, CheckCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import type { UserPerformanceScore } from '@/hooks/usePerformanceScoring';
@@ -14,9 +14,11 @@ interface Props {
 }
 
 const SEGMENTS = [
+  { key: 'completedActions', label: 'عمليات مكتملة', icon: CheckCheck, color: 'hsl(160, 70%, 40%)' },
   { key: 'updates', label: 'تحديثات', icon: FileEdit, color: 'hsl(210, 80%, 52%)' },
   { key: 'creates', label: 'إنشاءات', icon: Plus, color: 'hsl(142, 71%, 45%)' },
   { key: 'deletes', label: 'حذف', icon: Trash2, color: 'hsl(0, 84%, 60%)' },
+  { key: 'newsCount', label: 'أخبار منشورة', icon: Newspaper, color: 'hsl(270, 60%, 55%)' },
   { key: 'financialImpact', label: 'تأثير مالي', icon: DollarSign, color: 'hsl(38, 92%, 50%)' },
 ] as const;
 
@@ -211,7 +213,7 @@ export default function PerformanceCircleDialog({ score, previousScore }: Props)
               {SEGMENTS.map(seg => {
                 const val = seg.key === 'financialImpact'
                   ? (score.financialImpact > 0 ? Math.min(Math.round(score.financialImpact / 1000), 100) : 0)
-                  : score[seg.key];
+                  : (score as any)[seg.key] ?? 0;
                 const max = seg.key === 'financialImpact' ? 100 : totalMax;
                 return (
                   <SegmentBar key={seg.key} value={seg.key === 'financialImpact' ? score.financialImpact : val}

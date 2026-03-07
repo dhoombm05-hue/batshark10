@@ -130,7 +130,8 @@ export default function Employees() {
                 </span>
                 <span className="text-xs font-medium text-foreground flex-1">{ps.displayName}</span>
                 <div className="flex gap-3 text-[10px] text-muted-foreground">
-                  <span>عمليات: <b className="text-foreground">{ps.totalActions}</b></span>
+                  <span>مكتملة: <b className="text-foreground">{ps.completedActions}</b></span>
+                  <span>أخبار: <b className="text-foreground">{ps.newsCount}</b></span>
                   <span>تأثير مالي: <b className="text-foreground">{ps.financialImpact > 0 ? formatCurrency(ps.financialImpact) : '0'}</b></span>
                 </div>
                 <div className="w-20">
