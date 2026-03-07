@@ -195,6 +195,15 @@ export default function Employees() {
         )}
       </AnimatePresence>
 
+      {/* Performance Drop Alerts */}
+      {perfScores && cycles && perfScores.map(ps => {
+        const lastCycle = cycles.find(c => c.display_name === ps.displayName);
+        if (!lastCycle || ps.score >= lastCycle.final_score) return null;
+        const drop = lastCycle.final_score - ps.score;
+        if (drop < 5) return null;
+        return <PerformanceAlertBanner key={ps.userId} score={ps.score} previousScore={lastCycle.final_score} name={ps.displayName} />;
+      })}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {empList.map((emp, i) => (
           <motion.div key={emp.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
