@@ -12,9 +12,7 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Layout from '@/components/Layout';
 
-function getInitials(name: string) {
-  return name.split(' ').map(w => w[0]).join('').slice(0, 2);
-}
+// Removed getInitials - use User icon fallback instead
 
 function getAvatarColor(name: string) {
   const colors = [
