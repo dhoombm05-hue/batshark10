@@ -580,11 +580,13 @@ export default function ChatRooms() {
 
                {/* Messages */}
                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative isolate" style={{ background: 'hsl(220 20% 13%)' }}>
-                {/* Chat Wallpaper — solid, no blur/glass, never covers messages */}
+                {/* Chat Wallpaper — fixed behind messages, stays in place while scrolling */}
                 {chatWallpaper && (
-                  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-                    <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity }} />
-                    <div className="absolute inset-0" style={{ background: prefs?.chat_wallpaper_overlay || 'rgba(0,0,0,0.4)' }} />
+                  <div className="sticky top-0 left-0 right-0 h-0 pointer-events-none" style={{ zIndex: 0 }}>
+                    <div className="absolute inset-0 w-full" style={{ height: '100vh' }}>
+                      <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity }} />
+                      <div className="absolute inset-0" style={{ background: prefs?.chat_wallpaper_overlay || 'rgba(0,0,0,0.4)' }} />
+                    </div>
                   </div>
                 )}
                 {msgsLoading ? (
