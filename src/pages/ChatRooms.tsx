@@ -594,22 +594,27 @@ export default function ChatRooms() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2 }}
-                        className={`flex gap-2 items-start relative z-10 group ${isOwn ? 'flex-row' : 'flex-row-reverse'}`}
+                        className={`flex gap-2.5 items-start relative z-10 group ${isOwn ? 'flex-row' : 'flex-row-reverse'}`}
+                        style={{ isolation: 'isolate' }}
                       >
-                        {/* Avatar — always visible with each message */}
-                        <div className="w-8 shrink-0 self-start relative z-20">
-                          {showAvatar && (
-                            isAI ? (
-                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] flex items-center justify-center text-white">
-                                <Brain className="w-4 h-4" />
-                              </div>
-                            ) : userAvatarUrl ? (
-                              <img src={userAvatarUrl} alt={displayName} className={`w-8 h-8 rounded-lg object-cover ring-1 ring-white/10 ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`} style={{ imageRendering: 'auto', filter: 'none' }} />
-                            ) : (
-                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${avatarColor} flex items-center justify-center ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.5)]' : ''}`}>
-                                <UsersIcon className="w-4 h-4 text-white/80" />
-                              </div>
-                            )
+                        {/* Avatar — always visible, inline with each message, never hidden */}
+                        <div className="w-9 shrink-0 self-start relative z-20 mt-0.5">
+                          {isAI ? (
+                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] flex items-center justify-center text-white shadow-md">
+                              <Brain className="w-4.5 h-4.5" />
+                            </div>
+                          ) : userAvatarUrl ? (
+                            <img
+                              src={userAvatarUrl}
+                              alt={displayName}
+                              className={`w-9 h-9 rounded-lg object-cover shadow-md ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.6)]' : 'ring-1 ring-white/15'}`}
+                              style={{ imageRendering: 'auto', filter: 'none' }}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${avatarColor} flex items-center justify-center shadow-md ${isAdmin ? 'ring-2 ring-[hsl(43,65%,50%/0.6)]' : ''}`}>
+                              <User className="w-4 h-4 text-white/90" />
+                            </div>
                           )}
                         </div>
 
