@@ -262,12 +262,6 @@ export default function Employees() {
                     </div>
                   );
                 })()}
-                  return (
-                    <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
-                      <PerformanceCircleDialog score={ps} previousScore={lastCycle?.final_score} />
-                    </div>
-                  );
-                })()}
                 <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-section-employees transition-colors shrink-0" />
               </div>
 
