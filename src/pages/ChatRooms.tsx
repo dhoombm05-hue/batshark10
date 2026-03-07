@@ -594,10 +594,10 @@ export default function ChatRooms() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2 }}
-                        className={`flex gap-2 group ${isOwn ? 'flex-row' : 'flex-row-reverse'}`}
+                        className={`flex gap-2 items-start relative z-10 group ${isOwn ? 'flex-row' : 'flex-row-reverse'}`}
                       >
-                        {/* Avatar */}
-                        <div className="w-8 shrink-0">
+                        {/* Avatar — always visible with each message */}
+                        <div className="w-8 shrink-0 self-start relative z-20">
                           {showAvatar && (
                             isAI ? (
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] flex items-center justify-center text-white">
