@@ -103,7 +103,14 @@ function useUserAvatarMap() {
   const getAvatarByUserId = (userId: string, userName: string): string | null => {
     const profile = profileMap.get(userId);
     if (profile?.avatar_url) return profile.avatar_url;
-    return employeeAvatarMap.get(userName) || null;
+    // Direct match
+    if (employeeAvatarMap.has(userName)) return employeeAvatarMap.get(userName)!;
+    // Fuzzy match (CEO name may differ between profile and employees table)
+    const displayName = profile?.display_name || userName;
+    for (const [empName, empAvatar] of employeeAvatarMap.entries()) {
+      if (empName.includes(displayName) || displayName.includes(empName)) return empAvatar;
+    }
+    return null;
   };
 
   const getDisplayNameByUserId = (userId: string, userName: string): string => {
