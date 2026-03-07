@@ -231,6 +231,17 @@ export default function Employees() {
                   <h3 className="font-heading font-bold text-sm text-foreground group-hover:text-section-employees transition-colors truncate">{emp.name}</h3>
                   <p className="text-xs text-muted-foreground">{emp.position}</p>
                 </div>
+                {/* Performance Circle Button */}
+                {(() => {
+                  const ps = perfScores?.find(p => p.displayName === emp.name);
+                  const lastCycle = cycles?.find(c => c.display_name === emp.name);
+                  if (!ps) return null;
+                  return (
+                    <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                      <PerformanceCircleDialog score={ps} previousScore={lastCycle?.final_score} />
+                    </div>
+                  );
+                })()}
                 <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-section-employees transition-colors shrink-0" />
               </div>
 
