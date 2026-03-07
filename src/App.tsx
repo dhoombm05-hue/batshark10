@@ -20,6 +20,7 @@ import SetupCEO from "./pages/SetupCEO";
 import DocumentCenter from "./pages/DocumentCenter";
 import CustomTables from "./pages/CustomTables";
 import ChatRooms from "./pages/ChatRooms";
+import PrivateMessages from "./pages/PrivateMessages";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import NotFound from "./pages/NotFound";
