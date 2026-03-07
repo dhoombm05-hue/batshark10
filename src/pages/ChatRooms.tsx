@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useChatRooms, useChatMessages, type ChatRoom, type ChatMessage } from '@/hooks/useChatRooms';
+import RoomSettingsDialog from '@/components/RoomSettingsDialog';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences, useUpdatePreferences, useUploadThemeImage } from '@/hooks/useUserPreferences';
@@ -139,6 +140,7 @@ export default function ChatRooms() {
   const [aiLoading, setAiLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [wallpaperDialogOpen, setWallpaperDialogOpen] = useState(false);
+  const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
   const wallpaperFileRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -323,8 +325,8 @@ export default function ChatRooms() {
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt="" className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/10" style={{ filter: 'none' }} />
               ) : (
-                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(profile.display_name || 'U')} flex items-center justify-center text-white text-[9px] font-bold`}>
-                  {getInitials(profile.display_name || 'U')}
+                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(profile.display_name || 'U')} flex items-center justify-center text-white`}>
+                  <User className="w-3.5 h-3.5" />
                 </div>
               )}
               <span className="text-[11px] text-[hsl(210,20%,80%)] hidden sm:inline">{isCurrentUserAdmin ? '👑 عبدالرحمن CEO' : profile.display_name}</span>
@@ -483,12 +485,21 @@ export default function ChatRooms() {
                   </button>
                   <input ref={wallpaperFileRef} type="file" accept="image/*" className="hidden" onChange={handleWallpaperUpload} />
                   {(isCEO || selectedRoom.created_by === user?.id) && (
-                    <button
-                      onClick={() => { deleteRoom(selectedRoom.id); setSelectedRoom(null); }}
-                      className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(0,72%,55%/0.6)] hover:bg-[hsl(0,72%,55%/0.1)] hover:text-[hsl(0,72%,55%)] transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setRoomSettingsOpen(true)}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)] hover:text-[hsl(210,80%,58%)] transition-colors"
+                        title="سمات الغرفة"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => { deleteRoom(selectedRoom.id); setSelectedRoom(null); }}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(0,72%,55%/0.6)] hover:bg-[hsl(0,72%,55%/0.1)] hover:text-[hsl(0,72%,55%)] transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -829,6 +840,14 @@ export default function ChatRooms() {
           )}
         </div>
       </div>
+      {selectedRoom && (
+        <RoomSettingsDialog
+          open={roomSettingsOpen}
+          onOpenChange={setRoomSettingsOpen}
+          roomId={selectedRoom.id}
+          roomName={selectedRoom.name}
+        />
+      )}
     </div>
   );
 }

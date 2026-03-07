@@ -270,6 +270,56 @@ export type Database = {
           },
         ]
       }
+      chat_room_settings: {
+        Row: {
+          allowed_roles: string[] | null
+          created_at: string
+          id: string
+          is_private: boolean | null
+          notification_sound: string | null
+          notifications_enabled: boolean | null
+          room_id: string
+          theme_color: string | null
+          updated_at: string
+          wallpaper_opacity: number | null
+          wallpaper_url: string | null
+        }
+        Insert: {
+          allowed_roles?: string[] | null
+          created_at?: string
+          id?: string
+          is_private?: boolean | null
+          notification_sound?: string | null
+          notifications_enabled?: boolean | null
+          room_id: string
+          theme_color?: string | null
+          updated_at?: string
+          wallpaper_opacity?: number | null
+          wallpaper_url?: string | null
+        }
+        Update: {
+          allowed_roles?: string[] | null
+          created_at?: string
+          id?: string
+          is_private?: boolean | null
+          notification_sound?: string | null
+          notifications_enabled?: boolean | null
+          room_id?: string
+          theme_color?: string | null
+          updated_at?: string
+          wallpaper_opacity?: number | null
+          wallpaper_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_room_settings_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rooms: {
         Row: {
           created_at: string
