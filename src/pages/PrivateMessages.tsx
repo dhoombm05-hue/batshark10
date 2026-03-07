@@ -197,8 +197,8 @@ function ChatArea({ conversation, onBack }: { conversation: PrivateConversation;
               {!isMine && (
                 <Avatar className="h-7 w-7 flex-shrink-0 mt-1">
                   <AvatarImage src={senderProfile?.avatar_url || other?.avatar_url || ''} />
-                  <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(senderProfile?.display_name || other?.display_name || '')} text-white text-[10px]`}>
-                    {getInitials(senderProfile?.display_name || other?.display_name || '?')}
+                  <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(senderProfile?.display_name || other?.display_name || '')} text-white`}>
+                    <User className="w-3.5 h-3.5" />
                   </AvatarFallback>
                 </Avatar>
               )}
