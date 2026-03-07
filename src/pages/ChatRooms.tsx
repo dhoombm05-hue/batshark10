@@ -179,7 +179,8 @@ export default function ChatRooms() {
     setInput('');
     setReplyTo(null);
 
-    if (hasBatShark && question) {
+    if (hasBatShark) {
+      const aiQuestion = question || 'أعطني ملخص سريع عن وضع الشركة الحالي';
       setAiLoading(true);
       try {
         const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/batshark-ai`, {
