@@ -104,17 +104,19 @@ export default function ExpenseRow({ expense }: ExpenseRowProps) {
             <span className="text-sm text-foreground">{expense.category}</span>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{formatCurrency(expense.amount)}</span>
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
-                <button onClick={() => setEditing(true)} className="p-1 rounded hover:bg-primary/10 text-primary" title="تعديل">
-                  <Pencil className="w-3 h-3" />
-                </button>
-                <button onClick={() => setShowHistory(true)} className="p-1 rounded hover:bg-accent/10 text-accent" title="السجل">
-                  <History className="w-3 h-3" />
-                </button>
-                <button onClick={handleDelete} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="حذف">
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
+              {isCEO && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
+                  <button onClick={() => setEditing(true)} className="p-1 rounded hover:bg-primary/10 text-primary" title="تعديل">
+                    <Pencil className="w-3 h-3" />
+                  </button>
+                  <button onClick={() => setShowHistory(true)} className="p-1 rounded hover:bg-accent/10 text-accent" title="السجل">
+                    <History className="w-3 h-3" />
+                  </button>
+                  <button onClick={handleDelete} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="حذف">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}

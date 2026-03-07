@@ -95,11 +95,13 @@ export default function ManualOverrideField({
       ) : (
         <div className="flex items-center gap-1">
           <span className={`text-sm font-heading font-bold ${valueClassName}`}>{displayValue}</span>
-          <button onClick={handleEdit}
-            className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-primary/10 text-primary transition-all print:hidden"
-            title="تعديل يدوي">
-            <Pencil className="w-3 h-3" />
-          </button>
+          {isCEO && (
+            <button onClick={handleEdit}
+              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-primary/10 text-primary transition-all print:hidden"
+              title="تعديل يدوي">
+              <Pencil className="w-3 h-3" />
+            </button>
+          )}
         </div>
       )}
     </div>
