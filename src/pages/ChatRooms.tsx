@@ -289,22 +289,26 @@ export default function ChatRooms() {
     return getPositionByUserId(userId, userName);
   };
 
-  // Handle chat wallpaper upload
+  // Handle chat wallpaper upload — saves to room settings (shared for all members)
+  const { settings: roomSettings, upsertSettings } = useRoomSettings(selectedRoom?.id || null);
+
   const handleWallpaperUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !selectedRoom) return;
     try {
-      const url = await uploadThemeImage.mutateAsync({ file, type: 'wallpaper' });
-      await updatePrefs.mutateAsync({ chat_wallpaper_url: url });
-      toast({ title: '✅ تم حفظ خلفية الغرفة' });
+      const path = `room-wallpapers/${selectedRoom.id}/${Date.now()}_${file.name}`;
+      const { error: uploadErr } = await supabase.storage.from('documents').upload(path, file);
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+      await upsertSettings(selectedRoom.id, { wallpaper_url: urlData.publicUrl, wallpaper_opacity: 0.35 });
+      toast({ title: '✅ تم حفظ خلفية الغرفة — تظهر لجميع الأعضاء' });
     } catch {
-      toast({ title: 'خطأ', variant: 'destructive' });
+      toast({ title: 'خطأ في رفع الخلفية', variant: 'destructive' });
     }
   };
 
-  const chatWallpaper = prefs?.chat_wallpaper_url;
-  const chatOpacity = prefs?.chat_wallpaper_opacity ?? 0.3;
-  const chatBlur = prefs?.chat_wallpaper_blur ?? 8;
+  const chatWallpaper = roomSettings?.wallpaper_url || prefs?.chat_wallpaper_url;
+  const chatOpacity = roomSettings?.wallpaper_url ? (roomSettings.wallpaper_opacity ?? 0.35) : (prefs?.chat_wallpaper_opacity ?? 0.3);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col md:fixed md:inset-0" style={{ background: 'linear-gradient(135deg, hsl(220 20% 11%), hsl(220 22% 8%))' }}>
