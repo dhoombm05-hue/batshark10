@@ -51,6 +51,7 @@ const App = () => (
             <Route path="/documents" element={<ProtectedRoute><DocumentCenter /></ProtectedRoute>} />
             <Route path="/tables" element={<ProtectedRoute><CustomTables /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><ChatRooms /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><PrivateMessages /></ProtectedRoute>} />
             <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
             <Route path="/news/:id" element={<ProtectedRoute><NewsDetail /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

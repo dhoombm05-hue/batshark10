@@ -30,6 +30,7 @@ const navItems = [
   { path: '/ai', label: 'اسأل BatShark', icon: Brain, color: 'section-ai' },
   { path: '/documents', label: 'مركز الملفات', icon: FolderOpen, color: 'section-finance' },
   { path: '/chat', label: 'غرفة النقاشات', icon: MessageSquare, color: 'section-ai' },
+  { path: '/messages', label: 'الرسائل الخاصة', icon: Mail, color: 'section-forecast' },
   { path: '/news', label: 'الأخبار', icon: Newspaper, color: 'section-revenue' },
 ];
 
