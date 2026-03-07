@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, Search, Plus, ArrowRight, Paperclip, Image as ImageIcon, X } from 'lucide-react';
+import { MessageSquare, Send, Search, Plus, ArrowRight, Paperclip, Image as ImageIcon, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,9 +12,7 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Layout from '@/components/Layout';
 
-function getInitials(name: string) {
-  return name.split(' ').map(w => w[0]).join('').slice(0, 2);
-}
+// Removed getInitials - use User icon fallback instead
 
 function getAvatarColor(name: string) {
   const colors = [
@@ -82,8 +80,8 @@ export default function PrivateMessages() {
                 <div className="relative">
                   <Avatar className="h-11 w-11">
                     <AvatarImage src={convo.other_user?.avatar_url || ''} />
-                    <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(convo.other_user?.display_name || '')} text-white text-xs font-bold`}>
-                      {getInitials(convo.other_user?.display_name || '?')}
+                    <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(convo.other_user?.display_name || '')} text-white`}>
+                      <User className="w-5 h-5" />
                     </AvatarFallback>
                   </Avatar>
                   {(convo.unread_count || 0) > 0 && (
@@ -168,8 +166,8 @@ function ChatArea({ conversation, onBack }: { conversation: PrivateConversation;
         </button>
         <Avatar className="h-9 w-9">
           <AvatarImage src={other?.avatar_url || ''} />
-          <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(other?.display_name || '')} text-white text-xs`}>
-            {getInitials(other?.display_name || '?')}
+          <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(other?.display_name || '')} text-white`}>
+            <User className="w-4 h-4" />
           </AvatarFallback>
         </Avatar>
         <div>
@@ -199,8 +197,8 @@ function ChatArea({ conversation, onBack }: { conversation: PrivateConversation;
               {!isMine && (
                 <Avatar className="h-7 w-7 flex-shrink-0 mt-1">
                   <AvatarImage src={senderProfile?.avatar_url || other?.avatar_url || ''} />
-                  <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(senderProfile?.display_name || other?.display_name || '')} text-white text-[10px]`}>
-                    {getInitials(senderProfile?.display_name || other?.display_name || '?')}
+                  <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(senderProfile?.display_name || other?.display_name || '')} text-white`}>
+                    <User className="w-3.5 h-3.5" />
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -309,8 +307,8 @@ function NewConversationDialog({ onStart }: { onStart: (userId: string) => void 
             >
               <Avatar className="h-9 w-9">
                 <AvatarImage src={u.avatar_url || ''} />
-                <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(u.display_name || '')} text-white text-xs`}>
-                  {getInitials(u.display_name || '?')}
+                <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(u.display_name || '')} text-white`}>
+                  <User className="w-4 h-4" />
                 </AvatarFallback>
               </Avatar>
               <div>
