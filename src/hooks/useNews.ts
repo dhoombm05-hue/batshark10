@@ -65,22 +65,34 @@ export function useNews(projectId?: string) {
 
       if (authorIds.length === 0) return newsRows;
 
-      const [{ data: profiles, error: profilesError }, { data: roles }] = await Promise.all([
+      const [{ data: profiles, error: profilesError }, { data: roles }, { data: employees }] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', authorIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', authorIds).eq('role', 'ceo'),
+        supabase.from('employees').select('name, avatar_url'),
       ]);
 
       if (profilesError) throw profilesError;
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
       const ceoSet = new Set((roles || []).map((r: any) => r.user_id));
+      const empList = employees || [];
 
       return newsRows.map((item) => {
         const profile = profileMap.get(item.author_id);
+        // If profile has no avatar, try to match from employees table
+        let avatar = profile?.avatar_url || item.author_avatar;
+        if (!avatar && profile?.display_name) {
+          const matchedEmp = empList.find((e: any) => 
+            e.name === profile.display_name || 
+            e.name.includes(profile.display_name) || 
+            profile.display_name.includes(e.name)
+          );
+          if (matchedEmp) avatar = (matchedEmp as any).avatar_url;
+        }
         return {
           ...item,
           author_name: profile?.display_name || item.author_name || 'مستخدم',
-          author_avatar: profile?.avatar_url || item.author_avatar,
+          author_avatar: avatar,
           author_job_title: profile?.job_title || null,
           author_is_ceo: ceoSet.has(item.author_id),
         };
