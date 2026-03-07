@@ -140,6 +140,7 @@ export default function ChatRooms() {
   const [aiLoading, setAiLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [wallpaperDialogOpen, setWallpaperDialogOpen] = useState(false);
+  const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
   const wallpaperFileRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
