@@ -237,7 +237,7 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
                 <div key={c.id} className="flex items-start gap-2">
                   <Avatar className="w-7 h-7">
                     <AvatarImage src={c.user_avatar || undefined} />
-                    <AvatarFallback className="text-[10px] bg-secondary font-bold">{c.user_name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-secondary"><User className="w-3.5 h-3.5 text-muted-foreground" /></AvatarFallback>
                   </Avatar>
                   <div className="flex-1 bg-muted/50 rounded-xl p-2.5">
                     <div className="flex items-center justify-between">
