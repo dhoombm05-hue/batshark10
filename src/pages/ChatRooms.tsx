@@ -555,9 +555,9 @@ export default function ChatRooms() {
                 )}
               </AnimatePresence>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative" style={{ background: 'hsl(220 20% 13%)' }}>
-                {/* Chat Wallpaper — solid, no blur/glass */}
+               {/* Messages */}
+               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative isolate" style={{ background: 'hsl(220 20% 13%)' }}>
+                {/* Chat Wallpaper — solid, no blur/glass, never covers messages */}
                 {chatWallpaper && (
                   <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
                     <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity }} />
