@@ -69,7 +69,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     : navItems;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen min-h-[100dvh]">
       {/* Mobile menu button */}
       <button
         onClick={() => setMobileOpen(true)}
