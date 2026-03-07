@@ -45,7 +45,7 @@ function formatFileSize(bytes: number) {
 }
 
 export default function DocumentCenter() {
-  const { profile } = useAuthContext();
+  const { profile, isCEO } = useAuthContext();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState('all');
@@ -363,14 +363,18 @@ export default function DocumentCenter() {
                       className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors" title="تحميل">
                       <Download className="w-4 h-4" />
                     </a>
-                    <button onClick={() => { setEditingId(doc.id); setEditTitle(doc.title); setEditDesc(doc.description || ''); }}
-                      className="p-2 rounded-lg hover:bg-accent/10 text-accent transition-colors" title="تعديل">
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => { if (confirm('هل أنت متأكد من حذف هذا الملف؟')) deleteMutation.mutate(doc); }}
-                      className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors" title="حذف">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isCEO && (
+                      <>
+                        <button onClick={() => { setEditingId(doc.id); setEditTitle(doc.title); setEditDesc(doc.description || ''); }}
+                          className="p-2 rounded-lg hover:bg-accent/10 text-accent transition-colors" title="تعديل">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => { if (confirm('هل أنت متأكد من حذف هذا الملف؟')) deleteMutation.mutate(doc); }}
+                          className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors" title="حذف">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

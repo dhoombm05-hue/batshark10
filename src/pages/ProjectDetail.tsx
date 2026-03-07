@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, DollarSign, TrendingUp, Users, Megaphone, Activity, Plus, History, RotateCcw, Settings, Shield } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import Layout from '@/components/Layout';
+import { useAuthContext } from '@/contexts/AuthContext';
 import StatCard from '@/components/StatCard';
 import EditableField from '@/components/EditableField';
 import AskMeDialog from '@/components/AskMeDialog';
@@ -36,6 +37,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function ProjectDetail() {
   const { id } = useParams();
+  const { isCEO } = useAuthContext();
   const { data: project, isLoading: loadingProject } = useProject(id || '');
   const { data: monthlyData } = useProjectMonthlyData(project?.id || '');
   const { data: expenses } = useProjectExpenses(project?.id || '');
@@ -167,9 +169,11 @@ export default function ProjectDetail() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-heading text-muted-foreground">الإيرادات مقابل المصروفات</h3>
             <div className="flex gap-1">
-              <button className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="تعديل طريقة الحساب">
-                <Settings className="w-3.5 h-3.5" />
-              </button>
+              {isCEO && (
+                <button className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="تعديل طريقة الحساب">
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button className="p-1 rounded hover:bg-warning/10 text-muted-foreground hover:text-warning transition-colors" title="إعادة توليد">
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -243,9 +247,11 @@ export default function ProjectDetail() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-heading text-muted-foreground">اتجاه الأرباح الشهرية</h3>
           <div className="flex gap-1">
-            <button className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="تعديل مصدر البيانات">
-              <Settings className="w-3.5 h-3.5" />
-            </button>
+              {isCEO && (
+                <button className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="تعديل مصدر البيانات">
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
+              )}
             <button className="p-1 rounded hover:bg-warning/10 text-muted-foreground hover:text-warning transition-colors" title="إعادة توليد">
               <RotateCcw className="w-3.5 h-3.5" />
             </button>

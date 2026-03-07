@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pencil, Check, X, Lock, Unlock } from 'lucide-react';
 import { useUpdateField } from '@/hooks/useProjects';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface ManualOverrideFieldProps {
@@ -35,6 +36,7 @@ export default function ManualOverrideField({
   const [editValue, setEditValue] = useState('');
   const [reason, setReason] = useState('');
   const updateField = useUpdateField();
+  const { isCEO } = useAuthContext();
 
   const displayValue = formatter ? formatter(currentDbValue ?? computedValue) : String(currentDbValue ?? computedValue);
 
@@ -93,11 +95,13 @@ export default function ManualOverrideField({
       ) : (
         <div className="flex items-center gap-1">
           <span className={`text-sm font-heading font-bold ${valueClassName}`}>{displayValue}</span>
-          <button onClick={handleEdit}
-            className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-primary/10 text-primary transition-all print:hidden"
-            title="تعديل يدوي">
-            <Pencil className="w-3 h-3" />
-          </button>
+          {isCEO && (
+            <button onClick={handleEdit}
+              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-primary/10 text-primary transition-all print:hidden"
+              title="تعديل يدوي">
+              <Pencil className="w-3 h-3" />
+            </button>
+          )}
         </div>
       )}
     </div>

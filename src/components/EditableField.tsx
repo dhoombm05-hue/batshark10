@@ -4,6 +4,7 @@ import { Pencil, Check, X, History, RotateCcw, Lock, Unlock } from 'lucide-react
 import { useUpdateField } from '@/hooks/useProjects';
 import { useFinancialEngine } from '@/hooks/useFinancialEngine';
 import { logActivityImpact } from '@/hooks/useActivityImpact';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface EditableFieldProps {
@@ -52,6 +53,7 @@ export default function EditableField({
   const [showReason, setShowReason] = useState(false);
   const updateField = useUpdateField();
   const { setOverride, clearOverride } = useFinancialEngine();
+  const { isCEO } = useAuthContext();
 
   const isOverridable = table === 'projects' && OVERRIDE_FIELDS.includes(field);
   const isFinancialField = type === 'number' && ['total_revenue', 'total_expenses', 'net_profit', 'growth_rate', 'amount', 'revenue', 'expenses', 'profit'].includes(field);
@@ -175,42 +177,44 @@ export default function EditableField({
                 <Lock className="w-2 h-2" /> يدوي
               </span>
             )}
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 mr-1 print:hidden">
-              <button
-                onClick={() => { setEditValue(String(value ?? '')); setEditing(true); }}
-                className="p-0.5 rounded hover:bg-primary/10 text-primary transition-colors"
-                title="تعديل"
-              >
-                <Pencil className="w-3 h-3" />
-              </button>
-              {isOverridden && (
+            {isCEO && (
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 mr-1 print:hidden">
                 <button
-                  onClick={handleClearOverride}
-                  className="p-0.5 rounded hover:bg-success/10 text-success transition-colors"
-                  title="إعادة تفعيل الحساب التلقائي"
+                  onClick={() => { setEditValue(String(value ?? '')); setEditing(true); }}
+                  className="p-0.5 rounded hover:bg-primary/10 text-primary transition-colors"
+                  title="تعديل"
                 >
-                  <Unlock className="w-3 h-3" />
+                  <Pencil className="w-3 h-3" />
                 </button>
-              )}
-              {onHistoryClick && (
-                <button
-                  onClick={onHistoryClick}
-                  className="p-0.5 rounded hover:bg-accent/10 text-accent transition-colors"
-                  title="سجل التعديلات"
-                >
-                  <History className="w-3 h-3" />
-                </button>
-              )}
-              {onRecalculate && (
-                <button
-                  onClick={onRecalculate}
-                  className="p-0.5 rounded hover:bg-warning/10 text-warning transition-colors"
-                  title="إعادة احتساب"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                </button>
-              )}
-            </div>
+                {isOverridden && (
+                  <button
+                    onClick={handleClearOverride}
+                    className="p-0.5 rounded hover:bg-success/10 text-success transition-colors"
+                    title="إعادة تفعيل الحساب التلقائي"
+                  >
+                    <Unlock className="w-3 h-3" />
+                  </button>
+                )}
+                {onHistoryClick && (
+                  <button
+                    onClick={onHistoryClick}
+                    className="p-0.5 rounded hover:bg-accent/10 text-accent transition-colors"
+                    title="سجل التعديلات"
+                  >
+                    <History className="w-3 h-3" />
+                  </button>
+                )}
+                {onRecalculate && (
+                  <button
+                    onClick={onRecalculate}
+                    className="p-0.5 rounded hover:bg-warning/10 text-warning transition-colors"
+                    title="إعادة احتساب"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
