@@ -190,7 +190,7 @@ export default function ChatRooms() {
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            messages: [{ role: 'user', content: question }],
+            messages: [{ role: 'user', content: aiQuestion }],
             userName: profile?.display_name || 'المستخدم',
           }),
         });
