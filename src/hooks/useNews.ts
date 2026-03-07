@@ -67,8 +67,8 @@ export function useNews(projectId?: string) {
 
       const [{ data: profiles, error: profilesError }, { data: roles }, { data: employees }] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', authorIds),
-        supabase.from('user_roles').select('user_id, role').in('user_id', authorIds).eq('role', 'ceo'),
-        supabase.from('employees').select('name, avatar_url'),
+        supabase.from('user_roles').select('user_id, role').in('user_id', authorIds),
+        supabase.from('employees').select('name, avatar_url, slug, position'),
       ]);
 
       if (profilesError) throw profilesError;
