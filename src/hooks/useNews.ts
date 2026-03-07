@@ -81,11 +81,14 @@ export function useNews(projectId?: string) {
         const profile = profileMap.get(item.author_id);
         // If profile has no avatar, try to match from employees table
         let avatar = profile?.avatar_url || item.author_avatar;
-        if (!avatar && profile?.display_name) {
+        if (!avatar) {
+          const displayName = profile?.display_name || item.author_name || '';
           const matchedEmp = empList.find((e: any) => 
-            e.name === profile.display_name || 
-            e.name.includes(profile.display_name) || 
-            profile.display_name.includes(e.name)
+            e.avatar_url && (
+              e.name === displayName || 
+              e.name.includes(displayName) || 
+              displayName.includes(e.name)
+            )
           );
           if (matchedEmp) avatar = (matchedEmp as any).avatar_url;
         }
