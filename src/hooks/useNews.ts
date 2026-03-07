@@ -243,6 +243,7 @@ export function useNewsComments(newsId: string) {
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
       const empList = employees || [];
+      const ceoUserIds = new Set((roles || []).filter((r: any) => r.role === 'ceo').map((r: any) => r.user_id));
       
       return comments.map((comment) => {
         const profile = profileMap.get(comment.user_id);
