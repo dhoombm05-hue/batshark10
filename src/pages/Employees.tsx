@@ -242,26 +242,19 @@ export default function Employees() {
                 </div>
                 {/* Performance Circle Button */}
                 {(() => {
-                  const ps = perfScores?.find(p => 
-                    p.displayName === emp.name || 
-                    emp.name.includes(p.displayName) || 
-                    p.displayName.includes(emp.name) ||
-                    emp.name.split(' ')[0] === p.displayName.split(' ')[0]
-                  ) || (
-                    // Fallback: match by rank order if employee is CEO
-                    perfScores?.find(p => {
-                      const empIdx = empList.indexOf(emp);
-                      const psForEmp = perfScores.filter(ps2 => 
-                        !empList.some(e2 => e2 !== emp && (
-                          ps2.displayName === e2.name || 
-                          e2.name.includes(ps2.displayName) || 
-                          ps2.displayName.includes(e2.name)
-                        ))
-                      );
-                      return psForEmp.length === 1 ? psForEmp[0] === p : false;
-                    })
+                  const matchPs = (name: string) => perfScores?.find(p => 
+                    p.displayName === name || name.includes(p.displayName) || p.displayName.includes(name)
                   );
-                  const lastCycle = ps ? cycles?.find(c => c.display_name === ps.displayName) : undefined;
+                  let ps = matchPs(emp.name);
+                  // If no match found, this might be CEO (profile name differs from employee name)
+                  if (!ps && perfScores) {
+                    const matchedIds = new Set(
+                      empList.filter(e => e !== emp && matchPs(e.name)).map(e => matchPs(e.name)!.userId)
+                    );
+                    const unmatched = perfScores.filter(p => !matchedIds.has(p.userId));
+                    if (unmatched.length === 1) ps = unmatched[0];
+                  }
+                  const lastCycle = ps ? cycles?.find(c => c.display_name === ps!.displayName) : undefined;
                   if (!ps) return null;
                   return (
                     <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
