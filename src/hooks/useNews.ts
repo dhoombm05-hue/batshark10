@@ -233,9 +233,10 @@ export function useNewsComments(newsId: string) {
       const userIds = [...new Set(comments.map(c => c.user_id).filter(Boolean))];
       if (userIds.length === 0) return comments;
 
-      const [{ data: profiles, error: profilesError }, { data: employees }] = await Promise.all([
+      const [{ data: profiles, error: profilesError }, { data: employees }, { data: roles }] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', userIds),
-        supabase.from('employees').select('name, avatar_url'),
+        supabase.from('employees').select('name, avatar_url, slug, position'),
+        supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
       ]);
 
       if (profilesError) throw profilesError;
