@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, Search, Plus, ArrowRight, Paperclip, Image as ImageIcon, X } from 'lucide-react';
+import { MessageSquare, Send, Search, Plus, ArrowRight, Paperclip, Image as ImageIcon, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

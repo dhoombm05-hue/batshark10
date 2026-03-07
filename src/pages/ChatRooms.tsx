@@ -415,8 +415,8 @@ export default function ChatRooms() {
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover ring-2 ring-[hsl(210,70%,40%/0.4)]" style={{ filter: 'none' }} />
               ) : (
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white text-xs font-bold`}>
-                  {getInitials(profile?.display_name || 'U')}
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(profile?.display_name || 'U')} flex items-center justify-center text-white`}>
+                  <User className="w-4 h-4" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
