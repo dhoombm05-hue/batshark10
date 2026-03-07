@@ -170,10 +170,10 @@ export default function ChatRooms() {
 
   const handleSend = useCallback(async () => {
     if (!input.trim()) return;
-    // Detect AI triggers: @BatShark, @AI, ساعدني, يا AI, يا ذكاء
-    const aiTriggerPatterns = [/@BatShark/i, /@AI/i, /ساعدني\s*(يا)?\s*(AI|ذكاء)/i, /يا\s*(AI|ذكاء)/i];
+    // Detect AI triggers: ai, AI, Ai, @BatShark, @AI, ساعدني, يا AI, يا ذكاء
+    const aiTriggerPatterns = [/\bai\b/i, /@BatShark/i, /@AI/i, /ساعدني\s*(يا)?\s*(AI|ذكاء)/i, /يا\s*(AI|ذكاء)/i];
     const hasBatShark = aiTriggerPatterns.some(p => p.test(input));
-    const question = hasBatShark ? input.replace(/@[Bb]at[Ss]hark\s*/gi, '').replace(/@AI\s*/gi, '').replace(/ساعدني\s*(يا)?\s*(AI|ذكاء)?\s*/gi, '').replace(/يا\s*(AI|ذكاء)\s*/gi, '').trim() : '';
+    const question = hasBatShark ? input.replace(/\bai\b\s*/gi, '').replace(/@[Bb]at[Ss]hark\s*/gi, '').replace(/@AI\s*/gi, '').replace(/ساعدني\s*(يا)?\s*(AI|ذكاء)?\s*/gi, '').replace(/يا\s*(AI|ذكاء)\s*/gi, '').trim() : '';
     
     await sendMessage(input, replyTo?.id);
     setInput('');
