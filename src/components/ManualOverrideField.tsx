@@ -36,6 +36,7 @@ export default function ManualOverrideField({
   const [editValue, setEditValue] = useState('');
   const [reason, setReason] = useState('');
   const updateField = useUpdateField();
+  const { isCEO } = useAuthContext();
 
   const displayValue = formatter ? formatter(currentDbValue ?? computedValue) : String(currentDbValue ?? computedValue);
 
