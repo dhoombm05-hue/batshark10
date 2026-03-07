@@ -242,8 +242,14 @@ export default function Employees() {
                 </div>
                 {/* Performance Circle Button */}
                 {(() => {
-                  const ps = perfScores?.find(p => p.displayName === emp.name);
-                  const lastCycle = cycles?.find(c => c.display_name === emp.name);
+                  const ps = perfScores?.find(p => 
+                    p.displayName === emp.name || 
+                    emp.name.includes(p.displayName) || 
+                    p.displayName.includes(emp.name)
+                  );
+                  const lastCycle = cycles?.find(c => 
+                    c.display_name === ps?.displayName
+                  );
                   if (!ps) return null;
                   return (
                     <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
