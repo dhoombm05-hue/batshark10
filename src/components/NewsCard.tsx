@@ -89,8 +89,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
             <div className="relative cursor-pointer" onClick={() => navigate(`/employees`)}>
               <Avatar className="w-12 h-12 ring-2 ring-primary/30 hover:ring-primary/60 transition-all shadow-md">
                 <AvatarImage src={authorAvatar || undefined} className="object-cover" />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white text-sm font-bold">
-                  {authorName.charAt(0)}
+                <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--royal))] text-white">
+                  <User className="w-5 h-5" />
                 </AvatarFallback>
               </Avatar>
               {!isRead && (
