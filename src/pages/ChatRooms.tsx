@@ -485,12 +485,21 @@ export default function ChatRooms() {
                   </button>
                   <input ref={wallpaperFileRef} type="file" accept="image/*" className="hidden" onChange={handleWallpaperUpload} />
                   {(isCEO || selectedRoom.created_by === user?.id) && (
-                    <button
-                      onClick={() => { deleteRoom(selectedRoom.id); setSelectedRoom(null); }}
-                      className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(0,72%,55%/0.6)] hover:bg-[hsl(0,72%,55%/0.1)] hover:text-[hsl(0,72%,55%)] transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setRoomSettingsOpen(true)}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)] hover:text-[hsl(210,80%,58%)] transition-colors"
+                        title="سمات الغرفة"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => { deleteRoom(selectedRoom.id); setSelectedRoom(null); }}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(0,72%,55%/0.6)] hover:bg-[hsl(0,72%,55%/0.1)] hover:text-[hsl(0,72%,55%)] transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
