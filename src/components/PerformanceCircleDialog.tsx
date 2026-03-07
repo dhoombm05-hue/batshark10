@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Activity, TrendingUp, TrendingDown, FileEdit, Plus, Trash2, DollarSign, Calendar, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Activity, TrendingUp, TrendingDown, FileEdit, Plus, Trash2, DollarSign, Calendar, AlertTriangle, CheckCircle, Clock, ChevronUp, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import type { UserPerformanceScore } from '@/hooks/usePerformanceScoring';
