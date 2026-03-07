@@ -194,14 +194,13 @@ function ChatArea({ conversation, onBack }: { conversation: PrivateConversation;
               animate={{ opacity: 1, y: 0 }}
               className={`flex gap-2 ${isMine ? 'flex-row-reverse' : ''}`}
             >
-              {!isMine && (
-                <Avatar className="h-7 w-7 flex-shrink-0 mt-1">
-                  <AvatarImage src={senderProfile?.avatar_url || other?.avatar_url || ''} />
-                  <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(senderProfile?.display_name || other?.display_name || '')} text-white`}>
-                    <User className="w-3.5 h-3.5" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
+              {/* Avatar — always visible for every message */}
+              <Avatar className="h-7 w-7 flex-shrink-0 mt-1">
+                <AvatarImage src={isMine ? (profileMap.get(msg.sender_id)?.avatar_url || '') : (senderProfile?.avatar_url || other?.avatar_url || '')} />
+                <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(senderProfile?.display_name || other?.display_name || '')} text-white`}>
+                  <User className="w-3.5 h-3.5" />
+                </AvatarFallback>
+              </Avatar>
               <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 ${
                 isMine
                   ? 'bg-primary text-primary-foreground rounded-br-md'
