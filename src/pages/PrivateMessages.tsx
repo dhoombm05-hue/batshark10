@@ -166,8 +166,8 @@ function ChatArea({ conversation, onBack }: { conversation: PrivateConversation;
         </button>
         <Avatar className="h-9 w-9">
           <AvatarImage src={other?.avatar_url || ''} />
-          <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(other?.display_name || '')} text-white text-xs`}>
-            {getInitials(other?.display_name || '?')}
+          <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(other?.display_name || '')} text-white`}>
+            <User className="w-4 h-4" />
           </AvatarFallback>
         </Avatar>
         <div>
