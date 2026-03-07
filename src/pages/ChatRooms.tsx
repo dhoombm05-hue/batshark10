@@ -170,16 +170,17 @@ export default function ChatRooms() {
 
   const handleSend = useCallback(async () => {
     if (!input.trim()) return;
-    // Detect AI triggers: @BatShark, @AI, ساعدني, يا AI, يا ذكاء
-    const aiTriggerPatterns = [/@BatShark/i, /@AI/i, /ساعدني\s*(يا)?\s*(AI|ذكاء)/i, /يا\s*(AI|ذكاء)/i];
+    // Detect AI triggers: ai, AI, Ai, @BatShark, @AI, ساعدني, يا AI, يا ذكاء
+    const aiTriggerPatterns = [/\bai\b/i, /@BatShark/i, /@AI/i, /ساعدني\s*(يا)?\s*(AI|ذكاء)/i, /يا\s*(AI|ذكاء)/i];
     const hasBatShark = aiTriggerPatterns.some(p => p.test(input));
-    const question = hasBatShark ? input.replace(/@[Bb]at[Ss]hark\s*/gi, '').replace(/@AI\s*/gi, '').replace(/ساعدني\s*(يا)?\s*(AI|ذكاء)?\s*/gi, '').replace(/يا\s*(AI|ذكاء)\s*/gi, '').trim() : '';
+    const question = hasBatShark ? input.replace(/\bai\b\s*/gi, '').replace(/@[Bb]at[Ss]hark\s*/gi, '').replace(/@AI\s*/gi, '').replace(/ساعدني\s*(يا)?\s*(AI|ذكاء)?\s*/gi, '').replace(/يا\s*(AI|ذكاء)\s*/gi, '').trim() : '';
     
     await sendMessage(input, replyTo?.id);
     setInput('');
     setReplyTo(null);
 
-    if (hasBatShark && question) {
+    if (hasBatShark) {
+      const aiQuestion = question || 'أعطني ملخص سريع عن وضع الشركة الحالي';
       setAiLoading(true);
       try {
         const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/batshark-ai`, {
@@ -189,7 +190,7 @@ export default function ChatRooms() {
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            messages: [{ role: 'user', content: question }],
+            messages: [{ role: 'user', content: aiQuestion }],
             userName: profile?.display_name || 'المستخدم',
           }),
         });
