@@ -480,15 +480,19 @@ export default function ChatRooms() {
                   >
                     <Search className="w-3.5 h-3.5" />
                   </button>
-                  {/* Wallpaper button */}
-                  <button
-                    onClick={() => wallpaperFileRef.current?.click()}
-                    className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)] transition-colors"
-                    title="جدار الغرفة"
-                  >
-                    <ImageIcon className="w-3.5 h-3.5" />
-                  </button>
-                  <input ref={wallpaperFileRef} type="file" accept="image/*" className="hidden" onChange={handleWallpaperUpload} />
+                  {/* Wallpaper button — CEO only */}
+                  {isCEO && (
+                    <>
+                      <button
+                        onClick={() => wallpaperFileRef.current?.click()}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-[hsl(220,10%,50%)] hover:bg-[hsl(220,18%,20%)] hover:text-[hsl(43,65%,55%)] transition-colors"
+                        title="🖼 تغيير خلفية الغرفة"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                      </button>
+                      <input ref={wallpaperFileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleWallpaperUpload} />
+                    </>
+                  )}
                   {(isCEO || selectedRoom.created_by === user?.id) && (
                     <>
                       <button
