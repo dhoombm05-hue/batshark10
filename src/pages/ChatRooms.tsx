@@ -323,8 +323,8 @@ export default function ChatRooms() {
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt="" className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/10" style={{ filter: 'none' }} />
               ) : (
-                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(profile.display_name || 'U')} flex items-center justify-center text-white text-[9px] font-bold`}>
-                  {getInitials(profile.display_name || 'U')}
+                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(profile.display_name || 'U')} flex items-center justify-center text-white`}>
+                  <User className="w-3.5 h-3.5" />
                 </div>
               )}
               <span className="text-[11px] text-[hsl(210,20%,80%)] hidden sm:inline">{isCurrentUserAdmin ? '👑 عبدالرحمن CEO' : profile.display_name}</span>
