@@ -14,9 +14,11 @@ interface Props {
 }
 
 const SEGMENTS = [
+  { key: 'completedActions', label: 'عمليات مكتملة', icon: CheckCheck, color: 'hsl(160, 70%, 40%)' },
   { key: 'updates', label: 'تحديثات', icon: FileEdit, color: 'hsl(210, 80%, 52%)' },
   { key: 'creates', label: 'إنشاءات', icon: Plus, color: 'hsl(142, 71%, 45%)' },
   { key: 'deletes', label: 'حذف', icon: Trash2, color: 'hsl(0, 84%, 60%)' },
+  { key: 'newsCount', label: 'أخبار منشورة', icon: Newspaper, color: 'hsl(270, 60%, 55%)' },
   { key: 'financialImpact', label: 'تأثير مالي', icon: DollarSign, color: 'hsl(38, 92%, 50%)' },
 ] as const;
 
