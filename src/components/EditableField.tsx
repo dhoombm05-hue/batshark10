@@ -53,6 +53,7 @@ export default function EditableField({
   const [showReason, setShowReason] = useState(false);
   const updateField = useUpdateField();
   const { setOverride, clearOverride } = useFinancialEngine();
+  const { isCEO } = useAuthContext();
 
   const isOverridable = table === 'projects' && OVERRIDE_FIELDS.includes(field);
   const isFinancialField = type === 'number' && ['total_revenue', 'total_expenses', 'net_profit', 'growth_rate', 'amount', 'revenue', 'expenses', 'profit'].includes(field);
