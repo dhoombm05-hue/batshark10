@@ -224,7 +224,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {currentTheme === 'custom' && prefs?.custom_bg_url && (
           <div className="fixed inset-0 bg-background/60 backdrop-blur-sm pointer-events-none" style={{ zIndex: 0 }} />
         )}
-        <di3 sm:p-4 lg:p-8 max-w-7xl mx-auto relative safe-bottomx-auto relative" style={{ zIndex: 1 }}>
+        <div className="p-3 sm:p-4 lg:p-8 max-w-7xl mx-auto relative safe-bottom" style={{ zIndex: 1 }}>
           {children}
         </div>
       </main>
