@@ -109,6 +109,7 @@ function TableEditor({ tableId, columns, onColumnsUpdate, onDirtyChange }: {
   const addRow = useAddCustomTableRow();
   const updateRow = useUpdateCustomTableRow();
   const deleteRow = useDeleteCustomTableRow();
+  const { isCEO } = useAuthContext();
   const [editingCell, setEditingCell] = useState<{ rowId: string; colId: string } | null>(null);
   const [cellValue, setCellValue] = useState('');
   const [editingColId, setEditingColId] = useState<string | null>(null);
