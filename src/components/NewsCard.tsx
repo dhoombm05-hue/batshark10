@@ -266,8 +266,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
               <div className="flex items-center gap-2">
                 <Avatar className="w-7 h-7">
                   <AvatarImage src={myProfile?.avatar_url || undefined} />
-                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
-                    {myProfile?.display_name?.charAt(0) || '؟'}
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <User className="w-3.5 h-3.5" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 flex items-center gap-2">
