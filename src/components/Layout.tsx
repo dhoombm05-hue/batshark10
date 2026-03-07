@@ -188,8 +188,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3 mt-1">
               <Avatar className="w-9 h-9 rounded-xl">
                 <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-heading font-bold rounded-xl">
-                  {profile.display_name.charAt(0)}
+                <AvatarFallback className="bg-primary/10 text-primary rounded-xl">
+                  <User className="w-4 h-4" />
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">

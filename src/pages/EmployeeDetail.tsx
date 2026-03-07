@@ -262,7 +262,7 @@ export default function EmployeeDetail() {
                   className="w-24 h-24 rounded-2xl object-cover ring-4 ring-card shadow-elevated" />
               ) : (
                 <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[hsl(25,85%,52%)] to-[hsl(38,92%,50%)] flex items-center justify-center ring-4 ring-card shadow-elevated">
-                  <span className="text-white font-heading font-bold text-3xl">{emp.name.charAt(0)}</span>
+                  <Users className="w-10 h-10 text-white" />
                 </div>
               )}
               {isCEO && (

@@ -130,9 +130,13 @@ export default function Dashboard() {
               <Settings className="w-5 h-5" />
             </Link>
             <PrintButton title="طباعة التقرير" />
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,80%,52%)] to-[hsl(190,80%,45%)] flex items-center justify-center text-white font-heading font-bold text-sm shadow-card mr-1">
-              {profile?.display_name?.charAt(0) || '؟'}
-            </div>
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="w-10 h-10 rounded-xl object-cover shadow-card mr-1" />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,80%,52%)] to-[hsl(190,80%,45%)] flex items-center justify-center text-white shadow-card mr-1">
+                <User className="w-5 h-5" />
+              </div>
+            )}
           </motion.div>
         </div>
 
