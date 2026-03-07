@@ -80,8 +80,8 @@ export default function PrivateMessages() {
                 <div className="relative">
                   <Avatar className="h-11 w-11">
                     <AvatarImage src={convo.other_user?.avatar_url || ''} />
-                    <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(convo.other_user?.display_name || '')} text-white text-xs font-bold`}>
-                      {getInitials(convo.other_user?.display_name || '?')}
+                    <AvatarFallback className={`bg-gradient-to-br ${getAvatarColor(convo.other_user?.display_name || '')} text-white`}>
+                      <User className="w-5 h-5" />
                     </AvatarFallback>
                   </Avatar>
                   {(convo.unread_count || 0) > 0 && (
