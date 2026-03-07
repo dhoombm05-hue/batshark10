@@ -132,8 +132,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               <Avatar className="w-7 h-7">
                 <AvatarImage src={latestUnreadNews.author_avatar || undefined} />
-                <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
-                  {(latestUnreadNews.author_name || '؟').charAt(0)}
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  <User className="w-3.5 h-3.5" />
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
