@@ -247,9 +247,11 @@ export default function ProjectDetail() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-heading text-muted-foreground">اتجاه الأرباح الشهرية</h3>
           <div className="flex gap-1">
-            <button className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="تعديل مصدر البيانات">
-              <Settings className="w-3.5 h-3.5" />
-            </button>
+              {isCEO && (
+                <button className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="تعديل مصدر البيانات">
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
+              )}
             <button className="p-1 rounded hover:bg-warning/10 text-muted-foreground hover:text-warning transition-colors" title="إعادة توليد">
               <RotateCcw className="w-3.5 h-3.5" />
             </button>

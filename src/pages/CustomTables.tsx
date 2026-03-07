@@ -225,16 +225,18 @@ function TableEditor({ tableId, columns, onColumnsUpdate, onDirtyChange }: {
                           ({COL_TYPES.find(t => t.value === col.type)?.label})
                         </button>
                       )}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                        <button onClick={() => { setEditingColId(col.id); setColLabel(col.label); }}>
-                          <Pencil className="w-2.5 h-2.5 text-muted-foreground hover:text-primary" />
-                        </button>
-                        {columns.length > 1 && (
-                          <button onClick={() => handleDeleteColumn(col.id)}>
-                            <Trash2 className="w-2.5 h-2.5 text-muted-foreground hover:text-destructive" />
-                          </button>
+                        {isCEO && (
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                            <button onClick={() => { setEditingColId(col.id); setColLabel(col.label); }}>
+                              <Pencil className="w-2.5 h-2.5 text-muted-foreground hover:text-primary" />
+                            </button>
+                            {columns.length > 1 && (
+                              <button onClick={() => handleDeleteColumn(col.id)}>
+                                <Trash2 className="w-2.5 h-2.5 text-muted-foreground hover:text-destructive" />
+                              </button>
+                            )}
+                          </div>
                         )}
-                      </div>
                     </div>
                   )}
                 </th>
