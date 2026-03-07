@@ -69,7 +69,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     : navItems;
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh]">
+    <div className="flex min-h-screen min-h-[100dvh] min-h-[100dvh]">
       {/* Mobile menu button */}
       <button
         onClick={() => setMobileOpen(true)}
@@ -224,7 +224,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {currentTheme === 'custom' && prefs?.custom_bg_url && (
           <div className="fixed inset-0 bg-background/60 backdrop-blur-sm pointer-events-none" style={{ zIndex: 0 }} />
         )}
-        <div className="p-4 lg:p-8 max-w-7xl mx-auto relative" style={{ zIndex: 1 }}>
+        <di3 sm:p-4 lg:p-8 max-w-7xl mx-auto relative safe-bottomx-auto relative" style={{ zIndex: 1 }}>
           {children}
         </div>
       </main>
