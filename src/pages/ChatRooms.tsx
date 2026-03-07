@@ -601,14 +601,14 @@ export default function ChatRooms() {
                             </div>
                           )}
 
-                          <div className={`rounded-2xl px-3.5 py-2 relative ${
+                          <div className={`rounded-2xl px-3.5 py-2.5 relative shadow-md ${
                             isAI
-                              ? 'bg-gradient-to-bl from-[hsl(190,80%,45%/0.12)] to-[hsl(210,80%,52%/0.06)] border border-[hsl(190,80%,45%/0.2)]'
+                              ? 'bg-[hsl(190,60%,15%)] border border-[hsl(190,80%,30%/0.4)]'
                               : isAdmin && !isOwn
-                                ? 'bg-gradient-to-bl from-[hsl(43,65%,50%/0.1)] to-[hsl(25,85%,52%/0.05)] border border-[hsl(43,65%,50%/0.2)] rounded-bl-md'
+                                ? 'bg-[hsl(35,40%,16%)] border border-[hsl(43,65%,40%/0.3)] rounded-bl-md'
                                 : isOwn
-                                  ? 'bg-[hsl(210,80%,52%/0.15)] rounded-br-md'
-                                  : 'bg-[hsl(220,18%,20%)] border border-[hsl(220,18%,25%)] rounded-bl-md'
+                                  ? 'bg-[hsl(210,60%,22%)] rounded-br-md'
+                                  : 'bg-[hsl(220,20%,18%)] border border-[hsl(220,18%,24%)] rounded-bl-md'
                           } ${msg.is_pinned ? 'ring-1 ring-[hsl(43,65%,50%/0.3)]' : ''}`}>
                             {showAvatar && (
                               <div className="flex items-center gap-2 mb-0.5">
