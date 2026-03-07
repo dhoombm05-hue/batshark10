@@ -536,11 +536,11 @@ export default function ChatRooms() {
               </AnimatePresence>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative" style={{ background: 'radial-gradient(ellipse at 50% 0%, hsl(220 20% 16%), hsl(220 22% 11%) 70%)' }}>
-                {/* Chat Wallpaper — blur only on background, never on avatars */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 relative" style={{ background: 'hsl(220 20% 13%)' }}>
+                {/* Chat Wallpaper — solid, no blur/glass */}
                 {chatWallpaper && (
                   <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-                    <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity, filter: chatBlur > 0 ? `blur(${chatBlur}px)` : 'none' }} />
+                    <img src={chatWallpaper} alt="" className="w-full h-full object-cover" style={{ opacity: chatOpacity }} />
                     <div className="absolute inset-0" style={{ background: prefs?.chat_wallpaper_overlay || 'rgba(0,0,0,0.4)' }} />
                   </div>
                 )}
