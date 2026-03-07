@@ -240,11 +240,14 @@ export function useNewsComments(newsId: string) {
       return comments.map((comment) => {
         const profile = profileMap.get(comment.user_id);
         let avatar = profile?.avatar_url || comment.user_avatar;
-        if (!avatar && profile?.display_name) {
+        if (!avatar) {
+          const displayName = profile?.display_name || comment.user_name || '';
           const matchedEmp = empList.find((e: any) => 
-            e.name === profile.display_name || 
-            e.name.includes(profile.display_name) || 
-            profile.display_name.includes(e.name)
+            e.avatar_url && (
+              e.name === displayName || 
+              e.name.includes(displayName) || 
+              displayName.includes(e.name)
+            )
           );
           if (matchedEmp) avatar = (matchedEmp as any).avatar_url;
         }
