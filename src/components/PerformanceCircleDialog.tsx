@@ -140,6 +140,7 @@ export function PerformanceAlertBanner({ score, previousScore, name }: { score: 
 
 export default function PerformanceCircleDialog({ score, previousScore }: Props) {
   const [open, setOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const color = getScoreColor(score.score);
   const totalMax = Math.max(score.updates, score.creates, score.deletes, 1);
   const hasDrop = previousScore !== undefined && score.score < previousScore;
