@@ -186,11 +186,9 @@ export default function EmployeeGuide({ context }: EmployeeGuideProps) {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-l from-section-ai/10 to-transparent">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-section-ai/10">
-                    <GraduationCap className="w-5 h-5 text-section-ai" />
-                  </div>
+                  <img src={logo} alt="BatShark" className="w-10 h-10 object-contain" />
                   <div>
-                    <h2 className="font-heading font-bold text-foreground">📖 دليل الموظف التفاعلي</h2>
+                    <h2 className="font-heading font-bold text-foreground">دليل الموظف — BatShark</h2>
                     <p className="text-xs text-muted-foreground">تعلّم كيف تستخدم كل قسم في المنصة</p>
                   </div>
                 </div>
