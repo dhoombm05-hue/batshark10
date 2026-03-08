@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployee, useEmployeeMonthlyPerformance, useUpdateEmployee, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
 import { useEmployeeEngine } from '@/hooks/useEmployeeEngine';
+import EmployeeGovernanceTab from '@/components/EmployeeGovernanceTab';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
