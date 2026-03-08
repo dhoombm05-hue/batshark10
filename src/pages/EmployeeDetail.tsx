@@ -68,6 +68,7 @@ export default function EmployeeDetail() {
   const { data: monthlyPerf } = useEmployeeMonthlyPerformance(emp?.id || '');
   const updateEmployee = useUpdateEmployee();
   const uploadAvatar = useUploadEmployeeAvatar();
+  const { recalculateEmployee } = useEmployeeEngine();
   const { toast } = useToast();
   const avatarFileRef = useRef<HTMLInputElement>(null);
   const videoFileRef = useRef<HTMLInputElement>(null);
