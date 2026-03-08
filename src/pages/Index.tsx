@@ -354,7 +354,7 @@ export default function Dashboard() {
 
   const enrichedSections = sectionDefs.map(s => ({
     ...s,
-    children: prefs.layout === 'grid' ? sectionChildren[s.key] : undefined,
+    children: undefined,
   }));
 
   return (
