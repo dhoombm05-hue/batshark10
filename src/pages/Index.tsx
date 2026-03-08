@@ -287,6 +287,42 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Row 3.5: Tasks + Import Center */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <SectionCard
+            to="/tasks" icon={ListTodo} label="إدارة المهام" desc="Kanban Board للفرق"
+            bgColor="bg-[hsl(25,85%,96%)]" textColor="text-orange" borderColor="border-orange/25"
+            className="lg:col-span-2"
+          >
+            <div className="flex gap-2 mt-2">
+              <span className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-orange border border-orange/20 font-semibold">قيد الانتظار</span>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-primary border border-primary/20 font-semibold">قيد التنفيذ</span>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-success border border-success/20 font-semibold">مكتملة</span>
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            to="/import" icon={FileUp} label="مركز الاستيراد" desc="رفع Excel و CSV"
+            bgColor="bg-[hsl(43,65%,96%)]" textColor="text-gold" borderColor="border-gold/25"
+          >
+            <div className="flex gap-1.5 mt-2 flex-wrap">
+              {['CSV', 'Excel', 'تنظيف'].map(tag => (
+                <span key={tag} className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-gold-dark border border-gold/20 font-semibold shadow-sm">{tag}</span>
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            to="/strategic" icon={Activity} label="مؤشرات الأداء" desc="KPIs متقدمة"
+            bgColor="bg-[hsl(175,60%,96%)]" textColor="text-teal" borderColor="border-teal/25"
+          >
+            <div className="grid grid-cols-2 gap-1 mt-2">
+              <div className="text-center p-1.5 rounded-lg bg-white/60 text-[10px] text-teal font-bold">ROI: {m.roi}%</div>
+              <div className="text-center p-1.5 rounded-lg bg-white/60 text-[10px] text-success font-bold">سيولة: {m.liquidityRatio}x</div>
+            </div>
+          </SectionCard>
+        </div>
+
         {/* BatShark AI Card */}
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, type: 'spring' }} className="mb-6">
           <Link to="/ai" className="block">
