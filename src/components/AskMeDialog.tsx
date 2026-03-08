@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, X, Send, Loader2, BookOpen, MessageCircle } from 'lucide-react';
+import { X, Send, Loader2, BookOpen, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
+import logo from '@/assets/batshark-logo-new.png';
 
 interface AskMeDialogProps {
   pageKey: string;
