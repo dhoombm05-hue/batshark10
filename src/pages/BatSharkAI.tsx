@@ -466,35 +466,54 @@ export default function BatSharkAI() {
         >
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-4">
-              {/* Animated living logo */}
+              {/* ═══ Premium Flying Bat with Wing Flapping ═══ */}
               <motion.div
                 className="relative"
                 animate={{
                   filter: [
                     'drop-shadow(0 0 8px hsl(190 80% 50% / 0.3))',
-                    'drop-shadow(0 0 20px hsl(190 80% 50% / 0.6))',
+                    'drop-shadow(0 0 24px hsl(190 80% 50% / 0.6))',
                     'drop-shadow(0 0 8px hsl(190 80% 50% / 0.3))',
                   ],
                 }}
                 transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
               >
+                {/* Wing-flapping effect - smooth sinusoidal */}
                 <motion.img
                   src={aiLogo}
                   alt="BatShark AI"
-                  className="w-14 h-14 object-contain"
+                  className="w-16 h-16 object-contain"
                   style={{ filter: 'brightness(0) invert(1)' }}
-                  animate={{
-                    scale: [1, 1.04, 1],
-                    rotate: [0, 1, -1, 0],
+                  animate={isLoading ? {
+                    scaleX: [1, 0.88, 1, 0.9, 1],
+                    scaleY: [1, 1.06, 0.97, 1.04, 1],
+                    rotate: [0, -3, 3, -2, 0],
+                    y: [0, -4, 0, -2, 0],
+                  } : {
+                    scaleX: [1, 0.94, 1, 0.96, 1],
+                    scaleY: [1, 1.03, 0.99, 1.02, 1],
+                    rotate: [0, -1.5, 1.5, -0.5, 0],
+                    y: [0, -3, 0, -1.5, 0],
                   }}
-                  transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: isLoading ? 1.2 : 3,
+                    ease: 'easeInOut',
+                  }}
+                />
+                {/* Glow ring */}
+                <motion.div
+                  className="absolute inset-[-10px] rounded-full"
+                  style={{ background: 'radial-gradient(circle, hsl(190 80% 50% / 0.1), transparent 70%)' }}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ repeat: Infinity, duration: 2.5 }}
                 />
                 {/* Thinking pulse ring */}
                 {isLoading && (
                   <motion.div
-                    className="absolute inset-[-6px] rounded-full border-2 border-primary/40"
-                    animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="absolute inset-[-8px] rounded-full border-2 border-primary/30"
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 1.2 }}
                   />
                 )}
               </motion.div>

@@ -350,14 +350,18 @@ export default function Dashboard() {
         >
           <div className="flex items-center gap-4 min-w-0">
             <motion.div
-              whileHover={{ rotate: [0, -5, 5, 0] }}
+              whileHover={{ scale: 1.08, rotate: [0, -3, 3, 0] }}
               transition={{ duration: 0.5 }}
-              className="relative"
+              className="relative shrink-0"
             >
-              <img src={logo} alt="BatShark" className="w-13 h-13 sm:w-[60px] sm:h-[60px] drop-shadow-xl" />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-success flex items-center justify-center shadow-sm">
+              <img src={logo} alt="BatShark" className="w-16 h-16 sm:w-[72px] sm:h-[72px] object-contain drop-shadow-2xl" />
+              <motion.div
+                className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-success flex items-center justify-center shadow-sm"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >
                 <div className="w-2 h-2 rounded-full bg-white" />
-              </div>
+              </motion.div>
             </motion.div>
             <div className="min-w-0">
               <div className="flex items-center gap-2.5 mb-0.5">
