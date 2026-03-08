@@ -47,10 +47,13 @@ function GridCard({ item, color, index }: { item: SectionItem; color: string; in
     >
       <Link to={item.to} className="block h-full group">
         <div
-          className="h-full rounded-2xl p-4 sm:p-5 transition-all duration-300 border relative overflow-hidden hover:shadow-lg"
-          style={{ borderColor: `${color}30`, background: `linear-gradient(145deg, ${color}06 0%, ${color}02 100%)` }}
+          className="h-full rounded-2xl p-4 sm:p-5 transition-all duration-300 relative overflow-hidden hover:shadow-lg bg-card"
+          style={{ 
+            borderWidth: 1, borderStyle: 'solid', borderColor: `${color}25`,
+            boxShadow: `0 1px 8px -2px ${color}10`
+          }}
         >
-          <div className="absolute top-0 left-0 w-full h-[2.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: color }} />
+          <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }} />
           <div className="relative z-10 flex flex-col items-center text-center gap-2.5 py-2">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${color}12`, color }}>
               <item.icon className="w-5 h-5" strokeWidth={1.8} />
@@ -79,8 +82,8 @@ function CircleCard({ item, color, index }: { item: SectionItem; color: string; 
     >
       <Link to={item.to} className="flex flex-col items-center gap-2.5 group">
         <div
-          className="w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-full flex items-center justify-center transition-all duration-300 border group-hover:shadow-lg"
-          style={{ borderColor: `${color}35`, background: `radial-gradient(circle at 35% 35%, ${color}12, ${color}04)` }}
+          className="w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-full flex items-center justify-center transition-all duration-300 group-hover:shadow-lg"
+          style={{ borderWidth: 2, borderStyle: 'solid', borderColor: `${color}30`, background: `radial-gradient(circle at 35% 35%, ${color}10, transparent)` }}
         >
           <item.icon className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" style={{ color }} strokeWidth={1.6} />
         </div>
@@ -104,8 +107,8 @@ function ListCard({ item, color, index }: { item: SectionItem; color: string; in
     >
       <Link to={item.to} className="block group">
         <div
-          className="flex items-center gap-4 p-3.5 rounded-2xl border transition-all duration-300 hover:shadow-md"
-          style={{ borderColor: `${color}25`, background: `linear-gradient(135deg, ${color}04, transparent)` }}
+          className="flex items-center gap-4 p-3.5 rounded-2xl transition-all duration-300 hover:shadow-md bg-card"
+          style={{ borderWidth: 1, borderStyle: 'solid', borderColor: `${color}22`, boxShadow: `0 1px 6px -2px ${color}08` }}
         >
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}10`, color }}>
             <item.icon className="w-5 h-5" strokeWidth={1.8} />
@@ -155,8 +158,8 @@ function MasonryCard({ item, color, index }: { item: SectionItem; color: string;
     >
       <Link to={item.to} className="block h-full group">
         <div
-          className="h-full rounded-2xl border transition-all duration-300 hover:shadow-lg relative overflow-hidden p-4"
-          style={{ borderColor: `${color}25`, background: `linear-gradient(160deg, ${color}08, ${color}02)` }}
+          className="h-full rounded-2xl transition-all duration-300 hover:shadow-lg relative overflow-hidden p-4 bg-card"
+          style={{ borderWidth: 1, borderStyle: 'solid', borderColor: `${color}22`, boxShadow: `0 1px 8px -2px ${color}10` }}
         >
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-[0.06]" style={{ background: color, transform: 'translate(30%, -30%)' }} />
           <div className="relative z-10 flex flex-col items-center text-center gap-2.5 py-2">
@@ -233,8 +236,8 @@ function LargeCard({ item, color, index }: { item: SectionItem; color: string; i
     >
       <Link to={item.to} className="block group">
         <div
-          className="rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg relative overflow-hidden"
-          style={{ borderColor: `${color}25`, background: `linear-gradient(145deg, ${color}06, ${color}02)` }}
+          className="rounded-2xl p-6 transition-all duration-300 hover:shadow-lg relative overflow-hidden bg-card"
+          style={{ borderWidth: 1, borderStyle: 'solid', borderColor: `${color}22`, boxShadow: `0 1px 8px -2px ${color}10` }}
         >
           <div className="absolute top-0 left-0 w-full h-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: color }} />
           <div className="flex items-start gap-4">
@@ -416,10 +419,17 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05, type: 'spring', stiffness: 260 }}
                 whileHover={{ y: -2 }}
-                className="bg-card rounded-2xl border border-border/50 p-4 sm:p-5 hover:shadow-md transition-all"
+                className="rounded-2xl p-4 sm:p-5 hover:shadow-md transition-all duration-300 relative overflow-hidden bg-card"
+                style={{ 
+                  borderWidth: 1, 
+                  borderStyle: 'solid', 
+                  borderColor: `${color}25`,
+                  boxShadow: `0 1px 8px -2px ${color}10`
+                }}
               >
+                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }} />
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color}12`, color }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color}14`, color }}>
                     <stat.icon className="w-[18px] h-[18px]" strokeWidth={1.8} />
                   </div>
                   {val.change && (
