@@ -282,7 +282,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           )}
 
           {allGroups.map((group) => (
-            <NavGroup
+            <NavSection
               key={group.groupLabel}
               group={group}
               collapsed={collapsed}
