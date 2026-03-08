@@ -266,13 +266,16 @@ export default function DataDictionary() {
                 <div key={category}>
                   {activeCategory === 'all' && (
                     <div className="flex items-center gap-2 mb-3">
-                      {categoryLabels[category] && (
-                        <>
-                          <categoryLabels[category].icon className={`w-5 h-5 text-${categoryLabels[category].color}`} />
-                          <h3 className="font-bold text-foreground">{categoryLabels[category].label}</h3>
-                          <Badge variant="outline" className="text-xs">{entries.length}</Badge>
-                        </>
-                      )}
+                      {categoryLabels[category] && (() => {
+                        const CategoryIcon = categoryLabels[category].icon;
+                        return (
+                          <>
+                            <CategoryIcon className={`w-5 h-5 text-${categoryLabels[category].color}`} />
+                            <h3 className="font-bold text-foreground">{categoryLabels[category].label}</h3>
+                            <Badge variant="outline" className="text-xs">{entries.length}</Badge>
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                   <div className="grid gap-3">

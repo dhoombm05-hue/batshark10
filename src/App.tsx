@@ -65,6 +65,13 @@ const App = () => (
             <Route path="/news/:id" element={<ProtectedRoute><NewsDetail /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/import" element={<ProtectedRoute><ImportCenter /></ProtectedRoute>} />
+            <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
+            <Route path="/operational" element={<ProtectedRoute><OperationalDashboard /></ProtectedRoute>} />
+            <Route path="/projects-dashboard" element={<ProtectedRoute><ProjectsDashboard /></ProtectedRoute>} />
+            <Route path="/alerts" element={<ProtectedRoute><SmartAlerts /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/ai-insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
+            <Route path="/dictionary" element={<ProtectedRoute><DataDictionary /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />
