@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployee, useEmployeeMonthlyPerformance, useUpdateEmployee, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
+import { useEmployeeEngine } from '@/hooks/useEmployeeEngine';
 
 const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
