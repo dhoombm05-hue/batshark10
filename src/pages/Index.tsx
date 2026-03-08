@@ -107,8 +107,8 @@ function ListCard({ item, color, index }: { item: SectionItem; color: string; in
     >
       <Link to={item.to} className="block group">
         <div
-          className="flex items-center gap-4 p-3.5 rounded-2xl border transition-all duration-300 hover:shadow-md"
-          style={{ borderColor: `${color}25`, background: `linear-gradient(135deg, ${color}04, transparent)` }}
+          className="flex items-center gap-4 p-3.5 rounded-2xl transition-all duration-300 hover:shadow-md bg-card"
+          style={{ borderWidth: 1, borderStyle: 'solid', borderColor: `${color}22`, boxShadow: `0 1px 6px -2px ${color}08` }}
         >
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}10`, color }}>
             <item.icon className="w-5 h-5" strokeWidth={1.8} />
