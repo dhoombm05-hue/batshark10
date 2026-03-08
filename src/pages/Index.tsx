@@ -236,8 +236,8 @@ function LargeCard({ item, color, index }: { item: SectionItem; color: string; i
     >
       <Link to={item.to} className="block group">
         <div
-          className="rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg relative overflow-hidden"
-          style={{ borderColor: `${color}25`, background: `linear-gradient(145deg, ${color}06, ${color}02)` }}
+          className="rounded-2xl p-6 transition-all duration-300 hover:shadow-lg relative overflow-hidden bg-card"
+          style={{ borderWidth: 1, borderStyle: 'solid', borderColor: `${color}22`, boxShadow: `0 1px 8px -2px ${color}10` }}
         >
           <div className="absolute top-0 left-0 w-full h-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: color }} />
           <div className="flex items-start gap-4">
