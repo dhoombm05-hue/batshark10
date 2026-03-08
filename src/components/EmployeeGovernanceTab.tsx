@@ -258,6 +258,26 @@ export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: 
 
   return (
     <div className="space-y-6">
+      {/* Period Selector */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {(Object.keys(PERIOD_LABELS) as TimePeriod[]).map(p => (
+          <button
+            key={p}
+            onClick={() => setPeriod(p)}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all border ${
+              period === p
+                ? 'bg-primary/15 text-primary border-primary/30'
+                : 'bg-card/50 text-muted-foreground border-border hover:bg-secondary/50'
+            }`}
+          >
+            {PERIOD_LABELS[p]}
+          </button>
+        ))}
+        <span className="text-[10px] text-muted-foreground mr-auto">
+          يتم التحديث تلقائياً • {analytics.total} عملية في الفترة
+        </span>
+      </div>
+
       {/* Governance Verdict Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
@@ -270,10 +290,24 @@ export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: 
               {verdict.emoji} حوكمة أداء {employeeName}
             </h3>
             <p className={`text-sm font-semibold ${verdict.color} mb-3`}>{verdict.label}</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <div>
-                <p className="text-[10px] text-muted-foreground">إجمالي العمليات</p>
-                <p className="text-sm font-bold text-foreground">{analytics.total.toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground">اليوم</p>
+                <p className={`text-sm font-bold ${period === 'daily' ? 'text-primary' : 'text-foreground'}`}>{analytics.today}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">الأسبوع</p>
+                <p className={`text-sm font-bold ${period === 'weekly' ? 'text-primary' : 'text-foreground'}`}>{analytics.weekly}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">الشهر</p>
+                <p className={`text-sm font-bold ${period === 'monthly' ? 'text-primary' : 'text-foreground'}`}>{analytics.monthly}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">الفترة الحالية</p>
+                <p className="text-sm font-bold text-foreground">{analytics.total}</p>
+              </div>
+            </div>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground">هذا الأسبوع</p>
