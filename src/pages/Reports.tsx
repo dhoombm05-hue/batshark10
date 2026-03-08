@@ -14,7 +14,7 @@ import { ar } from 'date-fns/locale';
 import { 
   FileText, Download, Printer, Mail, Calendar, 
   Building2, Users, FolderKanban, TrendingUp, DollarSign,
-  FileSpreadsheet, FilePdf, Send, Clock, CheckCircle2
+  FileSpreadsheet, Send, Clock, CheckCircle2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
