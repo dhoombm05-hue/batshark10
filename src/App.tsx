@@ -76,7 +76,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />
-          <EmployeeGuide />
+          <BatSharkGuide />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
