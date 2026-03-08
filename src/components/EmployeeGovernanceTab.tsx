@@ -92,14 +92,40 @@ const RISK_COLORS: Record<string, string> = {
   critical: 'bg-red-500/15 text-red-400 border-red-500/20',
 };
 
+type TimePeriod = 'daily' | 'weekly' | 'monthly' | 'all';
+
+const PERIOD_LABELS: Record<TimePeriod, string> = {
+  daily: 'اليوم',
+  weekly: 'هذا الأسبوع',
+  monthly: 'هذا الشهر',
+  all: 'الكل',
+};
+
 export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: Props) {
   const { data: allLogs = [] } = useActivityImpactLogs({ userId: employeeUserId });
   const { data: allScores = [] } = usePerformanceScoring();
+  const [period, setPeriod] = useState<TimePeriod>('monthly');
 
   const userScore = allScores.find(s => s.userId === employeeUserId);
 
+  // Filter logs by selected period
+  const filteredLogs = useMemo(() => {
+    const now = new Date();
+    if (period === 'daily') {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return allLogs.filter(l => new Date(l.created_at) >= start);
+    }
+    if (period === 'weekly') {
+      return allLogs.filter(l => new Date(l.created_at) >= new Date(now.getTime() - 7 * 86400000));
+    }
+    if (period === 'monthly') {
+      return allLogs.filter(l => new Date(l.created_at) >= new Date(now.getTime() - 30 * 86400000));
+    }
+    return allLogs;
+  }, [allLogs, period]);
+
   const analytics = useMemo(() => {
-    if (!allLogs.length) return null;
+    if (!filteredLogs.length) return null;
 
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 86400000);
@@ -107,8 +133,13 @@ export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: 
 
     const weeklyLogs = allLogs.filter(l => new Date(l.created_at) >= weekAgo);
     const monthlyLogs = allLogs.filter(l => new Date(l.created_at) >= monthAgo);
+    const todayLogs = allLogs.filter(l => {
+      const d = new Date(l.created_at);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    });
 
-    // Action breakdown
+    // Action breakdown — uses filteredLogs for all calculations
+    const logs = filteredLogs;
     const actionCounts: Record<string, number> = {};
     const sectionCounts: Record<string, number> = {};
     const entityCounts: Record<string, number> = {};
@@ -124,7 +155,7 @@ export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: 
     let criticalCount = 0;
     let highRiskCount = 0;
 
-    for (const log of allLogs) {
+    for (const log of logs) {
       actionCounts[log.action_type] = (actionCounts[log.action_type] || 0) + 1;
       if (log.section) sectionCounts[log.section] = (sectionCounts[log.section] || 0) + 1;
       entityCounts[log.entity_type] = (entityCounts[log.entity_type] || 0) + 1;
@@ -172,12 +203,12 @@ export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: 
        (actionCounts['update'] || 0) * 2 +
        (actionCounts['view'] || 0) * 0.5 -
        overrideCount * 1.5 -
-       criticalCount * 5) / Math.max(allLogs.length, 1) * 25 + 50
+       criticalCount * 5) / Math.max(logs.length, 1) * 25 + 50
     ), 100);
 
     // Quality score
     const qualityScore = Math.max(0, Math.min(100,
-      85 - criticalCount * 10 - highRiskCount * 3 + (positiveActions / Math.max(allLogs.length, 1)) * 20
+      85 - criticalCount * 10 - highRiskCount * 3 + (positiveActions / Math.max(logs.length, 1)) * 20
     ));
 
     // Governance radar
@@ -197,7 +228,8 @@ export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: 
     const peakHour = Object.entries(hourMap).sort((a, b) => b[1] - a[1])[0];
 
     return {
-      total: allLogs.length,
+      total: logs.length,
+      today: todayLogs.length,
       weekly: weeklyLogs.length,
       monthly: monthlyLogs.length,
       actionCounts, sectionCounts, entityCounts,
@@ -209,7 +241,7 @@ export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: 
       peakHour: peakHour ? `${peakHour[0]}:00` : '--',
       activeDays: Object.keys(dailyMap).length,
     };
-  }, [allLogs]);
+  }, [filteredLogs, allLogs]);
 
   if (!analytics) {
     return (
