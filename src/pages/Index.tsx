@@ -47,10 +47,13 @@ function GridCard({ item, color, index }: { item: SectionItem; color: string; in
     >
       <Link to={item.to} className="block h-full group">
         <div
-          className="h-full rounded-2xl p-4 sm:p-5 transition-all duration-300 border relative overflow-hidden hover:shadow-lg"
-          style={{ borderColor: `${color}30`, background: `linear-gradient(145deg, ${color}06 0%, ${color}02 100%)` }}
+          className="h-full rounded-2xl p-4 sm:p-5 transition-all duration-300 relative overflow-hidden hover:shadow-lg bg-card"
+          style={{ 
+            borderWidth: 1, borderStyle: 'solid', borderColor: `${color}25`,
+            boxShadow: `0 1px 8px -2px ${color}10`
+          }}
         >
-          <div className="absolute top-0 left-0 w-full h-[2.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: color }} />
+          <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }} />
           <div className="relative z-10 flex flex-col items-center text-center gap-2.5 py-2">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${color}12`, color }}>
               <item.icon className="w-5 h-5" strokeWidth={1.8} />
