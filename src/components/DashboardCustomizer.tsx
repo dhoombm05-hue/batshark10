@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, LayoutGrid, Circle, List, X, RotateCcw, Check } from 'lucide-react';
+import { SlidersHorizontal, LayoutGrid, Circle, List, X, RotateCcw, Check, Rows3, Grid3X3, LayoutDashboard, Columns3, Hexagon, Square } from 'lucide-react';
 
-export type LayoutMode = 'grid' | 'circles' | 'list';
+export type LayoutMode = 'grid' | 'circles' | 'list' | 'compact' | 'masonry' | 'hexagon' | 'minimal' | 'cards-lg';
 
 export interface ColorOverrides {
   stats: Record<string, string>;
