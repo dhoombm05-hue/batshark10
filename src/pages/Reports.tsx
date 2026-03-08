@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useProjects } from '@/hooks/useProjects';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useJournalMetrics } from '@/hooks/useJournalMetrics';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
