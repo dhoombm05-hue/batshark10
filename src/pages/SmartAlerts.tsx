@@ -55,8 +55,8 @@ export default function SmartAlerts() {
   const [whatIfRevenue, setWhatIfRevenue] = useState(0);
 
   // Calculate current metrics
-  const totalRevenue = projects.reduce((sum, p) => sum + (p.override_total_revenue ?? p.total_revenue), 0);
-  const totalExpenses = projects.reduce((sum, p) => sum + (p.override_total_expenses ?? p.total_expenses), 0);
+  const totalRevenue = projects.reduce((sum, p) => sum + p.total_revenue, 0);
+  const totalExpenses = projects.reduce((sum, p) => sum + p.total_expenses, 0);
   const netProfit = totalRevenue - totalExpenses;
   const expenseRatio = totalRevenue > 0 ? (totalExpenses / totalRevenue) * 100 : 0;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;

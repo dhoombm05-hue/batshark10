@@ -75,9 +75,9 @@ export default function Reports() {
             ['المشروع', 'الإيرادات', 'المصروفات', 'الربح', 'الحالة'],
             ...projects.map(p => [
               p.name,
-              p.override_total_revenue ?? p.total_revenue,
-              p.override_total_expenses ?? p.total_expenses,
-              (p.override_total_revenue ?? p.total_revenue) - (p.override_total_expenses ?? p.total_expenses),
+              p.total_revenue,
+              p.total_expenses,
+              p.total_revenue - p.total_expenses,
               p.status === 'profitable' ? 'مربح' : p.status === 'loss' ? 'خاسر' : 'متعادل'
             ])
           ]

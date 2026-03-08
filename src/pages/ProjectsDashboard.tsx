@@ -227,8 +227,8 @@ export default function ProjectsDashboard() {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredProjects.map((project, i) => {
-            const revenue = project.override_total_revenue ?? project.total_revenue;
-            const expenses = project.override_total_expenses ?? project.total_expenses;
+            const revenue = project.total_revenue;
+            const expenses = project.total_expenses;
             const profit = revenue - expenses;
             const health = getProjectHealth(project);
             const projectTasks = tasks.filter(t => t.project_id === project.id);

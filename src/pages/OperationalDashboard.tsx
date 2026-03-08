@@ -48,8 +48,8 @@ export default function OperationalDashboard() {
   // Projects performance today
   const projectsData = projects.slice(0, 5).map(p => ({
     name: p.name.slice(0, 10),
-    revenue: p.override_total_revenue ?? p.total_revenue,
-    expenses: p.override_total_expenses ?? p.total_expenses,
+    revenue: p.total_revenue,
+    expenses: p.total_expenses,
   }));
 
   const operationalMetrics = [

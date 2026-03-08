@@ -36,12 +36,12 @@ export default function AIInsights() {
   const [insights, setInsights] = useState<AIInsight[]>([]);
 
   // Calculate metrics
-  const totalRevenue = projects.reduce((sum, p) => sum + (p.override_total_revenue ?? p.total_revenue), 0);
-  const totalExpenses = projects.reduce((sum, p) => sum + (p.override_total_expenses ?? p.total_expenses), 0);
+  const totalRevenue = projects.reduce((sum, p) => sum + p.total_revenue, 0);
+  const totalExpenses = projects.reduce((sum, p) => sum + p.total_expenses, 0);
   const netProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
   const avgGrowth = projects.length > 0 
-    ? projects.reduce((sum, p) => sum + (p.override_growth_rate ?? p.growth_rate), 0) / projects.length 
+    ? projects.reduce((sum, p) => sum + p.growth_rate, 0) / projects.length 
     : 0;
 
   // Generate forecast data
