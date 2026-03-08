@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { useProjects } from '@/hooks/useProjects';
-import { useJournalMetrics } from '@/hooks/useJournalMetrics';
 import { 
   AlertTriangle, AlertCircle, Bell, TrendingDown, TrendingUp,
   DollarSign, Wallet, Shield, Zap, Settings, Calculator,
