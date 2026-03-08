@@ -30,10 +30,10 @@ export default function ProjectsDashboard() {
 
   // Calculate project health for each project
   const getProjectHealth = (project: any) => {
-    const revenue = project.override_total_revenue ?? project.total_revenue;
-    const expenses = project.override_total_expenses ?? project.total_expenses;
+    const revenue = project.total_revenue;
+    const expenses = project.total_expenses;
     const profit = revenue - expenses;
-    const growth = project.override_growth_rate ?? project.growth_rate;
+    const growth = project.growth_rate;
     const projectTasks = tasks.filter(t => t.project_id === project.id);
     const completedTasks = projectTasks.filter(t => t.status === 'done').length;
     const taskCompletion = projectTasks.length > 0 ? (completedTasks / projectTasks.length) * 100 : 50;
