@@ -98,7 +98,7 @@ const colorMap: Record<string, { text: string; bg: string; glow: string }> = {
   'section-ai': { text: 'text-section-ai', bg: 'bg-section-ai/15', glow: '0 0 20px hsl(190 80% 50% / 0.2)' },
 };
 
-function NavGroup({
+function NavSection({
   group,
   collapsed,
   location,
@@ -111,18 +111,25 @@ function NavGroup({
   onNav: () => void;
   newsUnread: number;
 }) {
-  const hasActive = group.items.some(
-    (item) => location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path))
-  );
-  const [open, setOpen] = useState(hasActive);
   const groupColors = colorMap[group.groupColor];
 
-  if (collapsed) {
-    return (
-      <div className="space-y-1">
-        {group.items.map((item) => {
-          const active = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-          const colors = colorMap[item.color];
+  return (
+    <div className="space-y-0.5">
+      {/* Section label */}
+      {!collapsed && (
+        <div className="flex items-center gap-2 px-3 pt-3 pb-1.5">
+          <div className={`w-1 h-3.5 rounded-full ${groupColors.bg}`} style={{ boxShadow: groupColors.glow }} />
+          <span className="font-heading text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">{group.groupLabel}</span>
+        </div>
+      )}
+      {collapsed && <div className="h-px mx-2 my-1.5 bg-border/50" />}
+
+      {/* Items */}
+      {group.items.map((item) => {
+        const active = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+        const colors = colorMap[item.color];
+
+        if (collapsed) {
           return (
             <Link
               key={item.path}
@@ -135,57 +142,28 @@ function NavGroup({
               <item.icon className={`w-5 h-5 shrink-0 ${active ? colors.text : ''}`} />
             </Link>
           );
-        })}
-      </div>
-    );
-  }
+        }
 
-  return (
-    <div className="space-y-0.5">
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 group ${hasActive ? `${groupColors.bg} ${groupColors.text}` : 'text-muted-foreground hover:text-foreground hover:bg-secondary/30'}`}
-      >
-        <group.groupIcon className={`w-4 h-4 shrink-0 ${hasActive ? groupColors.text : 'text-muted-foreground group-hover:text-foreground'}`} />
-        <span className="font-body text-xs font-semibold flex-1 text-start">{group.groupLabel}</span>
-        <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="overflow-hidden"
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            onClick={onNav}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${active ? `${colors.bg} ${colors.text}` : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+            style={active ? { boxShadow: colors.glow } : undefined}
           >
-            <div className="pr-2 space-y-0.5 pt-0.5">
-              {group.items.map((item) => {
-                const active = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-                const colors = colorMap[item.color];
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={onNav}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${active ? `${colors.bg} ${colors.text}` : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
-                    style={active ? { boxShadow: colors.glow } : undefined}
-                  >
-                    <item.icon className={`w-4 h-4 shrink-0 ${active ? colors.text : ''}`} />
-                    <span className="font-body text-[13px] font-medium flex-1">{item.label}</span>
-                    {item.path === '/news' && newsUnread > 0 && (
-                      <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pulse">
-                        {newsUnread}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
+            <div className={`p-1 rounded-md ${active ? colors.bg : 'bg-secondary/30'}`}>
+              <item.icon className={`w-3.5 h-3.5 shrink-0 ${active ? colors.text : ''}`} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <span className="font-body text-[13px] font-medium flex-1">{item.label}</span>
+            {item.path === '/news' && newsUnread > 0 && (
+              <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pulse">
+                {newsUnread}
+              </span>
+            )}
+          </Link>
+        );
+      })}
     </div>
   );
 }
