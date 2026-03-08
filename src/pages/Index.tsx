@@ -158,8 +158,8 @@ function MasonryCard({ item, color, index }: { item: SectionItem; color: string;
     >
       <Link to={item.to} className="block h-full group">
         <div
-          className="h-full rounded-2xl border transition-all duration-300 hover:shadow-lg relative overflow-hidden p-4"
-          style={{ borderColor: `${color}25`, background: `linear-gradient(160deg, ${color}08, ${color}02)` }}
+          className="h-full rounded-2xl transition-all duration-300 hover:shadow-lg relative overflow-hidden p-4 bg-card"
+          style={{ borderWidth: 1, borderStyle: 'solid', borderColor: `${color}22`, boxShadow: `0 1px 8px -2px ${color}10` }}
         >
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-[0.06]" style={{ background: color, transform: 'translate(30%, -30%)' }} />
           <div className="relative z-10 flex flex-col items-center text-center gap-2.5 py-2">
