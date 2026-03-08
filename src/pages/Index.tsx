@@ -480,6 +480,41 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
+              {prefs.layout === 'compact' && (
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1 mb-6 justify-items-center">
+                  {enrichedSections.map((item, i) => (
+                    <CompactCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'masonry' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                  {enrichedSections.map((item, i) => (
+                    <MasonryCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'hexagon' && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 mb-6 justify-items-center py-3">
+                  {enrichedSections.map((item, i) => (
+                    <HexCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'minimal' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 mb-6 bg-card rounded-2xl border border-border/50 p-4">
+                  {enrichedSections.map((item, i) => (
+                    <MinimalCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'cards-lg' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                  {enrichedSections.map((item, i) => (
+                    <LargeCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </LayoutGroup>
