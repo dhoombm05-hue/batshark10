@@ -7,6 +7,7 @@ import PrintButton from '@/components/PrintButton';
 import { useEmployees, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
 import { usePerformanceScoring } from '@/hooks/usePerformanceScoring';
 import { usePerformanceCycles, useResetPerformanceCycle } from '@/hooks/usePerformanceCycles';
+import { useEmployeeEngine } from '@/hooks/useEmployeeEngine';
 import PerformanceCircleDialog, { PerformanceAlertBanner } from '@/components/PerformanceCircleDialog';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/data/mockData';
