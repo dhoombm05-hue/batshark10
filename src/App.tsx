@@ -34,7 +34,7 @@ import Tasks from "./pages/Tasks";
 import ImportCenter from "./pages/ImportCenter";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
-import EmployeeGuide from "./components/EmployeeGuide";
+import BatSharkGuide from "./components/BatSharkGuide";
 
 const queryClient = new QueryClient();
 
