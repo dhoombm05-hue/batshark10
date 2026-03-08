@@ -416,10 +416,17 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05, type: 'spring', stiffness: 260 }}
                 whileHover={{ y: -2 }}
-                className="bg-card rounded-2xl border border-border/50 p-4 sm:p-5 hover:shadow-md transition-all"
+                className="rounded-2xl p-4 sm:p-5 hover:shadow-md transition-all duration-300 relative overflow-hidden bg-card"
+                style={{ 
+                  borderWidth: 1, 
+                  borderStyle: 'solid', 
+                  borderColor: `${color}25`,
+                  boxShadow: `0 1px 8px -2px ${color}10`
+                }}
               >
+                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }} />
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color}12`, color }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color}14`, color }}>
                     <stat.icon className="w-[18px] h-[18px]" strokeWidth={1.8} />
                   </div>
                   {val.change && (
