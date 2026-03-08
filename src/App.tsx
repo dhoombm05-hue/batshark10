@@ -9,6 +9,13 @@ import Login from "./pages/Login";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import OperationalDashboard from "./pages/OperationalDashboard";
+import ProjectsDashboard from "./pages/ProjectsDashboard";
+import SmartAlerts from "./pages/SmartAlerts";
+import Reports from "./pages/Reports";
+import AIInsights from "./pages/AIInsights";
+import DataDictionary from "./pages/DataDictionary";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import Forecasts from "./pages/Forecasts";
@@ -58,6 +65,13 @@ const App = () => (
             <Route path="/news/:id" element={<ProtectedRoute><NewsDetail /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/import" element={<ProtectedRoute><ImportCenter /></ProtectedRoute>} />
+            <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
+            <Route path="/operational" element={<ProtectedRoute><OperationalDashboard /></ProtectedRoute>} />
+            <Route path="/projects-dashboard" element={<ProtectedRoute><ProjectsDashboard /></ProtectedRoute>} />
+            <Route path="/alerts" element={<ProtectedRoute><SmartAlerts /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/ai-insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
+            <Route path="/dictionary" element={<ProtectedRoute><DataDictionary /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />

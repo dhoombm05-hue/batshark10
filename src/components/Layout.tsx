@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
-  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User, ListTodo, FileUp
+  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User, ListTodo, FileUp,
+  BarChart3, Activity, AlertTriangle, FileText, Sparkles, BookOpen
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -22,18 +23,25 @@ const ROLE_LABELS: Record<string, string> = {
 
 const navItems = [
   { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard, color: 'section-finance' },
+  { path: '/executive', label: 'اللوحة التنفيذية', icon: BarChart3, color: 'section-revenue' },
+  { path: '/operational', label: 'التشغيل اليومي', icon: Activity, color: 'section-ai' },
+  { path: '/projects-dashboard', label: 'لوحة المشاريع', icon: FolderKanban, color: 'section-forecast' },
   { path: '/projects', label: 'المشاريع', icon: FolderKanban, color: 'section-revenue' },
   { path: '/employees', label: 'الموظفين', icon: Users, color: 'section-employees' },
   { path: '/forecasts', label: 'التوقعات', icon: TrendingUp, color: 'section-forecast' },
   { path: '/strategic', label: 'التحليل الاستراتيجي', icon: Shield, color: 'section-strategic' },
   { path: '/lab', label: 'مختبر النمذجة', icon: FlaskConical, color: 'section-invest' },
+  { path: '/alerts', label: 'التنبيهات الذكية', icon: AlertTriangle, color: 'section-employees' },
   { path: '/ai', label: 'اسأل BatShark', icon: Brain, color: 'section-ai' },
+  { path: '/ai-insights', label: 'رؤى AI المتقدمة', icon: Sparkles, color: 'section-ai' },
+  { path: '/reports', label: 'التقارير', icon: FileText, color: 'section-finance' },
   { path: '/documents', label: 'مركز الملفات', icon: FolderOpen, color: 'section-finance' },
   { path: '/chat', label: 'غرفة النقاشات', icon: MessageSquare, color: 'section-ai' },
   { path: '/messages', label: 'الرسائل الخاصة', icon: Mail, color: 'section-forecast' },
   { path: '/news', label: 'الأخبار', icon: Newspaper, color: 'section-revenue' },
   { path: '/tasks', label: 'إدارة المهام', icon: ListTodo, color: 'section-employees' },
   { path: '/import', label: 'مركز الاستيراد', icon: FileUp, color: 'section-invest' },
+  { path: '/dictionary', label: 'قاموس البيانات', icon: BookOpen, color: 'section-strategic' },
 ];
 
 const colorMap: Record<string, { text: string; bg: string; glow: string }> = {
