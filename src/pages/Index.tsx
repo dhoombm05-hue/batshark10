@@ -453,7 +453,7 @@ export default function Dashboard() {
               transition={{ duration: 0.2 }}
             >
               {prefs.layout === 'grid' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
                   {enrichedSections.map((item, i) => (
                     <GridCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
                   ))}
