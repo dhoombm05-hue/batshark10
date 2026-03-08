@@ -1,11 +1,12 @@
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   DollarSign, TrendingUp, TrendingDown, BarChart3, Users, FolderKanban,
-  Brain, FlaskConical, Shield, Bell, Settings, UserCircle, RotateCcw, FileSpreadsheet, User, ListTodo, FileUp, Activity
+  Brain, FlaskConical, Shield, Bell, Settings, User, RotateCcw, FileSpreadsheet,
+  ListTodo, FileUp, Activity, LayoutGrid, Circle, List, Newspaper, MessageSquare, Mail
 } from 'lucide-react';
 import PrintButton from '@/components/PrintButton';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '@/components/Layout';
 import HealthScore from '@/components/HealthScore';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -19,49 +20,149 @@ import logo from '@/assets/batshark-logo-main.png';
 import SmartAlerts from '@/components/SmartAlerts';
 import AskMeDialog from '@/components/AskMeDialog';
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload) return null;
+type LayoutMode = 'grid' | 'circles' | 'list';
+
+const LAYOUT_KEY = 'batshark-dashboard-layout';
+
+/* ───── layout switcher button ───── */
+function LayoutSwitcher({ mode, onChange }: { mode: LayoutMode; onChange: (m: LayoutMode) => void }) {
+  const modes: { key: LayoutMode; icon: typeof LayoutGrid; label: string }[] = [
+    { key: 'grid', icon: LayoutGrid, label: 'مربعات' },
+    { key: 'circles', icon: Circle, label: 'دوائر' },
+    { key: 'list', icon: List, label: 'قائمة' },
+  ];
   return (
-    <div className="bg-card border border-border rounded-2xl p-3 shadow-elevated">
-      <p className="text-sm font-heading text-foreground mb-2">{label}</p>
-      {payload.map((p: any, i: number) => (
-        <p key={i} className="text-xs text-muted-foreground">
-          <span style={{ color: p.color }}>●</span> {p.name}: {formatCurrency(p.value)}
-        </p>
+    <div className="flex items-center gap-1 p-1 rounded-2xl bg-secondary/60 border border-border backdrop-blur-sm">
+      {modes.map(m => (
+        <button
+          key={m.key}
+          onClick={() => onChange(m.key)}
+          className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-heading font-bold transition-all duration-300 ${
+            mode === m.key ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          {mode === m.key && (
+            <motion.div
+              layoutId="layout-pill"
+              className="absolute inset-0 bg-primary rounded-xl shadow-md"
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            />
+          )}
+          <span className="relative z-10 flex items-center gap-1.5">
+            <m.icon className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{m.label}</span>
+          </span>
+        </button>
       ))}
     </div>
   );
-};
+}
 
-const SectionCard = ({ to, icon: Icon, label, desc, bgColor, textColor, borderColor, children, className = '' }: {
-  to: string; icon: any; label: string; desc: string; bgColor: string; textColor: string; borderColor: string; children?: React.ReactNode; className?: string;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 24 }}
-    animate={{ opacity: 1, y: 0 }}
-    whileHover={{ scale: 1.02, y: -4 }}
-    transition={{ duration: 0.35, type: 'spring', stiffness: 300 }}
-    className={className}
-  >
-    <Link to={to} className="block h-full">
-      <div className={`h-full rounded-[20px] p-5 shadow-card hover:shadow-elevated transition-all duration-300 relative overflow-hidden group border ${borderColor} ${bgColor}`}>
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`p-2.5 rounded-xl ${textColor} bg-white/80 shadow-sm`}>
-              <Icon className="w-5 h-5" />
+/* ───── section card items ───── */
+interface SectionItem {
+  to: string;
+  icon: any;
+  label: string;
+  desc: string;
+  color: string;       // hsl token
+  bgLight: string;     // light bg class
+  borderClass: string;
+  children?: React.ReactNode;
+  span2?: boolean;
+}
+
+/* ───── grid card ───── */
+function GridCard({ item, index }: { item: SectionItem; index: number }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ delay: index * 0.04, type: 'spring', stiffness: 300, damping: 26 }}
+      whileHover={{ scale: 1.025, y: -4 }}
+      className={item.span2 ? 'md:col-span-2' : ''}
+    >
+      <Link to={item.to} className="block h-full">
+        <div className={`h-full rounded-[20px] p-5 shadow-card hover:shadow-elevated transition-all duration-300 border ${item.borderClass} ${item.bgLight} relative overflow-hidden group`}>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 rounded-xl bg-white/80 shadow-sm" style={{ color: item.color }}>
+                <item.icon className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-heading font-bold text-sm truncate" style={{ color: item.color }}>{item.label}</h3>
+                <p className="text-[10px] text-muted-foreground truncate">{item.desc}</p>
+              </div>
             </div>
-            <div>
-              <h3 className={`font-heading font-bold text-sm ${textColor}`}>{label}</h3>
-              <p className="text-[10px] text-muted-foreground">{desc}</p>
-            </div>
+            {item.children}
           </div>
-          {children}
         </div>
-      </div>
-    </Link>
-  </motion.div>
-);
+      </Link>
+    </motion.div>
+  );
+}
 
+/* ───── circle card ───── */
+function CircleCard({ item, index }: { item: SectionItem; index: number }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5 }}
+      transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 24 }}
+      whileHover={{ scale: 1.1, y: -6 }}
+      className="flex flex-col items-center"
+    >
+      <Link to={item.to} className="flex flex-col items-center gap-2 group">
+        <div
+          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center shadow-card hover:shadow-elevated transition-all duration-300 border-2 relative overflow-hidden"
+          style={{
+            borderColor: item.color,
+            background: `radial-gradient(circle at 30% 30%, ${item.color}15, ${item.color}08)`,
+          }}
+        >
+          <item.icon className="w-8 h-8 sm:w-9 sm:h-9 transition-transform duration-300 group-hover:scale-110" style={{ color: item.color }} />
+        </div>
+        <span className="font-heading font-bold text-xs text-foreground text-center leading-tight max-w-[100px]">{item.label}</span>
+        <span className="text-[9px] text-muted-foreground text-center max-w-[100px] hidden sm:block">{item.desc}</span>
+      </Link>
+    </motion.div>
+  );
+}
+
+/* ───── list card ───── */
+function ListCard({ item, index }: { item: SectionItem; index: number }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: 30 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -30 }}
+      transition={{ delay: index * 0.03, type: 'spring', stiffness: 300, damping: 26 }}
+    >
+      <Link to={item.to} className="block">
+        <div className={`flex items-center gap-4 p-4 rounded-2xl border ${item.borderClass} ${item.bgLight} shadow-sm hover:shadow-card transition-all duration-300 group`}>
+          <div className="p-3 rounded-xl bg-white/80 shadow-sm shrink-0" style={{ color: item.color }}>
+            <item.icon className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-heading font-bold text-sm" style={{ color: item.color }}>{item.label}</h3>
+            <p className="text-[11px] text-muted-foreground truncate">{item.desc}</p>
+          </div>
+          <div className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors">
+            <TrendingUp className="w-4 h-4" />
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════ */
+/*                         DASHBOARD                              */
+/* ════════════════════════════════════════════════════════════════ */
 export default function Dashboard() {
   const { profile } = useAuthContext();
   const { data: dbProjects, isLoading: loadingProjects } = useProjects();
@@ -69,23 +170,30 @@ export default function Dashboard() {
   const { recalculateAll } = useFinancialEngine();
   const { data: journalData, isLoading: loadingJournal } = useJournalDerivedMetrics();
 
-  // Use journal-derived metrics as the SINGLE SOURCE OF TRUTH
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>(() => {
+    try { return (localStorage.getItem(LAYOUT_KEY) as LayoutMode) || 'grid'; } catch { return 'grid'; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(LAYOUT_KEY, layoutMode); } catch {}
+  }, [layoutMode]);
+
   const metrics = journalData?.companyMetrics || null;
   const isLoading = loadingProjects || loadingJournal;
 
   const handleRecalcAll = async () => {
-    try {
-      await recalculateAll();
-    } catch {
-      toast.error('فشلت إعادة الاحتساب');
-    }
+    try { await recalculateAll(); } catch { toast.error('فشلت إعادة الاحتساب'); }
   };
 
   if (isLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+        <div className="flex items-center justify-center min-h-[60dvh]">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+            className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full"
+          />
         </div>
       </Layout>
     );
@@ -98,49 +206,101 @@ export default function Dashboard() {
     costEfficiencyIndex: 0, performanceIndex: 0,
   };
 
+  /* ─── stat cards ─── */
+  const stats = [
+    { title: 'إجمالي الإيرادات', value: formatCurrency(m.totalRevenue), icon: DollarSign, change: formatPercent(m.monthlyGrowth), type: 'positive' as const, color: 'hsl(152,60%,40%)' },
+    { title: 'إجمالي المصروفات', value: formatCurrency(m.totalExpenses), icon: TrendingDown, color: 'hsl(0,72%,55%)' },
+    { title: 'صافي الربح', value: formatCurrency(m.netProfit), icon: TrendingUp, change: m.netProfit >= 0 ? 'ربح' : 'خسارة', type: (m.netProfit >= 0 ? 'positive' : 'negative') as any, color: 'hsl(210,80%,52%)' },
+    { title: 'النمو الشهري', value: formatPercent(m.monthlyGrowth), icon: BarChart3, change: m.monthlyGrowth >= 0 ? 'مستقر' : 'تراجع', type: (m.monthlyGrowth >= 0 ? 'positive' : 'negative') as any, color: 'hsl(270,60%,55%)' },
+  ];
+
+  /* ─── section items ─── */
+  const sections: SectionItem[] = [
+    { to: '/projects', icon: FolderKanban, label: 'المشاريع', desc: 'إدارة ومتابعة أداء المشاريع', color: 'hsl(152,60%,40%)', bgLight: 'bg-[hsl(152,60%,96%)]', borderClass: 'border-success/25', span2: true,
+      children: (
+        <div className="space-y-1.5 mt-2">
+          {dbProjects?.slice(0, 3).map(p => {
+            const jm = journalData?.companyMetrics.projectMetrics.get(p.id);
+            const profit = jm?.netProfit ?? Number(p.net_profit);
+            return (
+              <div key={p.id} className="flex items-center justify-between text-xs p-2 rounded-xl bg-white/70 shadow-sm">
+                <span className="text-foreground font-semibold truncate">{p.name}</span>
+                <span className={profit >= 0 ? 'text-success font-bold' : 'text-destructive font-bold'}>{formatCurrency(profit)}</span>
+              </div>
+            );
+          })}
+        </div>
+      ),
+    },
+    { to: '/employees', icon: Users, label: 'الموظفين', desc: 'تقييم الأداء والإنتاجية', color: 'hsl(25,85%,50%)', bgLight: 'bg-[hsl(25,85%,96%)]', borderClass: 'border-orange/25',
+      children: (
+        <div className="flex items-center gap-3 mt-3">
+          <span className="text-2xl font-heading font-black text-orange">{dbEmployees?.length || 0}</span>
+          <span className="text-[11px] text-muted-foreground">أعضاء الفريق</span>
+        </div>
+      ),
+    },
+    { to: '/strategic', icon: Shield, label: 'التحليل الاستراتيجي', desc: 'SWOT والتدفق النقدي', color: 'hsl(175,60%,38%)', bgLight: 'bg-[hsl(175,60%,96%)]', borderClass: 'border-teal/25' },
+    { to: '/forecasts', icon: TrendingUp, label: 'التوقعات المالية', desc: 'تحليل شبه اكتواري', color: 'hsl(270,60%,55%)', bgLight: 'bg-gradient-to-br from-[hsl(270,60%,96%)] to-[hsl(270,60%,92%)]', borderClass: 'border-purple/25' },
+    { to: '/lab', icon: FlaskConical, label: 'المختبر المالي', desc: 'سيناريوهات وقيود محاسبية', color: 'hsl(43,65%,45%)', bgLight: 'bg-[hsl(43,65%,96%)]', borderClass: 'border-gold/25' },
+    { to: '/tables', icon: FileSpreadsheet, label: 'الجداول المخصصة', desc: 'إنشاء وإدارة جداول', color: 'hsl(210,80%,52%)', bgLight: 'bg-[hsl(200,60%,96%)]', borderClass: 'border-primary/25' },
+    { to: '/tasks', icon: ListTodo, label: 'إدارة المهام', desc: 'Kanban Board للفرق', color: 'hsl(25,85%,50%)', bgLight: 'bg-[hsl(25,85%,96%)]', borderClass: 'border-orange/25', span2: true },
+    { to: '/import', icon: FileUp, label: 'مركز الاستيراد', desc: 'رفع Excel و CSV', color: 'hsl(43,65%,45%)', bgLight: 'bg-[hsl(43,65%,96%)]', borderClass: 'border-gold/25' },
+    { to: '/news', icon: Newspaper, label: 'الأخبار', desc: 'آخر الأخبار والتحديثات', color: 'hsl(210,80%,52%)', bgLight: 'bg-[hsl(210,60%,96%)]', borderClass: 'border-primary/25' },
+    { to: '/chat', icon: MessageSquare, label: 'غرف النقاش', desc: 'محادثات الفريق', color: 'hsl(152,60%,40%)', bgLight: 'bg-[hsl(152,60%,96%)]', borderClass: 'border-success/25' },
+    { to: '/messages', icon: Mail, label: 'الرسائل الخاصة', desc: 'محادثات مباشرة', color: 'hsl(270,60%,55%)', bgLight: 'bg-[hsl(270,60%,96%)]', borderClass: 'border-purple/25' },
+    { to: '/strategic', icon: Activity, label: 'مؤشرات الأداء', desc: 'KPIs متقدمة', color: 'hsl(175,60%,38%)', bgLight: 'bg-[hsl(175,60%,96%)]', borderClass: 'border-teal/25' },
+  ];
+
   return (
     <Layout>
-      {/* Background watermark */}
+      {/* Watermark */}
       <div className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center">
-        <img src={logo} alt="" className="w-[500px] h-[500px] opacity-[0.03]" />
+        <img src={logo} alt="" className="w-[400px] h-[400px] opacity-[0.025]" />
       </div>
 
-      <div className="relative z-10">
-        {/* Top Bar */}
-        <div className="flex items-center justify-between mb-8">
-          <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }} className="flex items-center gap-4">
-            <motion.img src={logo} alt="BatShark" className="w-16 h-16 drop-shadow-lg" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, type: 'spring' }} />
+      <div className="relative z-10 pb-8">
+        {/* ───── Top Bar ───── */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
+            <motion.img
+              src={logo} alt="BatShark"
+              className="w-12 h-12 sm:w-14 sm:h-14 drop-shadow-lg"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            />
             <div>
-              <h1 className="text-3xl lg:text-4xl font-heading font-black tracking-tight text-foreground">BATSHARK</h1>
-              <p className="text-sm text-muted-foreground font-medium -mt-1">Economy Intelligence Platform</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-black tracking-tight text-foreground">BATSHARK</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium -mt-0.5">Economy Intelligence Platform</p>
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-center gap-2">
-            <button onClick={handleRecalcAll} className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-warning" title="إعادة احتساب الكل">
-              <RotateCcw className="w-5 h-5" />
-            </button>
-            <Link to="/ai" className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-section-ai">
-              <Brain className="w-5 h-5" />
-            </Link>
-            <Link to="/documents" className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-muted-foreground relative" title="مركز الملفات">
-              <Bell className="w-5 h-5" />
-            </Link>
-            <Link to="/users" className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-muted-foreground" title="إدارة المستخدمين">
-              <Settings className="w-5 h-5" />
-            </Link>
-            <PrintButton title="طباعة التقرير" />
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-10 h-10 rounded-xl object-cover shadow-card mr-1" />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,80%,52%)] to-[hsl(190,80%,45%)] flex items-center justify-center text-white shadow-card mr-1">
-                <User className="w-5 h-5" />
-              </div>
-            )}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="flex items-center gap-2 flex-wrap">
+            <LayoutSwitcher mode={layoutMode} onChange={setLayoutMode} />
+            <div className="flex items-center gap-1.5 mr-2">
+              <button onClick={handleRecalcAll} className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-warning" title="إعادة احتساب">
+                <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <Link to="/ai" className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-section-ai">
+                <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Link>
+              <Link to="/users" className="p-2 rounded-xl bg-card border border-border hover:shadow-card transition-all text-muted-foreground">
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Link>
+              <PrintButton title="طباعة" />
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover shadow-card" />
+              ) : (
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-[hsl(190,80%,45%)] flex items-center justify-center text-white shadow-card">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
 
-        {/* Smart Alerts with risk analysis & suggestions */}
+        {/* ───── Smart Alerts ───── */}
         <SmartAlerts
           totalRevenue={m.totalRevenue}
           totalExpenses={m.totalExpenses}
@@ -152,196 +312,95 @@ export default function Dashboard() {
           healthScore={m.healthScore}
         />
 
-        {/* Stats Cards - from real DB */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[
-            { title: 'إجمالي الإيرادات', value: formatCurrency(m.totalRevenue), icon: DollarSign, change: formatPercent(m.monthlyGrowth), type: 'positive' as const, color: 'hsl(152, 60%, 40%)', borderColor: 'border-[hsl(152,60%,40%)]/20' },
-            { title: 'إجمالي المصروفات', value: formatCurrency(m.totalExpenses), icon: TrendingDown, color: 'hsl(0, 72%, 55%)', borderColor: 'border-[hsl(0,72%,55%)]/20' },
-            { title: 'صافي الربح', value: formatCurrency(m.netProfit), icon: TrendingUp, change: m.netProfit >= 0 ? 'ربح' : 'خسارة', type: (m.netProfit >= 0 ? 'positive' : 'negative') as any, color: 'hsl(210, 80%, 52%)', borderColor: 'border-[hsl(210,80%,52%)]/20' },
-            { title: 'النمو الشهري', value: formatPercent(m.monthlyGrowth), icon: BarChart3, change: m.monthlyGrowth >= 0 ? 'مستقر' : 'تراجع', type: (m.monthlyGrowth >= 0 ? 'positive' : 'negative') as any, color: 'hsl(270, 60%, 55%)', borderColor: 'border-[hsl(270,60%,55%)]/20' },
-          ].map((stat, i) => (
+        {/* ───── Financial Stats ───── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          {stats.map((stat, i) => (
             <motion.div
               key={stat.title}
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08, type: 'spring', stiffness: 300 }}
+              transition={{ delay: i * 0.06, type: 'spring', stiffness: 300 }}
               whileHover={{ scale: 1.03, y: -2 }}
-              className={`bg-card rounded-[20px] border ${stat.borderColor} p-5 shadow-card hover:shadow-elevated transition-all`}
+              className="bg-card rounded-2xl sm:rounded-[20px] border border-border/60 p-4 sm:p-5 shadow-card hover:shadow-elevated transition-all"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2.5 rounded-xl bg-white shadow-sm" style={{ color: stat.color }}>
-                  <stat.icon className="w-5 h-5" />
+              <div className="flex items-start justify-between mb-2 sm:mb-3">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-white shadow-sm" style={{ color: stat.color }}>
+                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 {stat.change && (
-                  <span className={`text-[10px] px-2 py-1 rounded-full font-semibold ${stat.type === 'positive' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
+                  <span className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-semibold ${
+                    stat.type === 'positive' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
+                  }`}>
                     {stat.change}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mb-1">{stat.title}</p>
-              <p className="text-xl font-heading font-black text-foreground" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">{stat.title}</p>
+              <p className="text-lg sm:text-xl font-heading font-black" style={{ color: stat.color }}>{stat.value}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Row 2: Projects from DB, Employees, Strategic */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <SectionCard
-            to="/projects" icon={FolderKanban} label="المشاريع" desc="إدارة ومتابعة أداء المشاريع"
-            bgColor="bg-[hsl(152,60%,96%)]" textColor="text-success" borderColor="border-success/25"
-            className="lg:col-span-2"
-          >
-            <div className="space-y-2 mt-2">
-              {dbProjects?.map(p => {
-                // Use journal-derived metrics for each project
-                const jm = journalData?.companyMetrics.projectMetrics.get(p.id);
-                const revenue = jm?.totalRevenue ?? Number(p.total_revenue);
-                const profit = jm?.netProfit ?? Number(p.net_profit);
-                const status = jm?.status ?? p.status;
-                return (
-                  <div key={p.id} className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-white/70 shadow-sm">
-                    <span className="text-foreground font-semibold">{p.name}</span>
-                    <div className="flex items-center gap-2">
-                      <span className={profit >= 0 ? 'text-success font-bold' : 'text-destructive font-bold'}>{formatCurrency(profit)}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                        status === 'profitable' ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
-                      }`}>
-                        {status === 'profitable' ? 'مربح' : status === 'loss' ? 'خسارة' : 'متعادل'}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-              {(!dbProjects || dbProjects.length === 0) && (
-                <p className="text-xs text-muted-foreground text-center py-2">لا توجد مشاريع</p>
-              )}
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            to="/employees" icon={Users} label="الموظفين" desc="تقييم الأداء والإنتاجية"
-            bgColor="bg-[hsl(25,85%,96%)]" textColor="text-orange" borderColor="border-orange/25"
-          >
-            <div className="flex items-center gap-3 mt-3">
-              <div className="text-3xl font-heading font-black text-orange">{dbEmployees?.length || 0}</div>
-              <div className="text-[11px] text-muted-foreground leading-relaxed">
-                أعضاء الفريق<br/>
-                متوسط الأداء: <span className="text-orange font-bold">{dbEmployees && dbEmployees.length > 0 ? Math.round(dbEmployees.reduce((s, e) => s + e.performance, 0) / dbEmployees.length) : 0}%</span>
-              </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            to="/strategic" icon={Shield} label="التحليل الاستراتيجي" desc="SWOT والتدفق النقدي"
-            bgColor="bg-[hsl(175,60%,96%)]" textColor="text-teal" borderColor="border-teal/25"
-          >
-            <div className="grid grid-cols-2 gap-1.5 mt-2">
-              <div className="text-center p-2 rounded-xl bg-success/10 text-success text-[10px] font-bold">قوة: 4</div>
-              <div className="text-center p-2 rounded-xl bg-destructive/10 text-destructive text-[10px] font-bold">ضعف: 3</div>
-              <div className="text-center p-2 rounded-xl bg-primary/10 text-primary text-[10px] font-bold">فرص: 4</div>
-              <div className="text-center p-2 rounded-xl bg-warning/10 text-warning text-[10px] font-bold">تهديد: 4</div>
-            </div>
-          </SectionCard>
-        </div>
-
-        {/* Row 3: Forecasts, Financial Lab */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <SectionCard
-            to="/forecasts" icon={TrendingUp} label="التوقعات المالية" desc="تحليل شبه اكتواري"
-            bgColor="bg-gradient-to-br from-[hsl(270,60%,96%)] to-[hsl(270,60%,92%)]" textColor="text-purple" borderColor="border-purple/25"
-          >
-            <div className="space-y-1.5 mt-2">
-              {[
-                { label: 'شهر', value: formatCurrency(Math.round(m.totalRevenue / 12)) },
-                { label: '3 أشهر', value: formatCurrency(Math.round(m.totalRevenue / 4)) },
-                { label: 'سنة', value: formatCurrency(m.totalRevenue) },
-              ].map(f => (
-                <div key={f.label} className="flex justify-between text-[11px] p-1.5 rounded-lg bg-white/60">
-                  <span className="text-muted-foreground">{f.label}</span>
-                  <span className="text-success font-bold">{f.value}</span>
+        {/* ───── Sections (layout-dependent) ───── */}
+        <LayoutGroup>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={layoutMode}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+            >
+              {layoutMode === 'grid' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                  {sections.map((item, i) => (
+                    <GridCard key={item.to + item.label} item={item} index={i} />
+                  ))}
                 </div>
-              ))}
-            </div>
-          </SectionCard>
+              )}
 
-          <SectionCard
-            to="/lab" icon={FlaskConical} label="المختبر المالي" desc="سيناريوهات وقيود محاسبية"
-            bgColor="bg-[hsl(43,65%,96%)]" textColor="text-gold" borderColor="border-gold/25"
-          >
-            <div className="flex gap-1.5 mt-2 flex-wrap">
-              {['ROI', 'NPV', 'سيناريوهات'].map(tag => (
-                <span key={tag} className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-gold-dark border border-gold/20 font-semibold shadow-sm">{tag}</span>
-              ))}
-            </div>
-          </SectionCard>
+              {layoutMode === 'circles' && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-6 sm:gap-8 mb-6 justify-items-center py-4">
+                  {sections.map((item, i) => (
+                    <CircleCard key={item.to + item.label} item={item} index={i} />
+                  ))}
+                </div>
+              )}
 
-          <SectionCard
-            to="/tables" icon={FileSpreadsheet} label="الجداول المخصصة" desc="إنشاء وإدارة جداول بيانات"
-            bgColor="bg-[hsl(200,60%,96%)]" textColor="text-primary" borderColor="border-primary/25"
-          >
-            <p className="text-[10px] text-muted-foreground mt-2">CRUD كامل • ربط بالمشاريع</p>
-          </SectionCard>
+              {layoutMode === 'list' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                  {sections.map((item, i) => (
+                    <ListCard key={item.to + item.label} item={item} index={i} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </LayoutGroup>
 
-          <div>
-            <HealthScore score={m.healthScore} />
-          </div>
+        {/* ───── Health Score ───── */}
+        <div className="mb-6">
+          <HealthScore score={m.healthScore} />
         </div>
 
-        {/* Row 3.5: Tasks + Import Center */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <SectionCard
-            to="/tasks" icon={ListTodo} label="إدارة المهام" desc="Kanban Board للفرق"
-            bgColor="bg-[hsl(25,85%,96%)]" textColor="text-orange" borderColor="border-orange/25"
-            className="lg:col-span-2"
-          >
-            <div className="flex gap-2 mt-2">
-              <span className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-orange border border-orange/20 font-semibold">قيد الانتظار</span>
-              <span className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-primary border border-primary/20 font-semibold">قيد التنفيذ</span>
-              <span className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-success border border-success/20 font-semibold">مكتملة</span>
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            to="/import" icon={FileUp} label="مركز الاستيراد" desc="رفع Excel و CSV"
-            bgColor="bg-[hsl(43,65%,96%)]" textColor="text-gold" borderColor="border-gold/25"
-          >
-            <div className="flex gap-1.5 mt-2 flex-wrap">
-              {['CSV', 'Excel', 'تنظيف'].map(tag => (
-                <span key={tag} className="text-[10px] px-2 py-1 rounded-full bg-white/70 text-gold-dark border border-gold/20 font-semibold shadow-sm">{tag}</span>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            to="/strategic" icon={Activity} label="مؤشرات الأداء" desc="KPIs متقدمة"
-            bgColor="bg-[hsl(175,60%,96%)]" textColor="text-teal" borderColor="border-teal/25"
-          >
-            <div className="grid grid-cols-2 gap-1 mt-2">
-              <div className="text-center p-1.5 rounded-lg bg-white/60 text-[10px] text-teal font-bold">ROI: {m.roi}%</div>
-              <div className="text-center p-1.5 rounded-lg bg-white/60 text-[10px] text-success font-bold">سيولة: {m.liquidityRatio}x</div>
-            </div>
-          </SectionCard>
-        </div>
-
-        {/* BatShark AI Card */}
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, type: 'spring' }} className="mb-6">
+        {/* ───── BatShark AI Card ───── */}
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, type: 'spring' }} className="mb-6">
           <Link to="/ai" className="block">
-            <div className="relative rounded-[20px] overflow-hidden shadow-elevated hover:shadow-[0_12px_48px_-12px_hsl(190,80%,45%,0.25)] transition-all duration-500 group">
+            <div className="relative rounded-2xl sm:rounded-[20px] overflow-hidden shadow-elevated hover:shadow-[0_12px_48px_-12px_hsl(190,80%,45%,0.25)] transition-all duration-500 group">
               <div className="absolute inset-0 bg-gradient-to-br from-[hsl(220,20%,14%)] via-[hsl(210,25%,18%)] to-[hsl(190,30%,12%)]" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <img src={logo} alt="" className="w-[300px] h-[300px] opacity-[0.06] group-hover:opacity-[0.1] transition-opacity duration-700" />
+                <img src={logo} alt="" className="w-[200px] sm:w-[300px] opacity-[0.06] group-hover:opacity-[0.1] transition-opacity duration-700" />
               </div>
-              <div className="absolute inset-0 backdrop-blur-[1px]" />
-              <div className="relative z-10 p-8 flex items-center gap-6">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] shadow-lg">
-                  <Brain className="w-8 h-8 text-white" />
+              <div className="relative z-10 p-5 sm:p-8 flex items-center gap-4 sm:gap-6">
+                <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] shadow-lg shrink-0">
+                  <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-heading font-black text-white mb-1">🦈 BatShark AI</h2>
-                  <p className="text-[hsl(210,20%,70%)] text-sm">المستشار المالي الذكي — اسأل عن الأرباح، التوقعات، الأداء، والمخاطر</p>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg sm:text-2xl font-heading font-black text-white mb-0.5 sm:mb-1">🦈 BatShark AI</h2>
+                  <p className="text-[hsl(210,20%,70%)] text-xs sm:text-sm truncate sm:whitespace-normal">المستشار المالي الذكي — اسأل عن الأرباح، التوقعات، والمخاطر</p>
                 </div>
-                <div className="hidden lg:flex items-center gap-3">
-                  <div className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] text-white font-heading font-bold text-sm shadow-lg group-hover:shadow-xl transition-shadow">
+                <div className="hidden sm:block shrink-0">
+                  <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-[hsl(190,80%,45%)] to-[hsl(210,80%,52%)] text-white font-heading font-bold text-sm shadow-lg group-hover:shadow-xl transition-shadow">
                     ابدأ المحادثة →
                   </div>
                 </div>
@@ -350,10 +409,11 @@ export default function Dashboard() {
           </Link>
         </motion.div>
 
-        {/* Advanced Indicators */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-            className="lg:col-span-2 bg-card rounded-[20px] border border-border p-6 shadow-card relative overflow-hidden">
+        {/* ───── Bottom Summary ───── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+          {/* Projects Summary */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+            className="lg:col-span-2 bg-card rounded-2xl sm:rounded-[20px] border border-border p-5 sm:p-6 shadow-card relative overflow-hidden">
             <img src={logo} alt="" className="absolute bottom-4 left-4 w-14 h-14 opacity-[0.04] pointer-events-none" />
             <h3 className="text-sm font-heading font-bold text-foreground mb-4">📊 ملخص أداء المشاريع</h3>
             <div className="space-y-3">
@@ -364,7 +424,7 @@ export default function Dashboard() {
                 const profitPercent = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
                 return (
                   <div key={p.id} className="flex items-center gap-3">
-                    <span className="text-xs text-foreground w-28 truncate font-medium">{p.name}</span>
+                    <span className="text-xs text-foreground w-24 sm:w-28 truncate font-medium">{p.name}</span>
                     <div className="flex-1 h-3 bg-secondary/50 rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full rounded-full ${profit >= 0 ? 'bg-success' : 'bg-destructive'}`}
@@ -373,7 +433,7 @@ export default function Dashboard() {
                         transition={{ duration: 1 }}
                       />
                     </div>
-                    <span className={`text-xs font-bold w-14 text-left ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    <span className={`text-xs font-bold w-12 text-left ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
                       {profitPercent}%
                     </span>
                   </div>
@@ -382,9 +442,10 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
+          {/* Side Cards */}
           <div className="space-y-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-              className="bg-card rounded-[20px] border border-border p-5 shadow-card">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+              className="bg-card rounded-2xl sm:rounded-[20px] border border-border p-4 sm:p-5 shadow-card">
               <h3 className="text-xs font-heading font-bold text-foreground mb-3">📈 مؤشرات متقدمة</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
@@ -393,18 +454,18 @@ export default function Dashboard() {
                   { label: 'هامش الربح', value: `${m.grossMargin}%`, color: 'text-primary' },
                   { label: 'السيولة', value: `${m.liquidityRatio}x`, color: 'text-teal' },
                 ].map(ind => (
-                  <div key={ind.label} className="text-center p-2.5 rounded-xl bg-secondary/50">
+                  <div key={ind.label} className="text-center p-2 sm:p-2.5 rounded-xl bg-secondary/50">
                     <p className="text-[9px] text-muted-foreground">{ind.label}</p>
-                    <p className={`text-sm font-heading font-black ${ind.color}`}>{ind.value}</p>
+                    <p className={`text-xs sm:text-sm font-heading font-black ${ind.color}`}>{ind.value}</p>
                   </div>
                 ))}
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-              className="bg-card rounded-[20px] border border-border p-5 shadow-card">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
+              className="bg-card rounded-2xl sm:rounded-[20px] border border-border p-4 sm:p-5 shadow-card">
               <h3 className="text-xs font-heading font-bold text-foreground mb-3">👑 مجلس الإدارة</h3>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {[
                   { emoji: '👑', name: 'عبدالرحمن بن بندر', role: 'CEO' },
                   { emoji: '⚙️', name: 'محمد بن تركي', role: 'COO' },
