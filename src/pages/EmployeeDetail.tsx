@@ -299,6 +299,12 @@ export default function EmployeeDetail() {
             </div>
 
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" 
+                onClick={() => recalculateEmployee.mutate({ employeeId: emp.id, employeeSlug: emp.slug, employeeName: emp.name })}
+                disabled={recalculateEmployee.isPending}>
+                {recalculateEmployee.isPending ? <Loader2 className="w-4 h-4 ml-1 animate-spin" /> : <RotateCcw className="w-4 h-4 ml-1" />}
+                إعادة احتساب
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setShowVideo(!showVideo)}>
                 <Video className="w-4 h-4 ml-1" /> الفيديو
               </Button>
