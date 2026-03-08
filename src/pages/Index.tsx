@@ -44,28 +44,21 @@ function GridCard({ item, color, index }: { item: SectionItem; color: string; in
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ delay: index * 0.035, type: 'spring', stiffness: 260, damping: 24 }}
       whileHover={{ y: -3 }}
-      className={item.span2 ? 'md:col-span-2' : ''}
     >
       <Link to={item.to} className="block h-full group">
         <div
-          className="h-full rounded-2xl p-5 transition-all duration-300 border relative overflow-hidden hover:shadow-lg"
+          className="h-full rounded-2xl p-4 sm:p-5 transition-all duration-300 border relative overflow-hidden hover:shadow-lg"
           style={{ borderColor: `${color}30`, background: `linear-gradient(145deg, ${color}06 0%, ${color}02 100%)` }}
         >
-          <div className="absolute top-0 left-0 w-full h-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: color }} />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}12`, color }}>
-                  <item.icon className="w-5 h-5" strokeWidth={1.8} />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-heading font-bold text-[13px] text-foreground truncate">{item.label}</h3>
-                  <p className="text-[10px] text-muted-foreground truncate">{item.desc}</p>
-                </div>
-              </div>
-              <ChevronLeft className="w-4 h-4 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
+          <div className="absolute top-0 left-0 w-full h-[2.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: color }} />
+          <div className="relative z-10 flex flex-col items-center text-center gap-2.5 py-2">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${color}12`, color }}>
+              <item.icon className="w-5 h-5" strokeWidth={1.8} />
             </div>
-            {item.children}
+            <div className="min-w-0">
+              <h3 className="font-heading font-bold text-[13px] text-foreground truncate">{item.label}</h3>
+              <p className="text-[10px] text-muted-foreground truncate mt-0.5">{item.desc}</p>
+            </div>
           </div>
         </div>
       </Link>
@@ -151,7 +144,6 @@ function CompactCard({ item, color, index }: { item: SectionItem; color: string;
 
 /* ───── masonry card ───── */
 function MasonryCard({ item, color, index }: { item: SectionItem; color: string; index: number }) {
-  const isLarge = index % 3 === 0;
   return (
     <motion.div
       layout
@@ -160,23 +152,19 @@ function MasonryCard({ item, color, index }: { item: SectionItem; color: string;
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.04, type: 'spring', stiffness: 260, damping: 24 }}
       whileHover={{ y: -3 }}
-      className={isLarge ? 'sm:col-span-2' : ''}
     >
       <Link to={item.to} className="block h-full group">
         <div
-          className={`h-full rounded-2xl border transition-all duration-300 hover:shadow-lg relative overflow-hidden ${isLarge ? 'p-6' : 'p-4'}`}
+          className="h-full rounded-2xl border transition-all duration-300 hover:shadow-lg relative overflow-hidden p-4"
           style={{ borderColor: `${color}25`, background: `linear-gradient(160deg, ${color}08, ${color}02)` }}
         >
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-[0.06]" style={{ background: color, transform: 'translate(30%, -30%)' }} />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${color}12`, color }}>
-                <item.icon className="w-4 h-4" strokeWidth={1.8} />
-              </div>
-              <h3 className="font-heading font-bold text-sm text-foreground">{item.label}</h3>
+          <div className="relative z-10 flex flex-col items-center text-center gap-2.5 py-2">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}12`, color }}>
+              <item.icon className="w-5 h-5" strokeWidth={1.8} />
             </div>
+            <h3 className="font-heading font-bold text-sm text-foreground">{item.label}</h3>
             <p className="text-[10px] text-muted-foreground">{item.desc}</p>
-            {isLarge && item.children && <div className="mt-2">{item.children}</div>}
           </div>
         </div>
       </Link>
@@ -292,13 +280,13 @@ export default function Dashboard() {
   ], []);
 
   const sectionDefs: SectionItem[] = useMemo(() => [
-    { key: 'المشاريع', to: '/projects', icon: FolderKanban, label: 'المشاريع', desc: 'إدارة ومتابعة أداء المشاريع', defaultColor: 'hsl(152,60%,40%)', span2: true },
+    { key: 'المشاريع', to: '/projects', icon: FolderKanban, label: 'المشاريع', desc: 'إدارة ومتابعة أداء المشاريع', defaultColor: 'hsl(152,60%,40%)' },
     { key: 'الموظفين', to: '/employees', icon: Users, label: 'الموظفين', desc: 'تقييم الأداء والإنتاجية', defaultColor: 'hsl(25,85%,50%)' },
     { key: 'التحليل الاستراتيجي', to: '/strategic', icon: Shield, label: 'التحليل الاستراتيجي', desc: 'SWOT والتدفق النقدي', defaultColor: 'hsl(175,60%,38%)' },
     { key: 'التوقعات المالية', to: '/forecasts', icon: TrendingUp, label: 'التوقعات المالية', desc: 'تحليل شبه اكتواري', defaultColor: 'hsl(270,60%,55%)' },
     { key: 'المختبر المالي', to: '/lab', icon: FlaskConical, label: 'المختبر المالي', desc: 'سيناريوهات وقيود محاسبية', defaultColor: 'hsl(43,65%,45%)' },
     { key: 'الجداول المخصصة', to: '/tables', icon: FileSpreadsheet, label: 'الجداول المخصصة', desc: 'إنشاء وإدارة جداول', defaultColor: 'hsl(210,80%,52%)' },
-    { key: 'إدارة المهام', to: '/tasks', icon: ListTodo, label: 'إدارة المهام', desc: 'Kanban Board للفرق', defaultColor: 'hsl(25,85%,50%)', span2: true },
+    { key: 'إدارة المهام', to: '/tasks', icon: ListTodo, label: 'إدارة المهام', desc: 'Kanban Board للفرق', defaultColor: 'hsl(25,85%,50%)' },
     { key: 'مركز الاستيراد', to: '/import', icon: FileUp, label: 'مركز الاستيراد', desc: 'رفع Excel و CSV', defaultColor: 'hsl(43,65%,45%)' },
     { key: 'الأخبار', to: '/news', icon: Newspaper, label: 'الأخبار', desc: 'آخر الأخبار والتحديثات', defaultColor: 'hsl(210,80%,52%)' },
     { key: 'غرف النقاش', to: '/chat', icon: MessageSquare, label: 'غرف النقاش', desc: 'محادثات الفريق', defaultColor: 'hsl(152,60%,40%)' },
@@ -361,7 +349,7 @@ export default function Dashboard() {
 
   const enrichedSections = sectionDefs.map(s => ({
     ...s,
-    children: prefs.layout === 'grid' ? sectionChildren[s.key] : undefined,
+    children: undefined,
   }));
 
   return (
@@ -460,7 +448,7 @@ export default function Dashboard() {
               transition={{ duration: 0.2 }}
             >
               {prefs.layout === 'grid' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
                   {enrichedSections.map((item, i) => (
                     <GridCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
                   ))}
@@ -488,7 +476,7 @@ export default function Dashboard() {
                 </div>
               )}
               {prefs.layout === 'masonry' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
                   {enrichedSections.map((item, i) => (
                     <MasonryCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
                   ))}
