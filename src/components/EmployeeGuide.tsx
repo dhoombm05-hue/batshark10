@@ -162,8 +162,8 @@ export default function EmployeeGuide({ context }: EmployeeGuideProps) {
         whileTap={{ scale: 0.95 }}
         style={{ bottom: '24px', right: '24px' }}
       >
-        <GraduationCap className="w-5 h-5" />
-        <span className="font-heading font-bold text-sm">📖 دليل الموظف</span>
+        <img src={logo} alt="BatShark" className="w-6 h-6 object-contain" />
+        <span className="font-heading font-bold text-sm">دليل الموظف</span>
       </motion.button>
 
       {/* Dialog */}
