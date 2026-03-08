@@ -32,6 +32,8 @@ const navItems = [
   { path: '/chat', label: 'غرفة النقاشات', icon: MessageSquare, color: 'section-ai' },
   { path: '/messages', label: 'الرسائل الخاصة', icon: Mail, color: 'section-forecast' },
   { path: '/news', label: 'الأخبار', icon: Newspaper, color: 'section-revenue' },
+  { path: '/tasks', label: 'إدارة المهام', icon: ListTodo, color: 'section-employees' },
+  { path: '/import', label: 'مركز الاستيراد', icon: FileUp, color: 'section-invest' },
 ];
 
 const colorMap: Record<string, { text: string; bg: string; glow: string }> = {
