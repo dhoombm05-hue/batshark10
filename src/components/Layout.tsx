@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
-  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User
+  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User, ListTodo, FileUp
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -32,6 +32,8 @@ const navItems = [
   { path: '/chat', label: 'غرفة النقاشات', icon: MessageSquare, color: 'section-ai' },
   { path: '/messages', label: 'الرسائل الخاصة', icon: Mail, color: 'section-forecast' },
   { path: '/news', label: 'الأخبار', icon: Newspaper, color: 'section-revenue' },
+  { path: '/tasks', label: 'إدارة المهام', icon: ListTodo, color: 'section-employees' },
+  { path: '/import', label: 'مركز الاستيراد', icon: FileUp, color: 'section-invest' },
 ];
 
 const colorMap: Record<string, { text: string; bg: string; glow: string }> = {

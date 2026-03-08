@@ -23,6 +23,8 @@ import ChatRooms from "./pages/ChatRooms";
 import PrivateMessages from "./pages/PrivateMessages";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
+import Tasks from "./pages/Tasks";
+import ImportCenter from "./pages/ImportCenter";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 
@@ -54,6 +56,8 @@ const App = () => (
             <Route path="/messages" element={<ProtectedRoute><PrivateMessages /></ProtectedRoute>} />
             <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
             <Route path="/news/:id" element={<ProtectedRoute><NewsDetail /></ProtectedRoute>} />
+            <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+            <Route path="/import" element={<ProtectedRoute><ImportCenter /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />
