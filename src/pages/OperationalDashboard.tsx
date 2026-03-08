@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useDataImports } from '@/hooks/useDataImports';
-import { useActivityLog } from '@/hooks/useActivityLog';
+import { useActivityImpactLogs } from '@/hooks/useActivityImpact';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { 
