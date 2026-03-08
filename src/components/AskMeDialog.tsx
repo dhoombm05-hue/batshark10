@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, X, Send, Loader2, BookOpen, MessageCircle } from 'lucide-react';
+import { X, Send, Loader2, BookOpen, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
+import logo from '@/assets/batshark-logo-new.png';
 
 interface AskMeDialogProps {
   pageKey: string;
@@ -157,8 +158,8 @@ export default function AskMeDialog({ pageKey }: AskMeDialogProps) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <HelpCircle className="w-5 h-5" />
-        <span className="font-heading font-bold text-sm">💡 اسألني</span>
+        <img src={logo} alt="BatShark" className="w-6 h-6 object-contain" />
+        <span className="font-heading font-bold text-sm">اسألني</span>
       </motion.button>
 
       {/* Dialog */}
@@ -181,11 +182,9 @@ export default function AskMeDialog({ pageKey }: AskMeDialogProps) {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-l from-primary/5 to-transparent">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-primary/10">
-                    <HelpCircle className="w-5 h-5 text-primary" />
-                  </div>
+                  <img src={logo} alt="BatShark" className="w-10 h-10 object-contain" />
                   <div>
-                    <h2 className="font-heading font-bold text-foreground">💡 مركز المساعدة</h2>
+                    <h2 className="font-heading font-bold text-foreground">مركز المساعدة — BatShark</h2>
                     <p className="text-xs text-muted-foreground">{help.title}</p>
                   </div>
                 </div>

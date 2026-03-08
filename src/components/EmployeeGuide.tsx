@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, X, Send, Loader2, BookOpen, MessageCircle, ChevronRight, Sparkles } from 'lucide-react';
+import { X, Send, Loader2, BookOpen, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
+import logo from '@/assets/batshark-logo-new.png';
 
 interface EmployeeGuideProps {
   /** Optional: restrict to specific context */
@@ -161,8 +162,8 @@ export default function EmployeeGuide({ context }: EmployeeGuideProps) {
         whileTap={{ scale: 0.95 }}
         style={{ bottom: '24px', right: '24px' }}
       >
-        <GraduationCap className="w-5 h-5" />
-        <span className="font-heading font-bold text-sm">📖 دليل الموظف</span>
+        <img src={logo} alt="BatShark" className="w-6 h-6 object-contain" />
+        <span className="font-heading font-bold text-sm">دليل الموظف</span>
       </motion.button>
 
       {/* Dialog */}
@@ -185,11 +186,9 @@ export default function EmployeeGuide({ context }: EmployeeGuideProps) {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-l from-section-ai/10 to-transparent">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-section-ai/10">
-                    <GraduationCap className="w-5 h-5 text-section-ai" />
-                  </div>
+                  <img src={logo} alt="BatShark" className="w-10 h-10 object-contain" />
                   <div>
-                    <h2 className="font-heading font-bold text-foreground">📖 دليل الموظف التفاعلي</h2>
+                    <h2 className="font-heading font-bold text-foreground">دليل الموظف — BatShark</h2>
                     <p className="text-xs text-muted-foreground">تعلّم كيف تستخدم كل قسم في المنصة</p>
                   </div>
                 </div>
