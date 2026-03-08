@@ -18,6 +18,7 @@ export default function Employees() {
   const { data: cycles } = usePerformanceCycles();
   const resetCycle = useResetPerformanceCycle();
   const uploadAvatar = useUploadEmployeeAvatar();
+  const { recalculateAll } = useEmployeeEngine();
   const [showArchive, setShowArchive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
