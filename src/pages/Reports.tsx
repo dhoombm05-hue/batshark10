@@ -49,8 +49,8 @@ export default function Reports() {
   const [additionalNotes, setAdditionalNotes] = useState('');
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const totalRevenue = projects.reduce((sum, p) => sum + (p.override_total_revenue ?? p.total_revenue), 0);
-  const totalExpenses = projects.reduce((sum, p) => sum + (p.override_total_expenses ?? p.total_expenses), 0);
+  const totalRevenue = projects.reduce((sum, p) => sum + p.total_revenue, 0);
+  const totalExpenses = projects.reduce((sum, p) => sum + p.total_expenses, 0);
   const netProfit = totalRevenue - totalExpenses;
 
   // Generate report data based on template
