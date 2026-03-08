@@ -82,8 +82,8 @@ function CircleCard({ item, color, index }: { item: SectionItem; color: string; 
     >
       <Link to={item.to} className="flex flex-col items-center gap-2.5 group">
         <div
-          className="w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-full flex items-center justify-center transition-all duration-300 border group-hover:shadow-lg"
-          style={{ borderColor: `${color}35`, background: `radial-gradient(circle at 35% 35%, ${color}12, ${color}04)` }}
+          className="w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-full flex items-center justify-center transition-all duration-300 group-hover:shadow-lg"
+          style={{ borderWidth: 2, borderStyle: 'solid', borderColor: `${color}30`, background: `radial-gradient(circle at 35% 35%, ${color}10, transparent)` }}
         >
           <item.icon className="w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:scale-110" style={{ color }} strokeWidth={1.6} />
         </div>
