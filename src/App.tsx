@@ -23,6 +23,8 @@ import ChatRooms from "./pages/ChatRooms";
 import PrivateMessages from "./pages/PrivateMessages";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
+import Tasks from "./pages/Tasks";
+import ImportCenter from "./pages/ImportCenter";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 
