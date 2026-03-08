@@ -136,10 +136,10 @@ function NavSection({
               to={item.path}
               onClick={onNav}
               title={item.label}
-              className={`flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 ${active ? `${colors.bg} ${colors.text}` : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+              className={`flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 ${active ? `${colors.bg} ${colors.text}` : `${colors.text} opacity-60 hover:opacity-100 hover:${colors.bg}`}`}
               style={active ? { boxShadow: colors.glow } : undefined}
             >
-              <item.icon className={`w-5 h-5 shrink-0 ${active ? colors.text : ''}`} />
+              <item.icon className={`w-5 h-5 shrink-0 ${colors.text}`} />
             </Link>
           );
         }
@@ -149,11 +149,11 @@ function NavSection({
             key={item.path}
             to={item.path}
             onClick={onNav}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${active ? `${colors.bg} ${colors.text}` : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${active ? `${colors.bg} ${colors.text}` : `text-sidebar-foreground/80 hover:text-sidebar-foreground hover:${colors.bg}`}`}
             style={active ? { boxShadow: colors.glow } : undefined}
           >
-            <div className={`p-1 rounded-md ${active ? colors.bg : 'bg-secondary/30'}`}>
-              <item.icon className={`w-3.5 h-3.5 shrink-0 ${active ? colors.text : ''}`} />
+            <div className={`p-1 rounded-md ${active ? colors.bg : `${colors.bg} opacity-40`}`}>
+              <item.icon className={`w-3.5 h-3.5 shrink-0 ${colors.text}`} />
             </div>
             <span className="font-body text-[13px] font-medium flex-1">{item.label}</span>
             {item.path === '/news' && newsUnread > 0 && (
