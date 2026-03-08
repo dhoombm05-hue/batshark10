@@ -524,82 +524,100 @@ export default function EmployeeDetail() {
         )}
       </AnimatePresence>
 
-      {/* Stats from DB */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[
-          { title: 'الأداء العام', value: `${emp.performance}%`, icon: Target, color: emp.performance >= 85 ? 'text-success' : 'text-section-employees' },
-          { title: 'تحقيق الأهداف', value: `${emp.kpi_achievement}%`, icon: CheckCircle, color: 'text-primary' },
-          { title: 'مساهمة في الربح', value: `${emp.profit_contribution}%`, icon: TrendingUp, color: 'text-success' },
-          { title: 'التقييم الشهري', value: `${emp.monthly_rating}/10`, icon: Star, color: 'text-gold' },
-        ].map((stat, i) => (
-          <motion.div key={stat.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.08 }}
-            className="bg-card rounded-xl border border-border p-4 shadow-card">
-            <div className="flex items-center gap-2 mb-2">
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
-              <span className="text-[10px] text-muted-foreground">{stat.title}</span>
-            </div>
-            <p className={`text-xl font-heading font-bold ${stat.color}`}>{stat.value}</p>
-          </motion.div>
-        ))}
-      </div>
+      {/* Tabs: Profile & Governance */}
+      <Tabs defaultValue="profile" dir="rtl">
+        <TabsList className="mb-6 bg-card border border-border">
+          <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-section-employees/15 data-[state=active]:text-section-employees">
+            <Users className="w-4 h-4" /> الملف الشخصي
+          </TabsTrigger>
+          <TabsTrigger value="governance" className="gap-2 data-[state=active]:bg-primary/15 data-[state=active]:text-primary">
+            <ShieldCheck className="w-4 h-4" /> حوكمة الأداء الشاملة
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Performance Chart from DB */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="bg-card rounded-xl border border-border p-5 shadow-card">
-          <h3 className="text-sm font-heading text-foreground mb-4">📈 الأداء الشهري</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 88%)" />
-              <XAxis dataKey="month" tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
-              <YAxis domain={[50, 100]} tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: 'hsl(0 0% 100%)', border: '1px solid hsl(220 15% 88%)', borderRadius: 12 }} />
-              <Line type="monotone" dataKey="score" name="الأداء" stroke="hsl(25, 85%, 52%)" strokeWidth={2.5} dot={{ fill: 'hsl(25, 85%, 52%)', r: 3 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </motion.div>
-
-        {/* Feedback & Achievements from DB */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="bg-card rounded-xl border border-border p-5 shadow-card">
-          <h3 className="text-sm font-heading text-foreground mb-4">📝 تقييم النظام</h3>
-
-          <div className={`p-4 rounded-lg mb-4 ${emp.performance >= 85 ? 'bg-success/10 border border-success/20' : emp.performance >= 70 ? 'bg-section-employees/10 border border-section-employees/20' : 'bg-destructive/10 border border-destructive/20'}`}>
-            {editingProfile && isCEO ? (
-              <textarea value={profileData.adminNotes} onChange={e => setProfileData(p => ({ ...p, adminNotes: e.target.value }))}
-                className="w-full bg-transparent text-sm text-foreground resize-none focus:outline-none" rows={3} />
-            ) : (
-              <p className="text-sm text-foreground leading-relaxed">{profileData.adminNotes}</p>
-            )}
+        <TabsContent value="profile">
+          {/* Stats from DB */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[
+              { title: 'الأداء العام', value: `${emp.performance}%`, icon: Target, color: emp.performance >= 85 ? 'text-success' : 'text-section-employees' },
+              { title: 'تحقيق الأهداف', value: `${emp.kpi_achievement}%`, icon: CheckCircle, color: 'text-primary' },
+              { title: 'مساهمة في الربح', value: `${emp.profit_contribution}%`, icon: TrendingUp, color: 'text-success' },
+              { title: 'التقييم الشهري', value: `${emp.monthly_rating}/10`, icon: Star, color: 'text-gold' },
+            ].map((stat, i) => (
+              <motion.div key={stat.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.08 }}
+                className="bg-card rounded-xl border border-border p-4 shadow-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                  <span className="text-[10px] text-muted-foreground">{stat.title}</span>
+                </div>
+                <p className={`text-xl font-heading font-bold ${stat.color}`}>{stat.value}</p>
+              </motion.div>
+            ))}
           </div>
 
-          {(emp.achievements || []).length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Award className="w-3 h-3 text-section-employees" /> الإنجازات</h4>
-              <div className="space-y-1.5">
-                {emp.achievements.map((a, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs text-foreground">
-                    <CheckCircle className="w-3 h-3 text-success mt-0.5 shrink-0" /><span>{a}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Performance Chart from DB */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+              className="bg-card rounded-xl border border-border p-5 shadow-card">
+              <h3 className="text-sm font-heading text-foreground mb-4">📈 الأداء الشهري</h3>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 88%)" />
+                  <XAxis dataKey="month" tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
+                  <YAxis domain={[50, 100]} tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
+                  <Tooltip contentStyle={{ background: 'hsl(0 0% 100%)', border: '1px solid hsl(220 15% 88%)', borderRadius: 12 }} />
+                  <Line type="monotone" dataKey="score" name="الأداء" stroke="hsl(25, 85%, 52%)" strokeWidth={2.5} dot={{ fill: 'hsl(25, 85%, 52%)', r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </motion.div>
 
-          {(emp.improvements || []).length > 0 && (
-            <div>
-              <h4 className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-warning" /> نقاط تحتاج تحسين</h4>
-              <div className="space-y-1.5">
-                {emp.improvements.map((a, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs text-foreground">
-                    <AlertTriangle className="w-3 h-3 text-warning mt-0.5 shrink-0" /><span>{a}</span>
-                  </div>
-                ))}
+            {/* Feedback & Achievements from DB */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+              className="bg-card rounded-xl border border-border p-5 shadow-card">
+              <h3 className="text-sm font-heading text-foreground mb-4">📝 تقييم النظام</h3>
+
+              <div className={`p-4 rounded-lg mb-4 ${emp.performance >= 85 ? 'bg-success/10 border border-success/20' : emp.performance >= 70 ? 'bg-section-employees/10 border border-section-employees/20' : 'bg-destructive/10 border border-destructive/20'}`}>
+                {editingProfile && isCEO ? (
+                  <textarea value={profileData.adminNotes} onChange={e => setProfileData(p => ({ ...p, adminNotes: e.target.value }))}
+                    className="w-full bg-transparent text-sm text-foreground resize-none focus:outline-none" rows={3} />
+                ) : (
+                  <p className="text-sm text-foreground leading-relaxed">{profileData.adminNotes}</p>
+                )}
               </div>
-            </div>
-          )}
-        </motion.div>
-      </div>
+
+              {(emp.achievements || []).length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Award className="w-3 h-3 text-section-employees" /> الإنجازات</h4>
+                  <div className="space-y-1.5">
+                    {emp.achievements.map((a, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-foreground">
+                        <CheckCircle className="w-3 h-3 text-success mt-0.5 shrink-0" /><span>{a}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(emp.improvements || []).length > 0 && (
+                <div>
+                  <h4 className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-warning" /> نقاط تحتاج تحسين</h4>
+                  <div className="space-y-1.5">
+                    {emp.improvements.map((a, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-foreground">
+                        <AlertTriangle className="w-3 h-3 text-warning mt-0.5 shrink-0" /><span>{a}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="governance">
+          <EmployeeGovernanceTab employeeName={emp.name} />
+        </TabsContent>
+      </Tabs>
     </Layout>
   );
 }
