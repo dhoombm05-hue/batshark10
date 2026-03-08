@@ -18,6 +18,10 @@ export interface DBProject {
   campaign_count: number;
   status: string;
   data_reliability_score: number;
+  override_total_revenue: number | null;
+  override_total_expenses: number | null;
+  override_net_profit: number | null;
+  override_growth_rate: number | null;
   created_at: string;
   updated_at: string;
 }
