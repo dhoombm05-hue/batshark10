@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
-  Menu, X, ChevronLeft, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User, ListTodo, FileUp,
+  Menu, X, ChevronLeft, ChevronDown, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User, ListTodo, FileUp,
   BarChart3, Activity, AlertTriangle, FileText, Sparkles, BookOpen
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -21,27 +21,71 @@ const ROLE_LABELS: Record<string, string> = {
   tech_director: '💻 التقنية',
 };
 
-const navItems = [
-  { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard, color: 'section-finance' },
-  { path: '/executive', label: 'اللوحة التنفيذية', icon: BarChart3, color: 'section-revenue' },
-  { path: '/operational', label: 'التشغيل اليومي', icon: Activity, color: 'section-ai' },
-  { path: '/projects-dashboard', label: 'لوحة المشاريع', icon: FolderKanban, color: 'section-forecast' },
-  { path: '/projects', label: 'المشاريع', icon: FolderKanban, color: 'section-revenue' },
-  { path: '/employees', label: 'الموظفين', icon: Users, color: 'section-employees' },
-  { path: '/forecasts', label: 'التوقعات', icon: TrendingUp, color: 'section-forecast' },
-  { path: '/strategic', label: 'التحليل الاستراتيجي', icon: Shield, color: 'section-strategic' },
-  { path: '/lab', label: 'مختبر النمذجة', icon: FlaskConical, color: 'section-invest' },
-  { path: '/alerts', label: 'التنبيهات الذكية', icon: AlertTriangle, color: 'section-employees' },
-  { path: '/ai', label: 'اسأل BatShark', icon: Brain, color: 'section-ai' },
-  { path: '/ai-insights', label: 'رؤى AI المتقدمة', icon: Sparkles, color: 'section-ai' },
-  { path: '/reports', label: 'التقارير', icon: FileText, color: 'section-finance' },
-  { path: '/documents', label: 'مركز الملفات', icon: FolderOpen, color: 'section-finance' },
-  { path: '/chat', label: 'غرفة النقاشات', icon: MessageSquare, color: 'section-ai' },
-  { path: '/messages', label: 'الرسائل الخاصة', icon: Mail, color: 'section-forecast' },
-  { path: '/news', label: 'الأخبار', icon: Newspaper, color: 'section-revenue' },
-  { path: '/tasks', label: 'إدارة المهام', icon: ListTodo, color: 'section-employees' },
-  { path: '/import', label: 'مركز الاستيراد', icon: FileUp, color: 'section-invest' },
-  { path: '/dictionary', label: 'قاموس البيانات', icon: BookOpen, color: 'section-strategic' },
+type NavItem = { path: string; label: string; icon: React.ElementType; color: string };
+
+const navGroups: { groupLabel: string; groupIcon: React.ElementType; groupColor: string; items: NavItem[] }[] = [
+  {
+    groupLabel: 'اللوحات الرئيسية',
+    groupIcon: LayoutDashboard,
+    groupColor: 'section-finance',
+    items: [
+      { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard, color: 'section-finance' },
+      { path: '/executive', label: 'اللوحة التنفيذية', icon: BarChart3, color: 'section-revenue' },
+      { path: '/operational', label: 'التشغيل اليومي', icon: Activity, color: 'section-ai' },
+      { path: '/projects-dashboard', label: 'لوحة المشاريع', icon: FolderKanban, color: 'section-forecast' },
+    ],
+  },
+  {
+    groupLabel: 'الأعمال والموارد',
+    groupIcon: FolderKanban,
+    groupColor: 'section-revenue',
+    items: [
+      { path: '/projects', label: 'المشاريع', icon: FolderKanban, color: 'section-revenue' },
+      { path: '/employees', label: 'الموظفين', icon: Users, color: 'section-employees' },
+      { path: '/tasks', label: 'إدارة المهام', icon: ListTodo, color: 'section-employees' },
+    ],
+  },
+  {
+    groupLabel: 'التحليل والتوقعات',
+    groupIcon: TrendingUp,
+    groupColor: 'section-forecast',
+    items: [
+      { path: '/forecasts', label: 'التوقعات', icon: TrendingUp, color: 'section-forecast' },
+      { path: '/strategic', label: 'التحليل الاستراتيجي', icon: Shield, color: 'section-strategic' },
+      { path: '/lab', label: 'مختبر النمذجة', icon: FlaskConical, color: 'section-invest' },
+      { path: '/alerts', label: 'التنبيهات الذكية', icon: AlertTriangle, color: 'section-employees' },
+    ],
+  },
+  {
+    groupLabel: 'الذكاء الاصطناعي',
+    groupIcon: Brain,
+    groupColor: 'section-ai',
+    items: [
+      { path: '/ai', label: 'اسأل BatShark', icon: Brain, color: 'section-ai' },
+      { path: '/ai-insights', label: 'رؤى AI المتقدمة', icon: Sparkles, color: 'section-ai' },
+    ],
+  },
+  {
+    groupLabel: 'التواصل والمحتوى',
+    groupIcon: MessageSquare,
+    groupColor: 'section-forecast',
+    items: [
+      { path: '/chat', label: 'غرفة النقاشات', icon: MessageSquare, color: 'section-ai' },
+      { path: '/messages', label: 'الرسائل الخاصة', icon: Mail, color: 'section-forecast' },
+      { path: '/news', label: 'الأخبار', icon: Newspaper, color: 'section-revenue' },
+    ],
+  },
+  {
+    groupLabel: 'الملفات والبيانات',
+    groupIcon: FileText,
+    groupColor: 'section-invest',
+    items: [
+      { path: '/reports', label: 'التقارير', icon: FileText, color: 'section-finance' },
+      { path: '/documents', label: 'مركز الملفات', icon: FolderOpen, color: 'section-finance' },
+      { path: '/import', label: 'مركز الاستيراد', icon: FileUp, color: 'section-invest' },
+      { path: '/dictionary', label: 'قاموس البيانات', icon: BookOpen, color: 'section-strategic' },
+    ],
+  },
 ];
 
 const colorMap: Record<string, { text: string; bg: string; glow: string }> = {
@@ -53,6 +97,98 @@ const colorMap: Record<string, { text: string; bg: string; glow: string }> = {
   'section-invest': { text: 'text-section-invest', bg: 'bg-section-invest/15', glow: '0 0 20px hsl(43 65% 55% / 0.2)' },
   'section-ai': { text: 'text-section-ai', bg: 'bg-section-ai/15', glow: '0 0 20px hsl(190 80% 50% / 0.2)' },
 };
+
+function NavGroup({
+  group,
+  collapsed,
+  location,
+  onNav,
+  newsUnread,
+}: {
+  group: typeof navGroups[0];
+  collapsed: boolean;
+  location: { pathname: string };
+  onNav: () => void;
+  newsUnread: number;
+}) {
+  const hasActive = group.items.some(
+    (item) => location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path))
+  );
+  const [open, setOpen] = useState(hasActive);
+  const groupColors = colorMap[group.groupColor];
+
+  if (collapsed) {
+    return (
+      <div className="space-y-1">
+        {group.items.map((item) => {
+          const active = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+          const colors = colorMap[item.color];
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={onNav}
+              title={item.label}
+              className={`flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 ${active ? `${colors.bg} ${colors.text}` : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+              style={active ? { boxShadow: colors.glow } : undefined}
+            >
+              <item.icon className={`w-5 h-5 shrink-0 ${active ? colors.text : ''}`} />
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-0.5">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 group ${hasActive ? `${groupColors.bg} ${groupColors.text}` : 'text-muted-foreground hover:text-foreground hover:bg-secondary/30'}`}
+      >
+        <group.groupIcon className={`w-4 h-4 shrink-0 ${hasActive ? groupColors.text : 'text-muted-foreground group-hover:text-foreground'}`} />
+        <span className="font-body text-xs font-semibold flex-1 text-start">{group.groupLabel}</span>
+        <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="pr-2 space-y-0.5 pt-0.5">
+              {group.items.map((item) => {
+                const active = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+                const colors = colorMap[item.color];
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={onNav}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${active ? `${colors.bg} ${colors.text}` : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+                    style={active ? { boxShadow: colors.glow } : undefined}
+                  >
+                    <item.icon className={`w-4 h-4 shrink-0 ${active ? colors.text : ''}`} />
+                    <span className="font-body text-[13px] font-medium flex-1">{item.label}</span>
+                    {item.path === '/news' && newsUnread > 0 && (
+                      <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pulse">
+                        {newsUnread}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -74,12 +210,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return 'var(--background-gradient)';
   };
 
-  const allNavItems = isCEO
-    ? [...navItems, { path: '/users', label: 'إدارة المستخدمين', icon: UserCog, color: 'section-finance' }]
-    : navItems;
+  const ceoGroup: typeof navGroups[0] | null = isCEO
+    ? {
+        groupLabel: 'الإدارة',
+        groupIcon: UserCog,
+        groupColor: 'section-finance',
+        items: [{ path: '/users', label: 'إدارة المستخدمين', icon: UserCog, color: 'section-finance' }],
+      }
+    : null;
+
+  const allGroups = ceoGroup ? [...navGroups, ceoGroup] : navGroups;
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] min-h-[100dvh]">
+    <div className="flex min-h-screen min-h-[100dvh]">
       {/* Mobile menu button */}
       <button
         onClick={() => setMobileOpen(true)}
@@ -133,7 +276,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
           {!collapsed && latestUnreadNews && (
             <Link
               to="/news"
@@ -159,36 +302,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               )}
             </Link>
           )}
-          {allNavItems.map((item) => {
-            const active = location.pathname === item.path ||
-              (item.path !== '/' && location.pathname.startsWith(item.path));
-            const colors = colorMap[item.color];
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileOpen(false)}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-                  ${active
-                    ? `${colors.bg} ${colors.text}`
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                  }
-                `}
-                style={active ? { boxShadow: colors.glow } : undefined}
-              >
-                <item.icon className={`w-5 h-5 shrink-0 ${active ? colors.text : ''}`} />
-                {!collapsed && (
-                  <span className="font-body text-sm font-medium flex-1">{item.label}</span>
-                )}
-                {item.path === '/news' && newsUnread > 0 && (
-                  <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pulse">
-                    {newsUnread}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+
+          {allGroups.map((group) => (
+            <NavGroup
+              key={group.groupLabel}
+              group={group}
+              collapsed={collapsed}
+              location={location}
+              onNav={() => setMobileOpen(false)}
+              newsUnread={newsUnread}
+            />
+          ))}
         </nav>
 
         {/* Theme + User Info & Logout */}
