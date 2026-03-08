@@ -583,6 +583,71 @@ export type Database = {
           },
         ]
       }
+      data_imports: {
+        Row: {
+          cleaning_report: Json | null
+          column_count: number | null
+          completed_at: string | null
+          created_at: string
+          error_log: Json | null
+          file_name: string
+          file_type: string
+          file_url: string | null
+          id: string
+          import_config: Json | null
+          imported_by: string
+          imported_by_name: string
+          project_id: string | null
+          row_count: number | null
+          status: string
+          target_table: string | null
+        }
+        Insert: {
+          cleaning_report?: Json | null
+          column_count?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          file_name: string
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          import_config?: Json | null
+          imported_by: string
+          imported_by_name?: string
+          project_id?: string | null
+          row_count?: number | null
+          status?: string
+          target_table?: string | null
+        }
+        Update: {
+          cleaning_report?: Json | null
+          column_count?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          file_name?: string
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          import_config?: Json | null
+          imported_by?: string
+          imported_by_name?: string
+          project_id?: string | null
+          row_count?: number | null
+          status?: string
+          target_table?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_imports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           business_name: string | null
@@ -1476,6 +1541,77 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          assigned_to_name: string | null
+          category: string | null
+          created_at: string
+          created_by: string
+          created_by_name: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          project_id: string | null
+          sort_order: number
+          source_id: string | null
+          source_label: string | null
+          source_type: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          category?: string | null
+          created_at?: string
+          created_by: string
+          created_by_name?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          project_id?: string | null
+          sort_order?: number
+          source_id?: string | null
+          source_label?: string | null
+          source_type?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          created_by_name?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          project_id?: string | null
+          sort_order?: number
+          source_id?: string | null
+          source_label?: string | null
+          source_type?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_activity: {
         Row: {
