@@ -466,35 +466,54 @@ export default function BatSharkAI() {
         >
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-4">
-              {/* Animated living logo */}
+              {/* ═══ Premium Flying Bat with Wing Flapping ═══ */}
               <motion.div
                 className="relative"
                 animate={{
                   filter: [
                     'drop-shadow(0 0 8px hsl(190 80% 50% / 0.3))',
-                    'drop-shadow(0 0 20px hsl(190 80% 50% / 0.6))',
+                    'drop-shadow(0 0 24px hsl(190 80% 50% / 0.6))',
                     'drop-shadow(0 0 8px hsl(190 80% 50% / 0.3))',
                   ],
                 }}
                 transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
               >
+                {/* Wing-flapping effect - smooth sinusoidal */}
                 <motion.img
                   src={aiLogo}
                   alt="BatShark AI"
-                  className="w-14 h-14 object-contain"
+                  className="w-16 h-16 object-contain"
                   style={{ filter: 'brightness(0) invert(1)' }}
-                  animate={{
-                    scale: [1, 1.04, 1],
-                    rotate: [0, 1, -1, 0],
+                  animate={isLoading ? {
+                    scaleX: [1, 0.88, 1, 0.9, 1],
+                    scaleY: [1, 1.06, 0.97, 1.04, 1],
+                    rotate: [0, -3, 3, -2, 0],
+                    y: [0, -4, 0, -2, 0],
+                  } : {
+                    scaleX: [1, 0.94, 1, 0.96, 1],
+                    scaleY: [1, 1.03, 0.99, 1.02, 1],
+                    rotate: [0, -1.5, 1.5, -0.5, 0],
+                    y: [0, -3, 0, -1.5, 0],
                   }}
-                  transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: isLoading ? 1.2 : 3,
+                    ease: 'easeInOut',
+                  }}
+                />
+                {/* Glow ring */}
+                <motion.div
+                  className="absolute inset-[-10px] rounded-full"
+                  style={{ background: 'radial-gradient(circle, hsl(190 80% 50% / 0.1), transparent 70%)' }}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ repeat: Infinity, duration: 2.5 }}
                 />
                 {/* Thinking pulse ring */}
                 {isLoading && (
                   <motion.div
-                    className="absolute inset-[-6px] rounded-full border-2 border-primary/40"
-                    animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="absolute inset-[-8px] rounded-full border-2 border-primary/30"
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 1.2 }}
                   />
                 )}
               </motion.div>
@@ -562,15 +581,42 @@ export default function BatSharkAI() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center">
-                <motion.div
-                  animate={{ scale: [1, 1.08, 1], rotate: [0, 2, -2, 0] }}
-                  transition={{ repeat: Infinity, duration: 4 }}
-                >
-                  <img
-                    src={aiLogo}
-                    alt="BatShark"
-                    className="w-24 h-24 mb-4 object-contain"
-                    style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 16px hsl(190 80% 50% / 0.3))' }}
+                <motion.div className="relative mb-6">
+                  {/* Wing-flapping welcome bat */}
+                  <motion.div
+                    className="relative"
+                    animate={{
+                      filter: [
+                        'drop-shadow(0 0 8px hsl(190 80% 50% / 0.2))',
+                        'drop-shadow(0 0 20px hsl(190 80% 50% / 0.5))',
+                        'drop-shadow(0 0 8px hsl(190 80% 50% / 0.2))',
+                      ],
+                    }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                  >
+                    <motion.img
+                      src={aiLogo}
+                      alt="BatShark"
+                      className="w-28 h-28 object-contain"
+                      style={{ filter: 'brightness(0) invert(1)' }}
+                      animate={{
+                        scaleX: [1, 0.9, 1, 0.92, 1],
+                        scaleY: [1, 1.05, 0.98, 1.03, 1],
+                        rotate: [0, -2, 2, -1, 0],
+                        y: [0, -8, 0, -4, 0],
+                      }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 2.5,
+                        ease: 'easeInOut',
+                      }}
+                    />
+                  </motion.div>
+                  {/* Shadow beneath */}
+                  <motion.div
+                    className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-16 h-3 rounded-full bg-white/5 blur-md"
+                    animate={{ scaleX: [1, 0.6, 1], opacity: [0.3, 0.1, 0.3] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
                   />
                 </motion.div>
                 <h3 className="text-lg font-heading mb-2" style={{ color: 'hsl(0 0% 92%)' }}>مرحباً {userName} 👋</h3>
