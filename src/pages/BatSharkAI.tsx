@@ -581,15 +581,42 @@ export default function BatSharkAI() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center">
-                <motion.div
-                  animate={{ scale: [1, 1.08, 1], rotate: [0, 2, -2, 0] }}
-                  transition={{ repeat: Infinity, duration: 4 }}
-                >
-                  <img
-                    src={aiLogo}
-                    alt="BatShark"
-                    className="w-24 h-24 mb-4 object-contain"
-                    style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 16px hsl(190 80% 50% / 0.3))' }}
+                <motion.div className="relative mb-6">
+                  {/* Wing-flapping welcome bat */}
+                  <motion.div
+                    className="relative"
+                    animate={{
+                      filter: [
+                        'drop-shadow(0 0 8px hsl(190 80% 50% / 0.2))',
+                        'drop-shadow(0 0 20px hsl(190 80% 50% / 0.5))',
+                        'drop-shadow(0 0 8px hsl(190 80% 50% / 0.2))',
+                      ],
+                    }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                  >
+                    <motion.img
+                      src={aiLogo}
+                      alt="BatShark"
+                      className="w-28 h-28 object-contain"
+                      style={{ filter: 'brightness(0) invert(1)' }}
+                      animate={{
+                        scaleX: [1, 0.9, 1, 0.92, 1],
+                        scaleY: [1, 1.05, 0.98, 1.03, 1],
+                        rotate: [0, -2, 2, -1, 0],
+                        y: [0, -8, 0, -4, 0],
+                      }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 2.5,
+                        ease: 'easeInOut',
+                      }}
+                    />
+                  </motion.div>
+                  {/* Shadow beneath */}
+                  <motion.div
+                    className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-16 h-3 rounded-full bg-white/5 blur-md"
+                    animate={{ scaleX: [1, 0.6, 1], opacity: [0.3, 0.1, 0.3] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
                   />
                 </motion.div>
                 <h3 className="text-lg font-heading mb-2" style={{ color: 'hsl(0 0% 92%)' }}>مرحباً {userName} 👋</h3>
