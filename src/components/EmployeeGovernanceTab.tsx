@@ -308,16 +308,6 @@ export default function EmployeeGovernanceTab({ employeeUserId, employeeName }: 
                 <p className="text-sm font-bold text-foreground">{analytics.total}</p>
               </div>
             </div>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground">هذا الأسبوع</p>
-                <p className="text-sm font-bold text-foreground">{analytics.weekly}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground">هذا الشهر</p>
-                <p className="text-sm font-bold text-foreground">{analytics.monthly}</p>
-              </div>
-            </div>
           </div>
           {userScore && (
             <div className="text-center bg-card/50 rounded-xl border border-border p-4 min-w-[120px]">
