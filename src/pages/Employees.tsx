@@ -81,6 +81,16 @@ export default function Employees() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => recalculateAll.mutate()}
+              disabled={recalculateAll.isPending}
+              className="text-xs"
+            >
+              {recalculateAll.isPending ? <Loader2 className="w-3.5 h-3.5 ml-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 ml-1" />}
+              إعادة احتساب تلقائي
+            </Button>
             <PrintButton title="طباعة تقرير الموظفين" />
           </div>
         </div>
