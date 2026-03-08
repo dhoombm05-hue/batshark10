@@ -61,7 +61,7 @@ export default function ProjectsDashboard() {
   // Projects comparison bar chart
   const comparisonData = filteredProjects.map(p => ({
     name: p.name.slice(0, 10),
-    profit: (p.override_total_revenue ?? p.total_revenue) - (p.override_total_expenses ?? p.total_expenses),
+    profit: p.total_revenue - p.total_expenses,
     status: p.status,
   }));
 
