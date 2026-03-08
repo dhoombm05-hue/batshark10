@@ -158,8 +158,8 @@ export default function AskMeDialog({ pageKey }: AskMeDialogProps) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <HelpCircle className="w-5 h-5" />
-        <span className="font-heading font-bold text-sm">💡 اسألني</span>
+        <img src={logo} alt="BatShark" className="w-6 h-6 object-contain" />
+        <span className="font-heading font-bold text-sm">اسألني</span>
       </motion.button>
 
       {/* Dialog */}
