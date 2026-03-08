@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useProjects } from '@/hooks/useProjects';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useJournalMetrics } from '@/hooks/useJournalMetrics';
 import { useTasks } from '@/hooks/useTasks';
 import { 
   Brain, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2,
