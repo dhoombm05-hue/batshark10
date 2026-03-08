@@ -18,10 +18,10 @@ import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 export default function OperationalDashboard() {
-  const { projects } = useProjects();
+  const { data: projects = [] } = useProjects();
   const { tasks, todoTasks, inProgressTasks, doneTasks } = useTasks();
   const { imports } = useDataImports();
-  const { logs } = useActivityLog();
+  const { data: logs = [] } = useActivityImpactLogs();
 
   const today = new Date();
   const todayStr = format(today, 'yyyy-MM-dd');

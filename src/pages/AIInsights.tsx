@@ -28,9 +28,8 @@ interface AIInsight {
 }
 
 export default function AIInsights() {
-  const { projects } = useProjects();
-  const { employees } = useEmployees();
-  const { metrics } = useJournalMetrics();
+  const { data: projects = [] } = useProjects();
+  const { data: employees = [] } = useEmployees();
   const { tasks, doneTasks, todoTasks } = useTasks();
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);

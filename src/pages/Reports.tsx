@@ -35,9 +35,8 @@ const reportTemplates: ReportTemplate[] = [
 ];
 
 export default function Reports() {
-  const { projects } = useProjects();
-  const { employees } = useEmployees();
-  const { metrics } = useJournalMetrics();
+  const { data: projects = [] } = useProjects();
+  const { data: employees = [] } = useEmployees();
   const { tasks, doneTasks } = useTasks();
   const { profile } = useAuthContext();
   

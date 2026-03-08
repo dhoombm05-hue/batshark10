@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 
 export default function ProjectsDashboard() {
-  const { projects } = useProjects();
+  const { data: projects = [] } = useProjects();
   const { tasks } = useTasks();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');

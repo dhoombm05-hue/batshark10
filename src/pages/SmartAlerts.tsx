@@ -32,8 +32,7 @@ interface WhatIfScenario {
 }
 
 export default function SmartAlerts() {
-  const { projects } = useProjects();
-  const { metrics } = useJournalMetrics();
+  const { data: projects = [] } = useProjects();
   
   // Alert thresholds (configurable)
   const [thresholds, setThresholds] = useState({

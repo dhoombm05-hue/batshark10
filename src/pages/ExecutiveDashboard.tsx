@@ -18,9 +18,8 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 export default function ExecutiveDashboard() {
-  const { projects } = useProjects();
-  const { employees } = useEmployees();
-  const { metrics } = useJournalMetrics();
+  const { data: projects = [] } = useProjects();
+  const { data: employees = [] } = useEmployees();
   const { tasks, todoTasks, inProgressTasks, doneTasks } = useTasks();
 
   const totalRevenue = projects.reduce((sum, p) => sum + (p.override_total_revenue ?? p.total_revenue), 0);
