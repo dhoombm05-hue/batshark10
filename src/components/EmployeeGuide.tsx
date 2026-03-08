@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, X, Send, Loader2, BookOpen, MessageCircle, ChevronRight, Sparkles } from 'lucide-react';
+import { X, Send, Loader2, BookOpen, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
+import logo from '@/assets/batshark-logo-new.png';
 
 interface EmployeeGuideProps {
   /** Optional: restrict to specific context */
