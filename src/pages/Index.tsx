@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   DollarSign, TrendingUp, TrendingDown, BarChart3, Users, FolderKanban,
-  Brain, FlaskConical, Shield, Bell, Settings, UserCircle, RotateCcw, FileSpreadsheet, User
+  Brain, FlaskConical, Shield, Bell, Settings, UserCircle, RotateCcw, FileSpreadsheet, User, ListTodo, FileUp, Activity
 } from 'lucide-react';
 import PrintButton from '@/components/PrintButton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
