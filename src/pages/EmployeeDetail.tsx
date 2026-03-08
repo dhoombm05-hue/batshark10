@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X, Camera, Video, Download, Upload, Trash2 } from 'lucide-react';
+import { ArrowRight, Award, AlertTriangle, CheckCircle, Target, TrendingUp, Star, ClipboardCheck, History, Loader2, Pencil, Users, Briefcase, Calendar, DollarSign, Save, X, Camera, Video, Download, Upload, Trash2, RotateCcw } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '@/components/Layout';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployee, useEmployeeMonthlyPerformance, useUpdateEmployee, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
+import { useEmployeeEngine } from '@/hooks/useEmployeeEngine';
 
 const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
@@ -67,6 +68,7 @@ export default function EmployeeDetail() {
   const { data: monthlyPerf } = useEmployeeMonthlyPerformance(emp?.id || '');
   const updateEmployee = useUpdateEmployee();
   const uploadAvatar = useUploadEmployeeAvatar();
+  const { recalculateEmployee } = useEmployeeEngine();
   const { toast } = useToast();
   const avatarFileRef = useRef<HTMLInputElement>(null);
   const videoFileRef = useRef<HTMLInputElement>(null);
@@ -297,6 +299,12 @@ export default function EmployeeDetail() {
             </div>
 
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" 
+                onClick={() => recalculateEmployee.mutate({ employeeId: emp.id, employeeSlug: emp.slug, employeeName: emp.name })}
+                disabled={recalculateEmployee.isPending}>
+                {recalculateEmployee.isPending ? <Loader2 className="w-4 h-4 ml-1 animate-spin" /> : <RotateCcw className="w-4 h-4 ml-1" />}
+                إعادة احتساب
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setShowVideo(!showVideo)}>
                 <Video className="w-4 h-4 ml-1" /> الفيديو
               </Button>

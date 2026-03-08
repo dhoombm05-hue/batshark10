@@ -7,6 +7,7 @@ import PrintButton from '@/components/PrintButton';
 import { useEmployees, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
 import { usePerformanceScoring } from '@/hooks/usePerformanceScoring';
 import { usePerformanceCycles, useResetPerformanceCycle } from '@/hooks/usePerformanceCycles';
+import { useEmployeeEngine } from '@/hooks/useEmployeeEngine';
 import PerformanceCircleDialog, { PerformanceAlertBanner } from '@/components/PerformanceCircleDialog';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/data/mockData';
@@ -17,6 +18,7 @@ export default function Employees() {
   const { data: cycles } = usePerformanceCycles();
   const resetCycle = useResetPerformanceCycle();
   const uploadAvatar = useUploadEmployeeAvatar();
+  const { recalculateAll } = useEmployeeEngine();
   const [showArchive, setShowArchive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
@@ -79,6 +81,16 @@ export default function Employees() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => recalculateAll.mutate()}
+              disabled={recalculateAll.isPending}
+              className="text-xs"
+            >
+              {recalculateAll.isPending ? <Loader2 className="w-3.5 h-3.5 ml-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 ml-1" />}
+              إعادة احتساب تلقائي
+            </Button>
             <PrintButton title="طباعة تقرير الموظفين" />
           </div>
         </div>
