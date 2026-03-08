@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, LayoutGrid, Circle, List, X, RotateCcw, Check } from 'lucide-react';
+import { SlidersHorizontal, LayoutGrid, Circle, List, X, RotateCcw, Check, Rows3, Grid3X3, LayoutDashboard, Columns3, Hexagon, Square } from 'lucide-react';
 
-export type LayoutMode = 'grid' | 'circles' | 'list';
+export type LayoutMode = 'grid' | 'circles' | 'list' | 'compact' | 'masonry' | 'hexagon' | 'minimal' | 'cards-lg';
 
 export interface ColorOverrides {
   stats: Record<string, string>;
@@ -69,9 +69,14 @@ export default function DashboardCustomizer({ prefs, onChange, statKeys, section
   const resetAll = () => onChange(DEFAULT_PREFS);
 
   const layouts: { key: LayoutMode; icon: typeof LayoutGrid; label: string; desc: string }[] = [
-    { key: 'grid', icon: LayoutGrid, label: 'بطاقات', desc: 'عرض شبكي مفصّل' },
-    { key: 'circles', icon: Circle, label: 'دوائر', desc: 'عرض أيقوني مختصر' },
+    { key: 'grid', icon: LayoutGrid, label: 'بطاقات', desc: 'عرض شبكي مع تفاصيل' },
+    { key: 'circles', icon: Circle, label: 'دوائر', desc: 'عرض أيقوني دائري' },
     { key: 'list', icon: List, label: 'قائمة', desc: 'عرض خطي سريع' },
+    { key: 'compact', icon: Grid3X3, label: 'مضغوط', desc: 'أيقونات صغيرة متراصة' },
+    { key: 'masonry', icon: Columns3, label: 'متدرج', desc: 'أعمدة بأحجام مختلفة' },
+    { key: 'hexagon', icon: Hexagon, label: 'سداسي', desc: 'عرض خلية نحل' },
+    { key: 'minimal', icon: Rows3, label: 'بسيط', desc: 'نص فقط بدون إطارات' },
+    { key: 'cards-lg', icon: Square, label: 'بطاقات كبيرة', desc: 'بطاقات عريضة مفصّلة' },
   ];
 
   return (

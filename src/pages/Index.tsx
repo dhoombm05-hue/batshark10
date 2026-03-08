@@ -128,6 +128,144 @@ function ListCard({ item, color, index }: { item: SectionItem; color: string; in
   );
 }
 
+/* ───── compact card ───── */
+function CompactCard({ item, color, index }: { item: SectionItem; color: string; index: number }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ delay: index * 0.03, type: 'spring', stiffness: 300, damping: 24 }}
+      whileHover={{ y: -3 }}
+    >
+      <Link to={item.to} className="flex flex-col items-center gap-1.5 group p-3 rounded-xl hover:bg-muted/40 transition-colors">
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-all" style={{ background: `${color}12`, color }}>
+          <item.icon className="w-5 h-5" strokeWidth={1.8} />
+        </div>
+        <span className="font-heading font-bold text-[10px] text-foreground text-center leading-tight">{item.label}</span>
+      </Link>
+    </motion.div>
+  );
+}
+
+/* ───── masonry card ───── */
+function MasonryCard({ item, color, index }: { item: SectionItem; color: string; index: number }) {
+  const isLarge = index % 3 === 0;
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ delay: index * 0.04, type: 'spring', stiffness: 260, damping: 24 }}
+      whileHover={{ y: -3 }}
+      className={isLarge ? 'sm:col-span-2' : ''}
+    >
+      <Link to={item.to} className="block h-full group">
+        <div
+          className={`h-full rounded-2xl border transition-all duration-300 hover:shadow-lg relative overflow-hidden ${isLarge ? 'p-6' : 'p-4'}`}
+          style={{ borderColor: `${color}25`, background: `linear-gradient(160deg, ${color}08, ${color}02)` }}
+        >
+          <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-[0.06]" style={{ background: color, transform: 'translate(30%, -30%)' }} />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${color}12`, color }}>
+                <item.icon className="w-4 h-4" strokeWidth={1.8} />
+              </div>
+              <h3 className="font-heading font-bold text-sm text-foreground">{item.label}</h3>
+            </div>
+            <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+            {isLarge && item.children && <div className="mt-2">{item.children}</div>}
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+/* ───── hexagon card ───── */
+function HexCard({ item, color, index }: { item: SectionItem; color: string; index: number }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.5, rotate: -30 }}
+      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+      exit={{ opacity: 0, scale: 0.5 }}
+      transition={{ delay: index * 0.05, type: 'spring', stiffness: 260, damping: 22 }}
+      whileHover={{ scale: 1.08, y: -4 }}
+      className="flex flex-col items-center"
+    >
+      <Link to={item.to} className="flex flex-col items-center gap-2 group">
+        <div
+          className="w-[76px] h-[76px] sm:w-[90px] sm:h-[90px] flex items-center justify-center transition-all duration-300 group-hover:shadow-lg"
+          style={{
+            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+            background: `linear-gradient(135deg, ${color}18, ${color}08)`,
+          }}
+        >
+          <item.icon className="w-7 h-7 sm:w-8 sm:h-8" style={{ color }} strokeWidth={1.6} />
+        </div>
+        <span className="font-heading font-bold text-[11px] text-foreground text-center leading-tight max-w-[90px]">{item.label}</span>
+      </Link>
+    </motion.div>
+  );
+}
+
+/* ───── minimal card ───── */
+function MinimalCard({ item, color, index }: { item: SectionItem; color: string; index: number }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ delay: index * 0.025 }}
+    >
+      <Link to={item.to} className="flex items-center gap-3 py-2.5 px-1 group border-b border-border/30 hover:bg-muted/20 transition-colors rounded-lg">
+        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
+        <span className="font-heading font-bold text-sm text-foreground group-hover:text-primary transition-colors">{item.label}</span>
+        <span className="text-[10px] text-muted-foreground hidden sm:inline">— {item.desc}</span>
+        <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/30 mr-auto group-hover:text-muted-foreground transition-colors" />
+      </Link>
+    </motion.div>
+  );
+}
+
+/* ───── large card ───── */
+function LargeCard({ item, color, index }: { item: SectionItem; color: string; index: number }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: index * 0.04, type: 'spring', stiffness: 260, damping: 24 }}
+      whileHover={{ y: -3 }}
+    >
+      <Link to={item.to} className="block group">
+        <div
+          className="rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg relative overflow-hidden"
+          style={{ borderColor: `${color}25`, background: `linear-gradient(145deg, ${color}06, ${color}02)` }}
+        >
+          <div className="absolute top-0 left-0 w-full h-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: color }} />
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `${color}12`, color }}>
+              <item.icon className="w-6 h-6" strokeWidth={1.6} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-heading font-bold text-base text-foreground mb-1">{item.label}</h3>
+              <p className="text-xs text-muted-foreground">{item.desc}</p>
+              {item.children && <div className="mt-3">{item.children}</div>}
+            </div>
+            <ChevronLeft className="w-5 h-5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0 mt-1" />
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════════ */
 export default function Dashboard() {
   const { profile } = useAuthContext();
@@ -339,6 +477,41 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6">
                   {enrichedSections.map((item, i) => (
                     <ListCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'compact' && (
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1 mb-6 justify-items-center">
+                  {enrichedSections.map((item, i) => (
+                    <CompactCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'masonry' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                  {enrichedSections.map((item, i) => (
+                    <MasonryCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'hexagon' && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 mb-6 justify-items-center py-3">
+                  {enrichedSections.map((item, i) => (
+                    <HexCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'minimal' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 mb-6 bg-card rounded-2xl border border-border/50 p-4">
+                  {enrichedSections.map((item, i) => (
+                    <MinimalCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
+                  ))}
+                </div>
+              )}
+              {prefs.layout === 'cards-lg' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                  {enrichedSections.map((item, i) => (
+                    <LargeCard key={item.key} item={item} color={getSectionColor(item.key)} index={i} />
                   ))}
                 </div>
               )}
