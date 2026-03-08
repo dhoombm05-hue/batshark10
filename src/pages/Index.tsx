@@ -144,7 +144,6 @@ function CompactCard({ item, color, index }: { item: SectionItem; color: string;
 
 /* ───── masonry card ───── */
 function MasonryCard({ item, color, index }: { item: SectionItem; color: string; index: number }) {
-  const isLarge = index % 3 === 0;
   return (
     <motion.div
       layout
@@ -153,23 +152,19 @@ function MasonryCard({ item, color, index }: { item: SectionItem; color: string;
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.04, type: 'spring', stiffness: 260, damping: 24 }}
       whileHover={{ y: -3 }}
-      className={isLarge ? 'sm:col-span-2' : ''}
     >
       <Link to={item.to} className="block h-full group">
         <div
-          className={`h-full rounded-2xl border transition-all duration-300 hover:shadow-lg relative overflow-hidden ${isLarge ? 'p-6' : 'p-4'}`}
+          className="h-full rounded-2xl border transition-all duration-300 hover:shadow-lg relative overflow-hidden p-4"
           style={{ borderColor: `${color}25`, background: `linear-gradient(160deg, ${color}08, ${color}02)` }}
         >
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-[0.06]" style={{ background: color, transform: 'translate(30%, -30%)' }} />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${color}12`, color }}>
-                <item.icon className="w-4 h-4" strokeWidth={1.8} />
-              </div>
-              <h3 className="font-heading font-bold text-sm text-foreground">{item.label}</h3>
+          <div className="relative z-10 flex flex-col items-center text-center gap-2.5 py-2">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}12`, color }}>
+              <item.icon className="w-5 h-5" strokeWidth={1.8} />
             </div>
+            <h3 className="font-heading font-bold text-sm text-foreground">{item.label}</h3>
             <p className="text-[10px] text-muted-foreground">{item.desc}</p>
-            {isLarge && item.children && <div className="mt-2">{item.children}</div>}
           </div>
         </div>
       </Link>
