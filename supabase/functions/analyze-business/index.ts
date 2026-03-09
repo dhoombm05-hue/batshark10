@@ -45,24 +45,37 @@ serve(async (req) => {
       currentTaskLoad: tasks?.length || 0,
     };
 
-    const systemPrompt = `أنت محلل أعمال خبير في منصة BatShark. مهمتك تحليل جدوى بزنس جديد بناءً على إجابات المستخدم وبيانات الشركة الحالية.
+    const systemPrompt = `أنت محلل أعمال خبير ومستشار استراتيجي في منصة BatShark. 
+
+المستخدم سيعطيك فقط المعلومات الأساسية عن فكرة بزنس (الاسم، القطاع، وصف الفكرة، الموقع الجغرافي). 
+مهمتك أنت كذكاء اصطناعي أن تبحث وتحلل كل شيء آخر بنفسك:
+
+## مهامك الأساسية:
+1. **بحث السوق**: حلل حجم السوق، اتجاهات النمو، الطلب المتوقع، الفئة المستهدفة
+2. **تحليل المنافسين**: حدد أبرز المنافسين في هذا القطاع والموقع، نقاط قوتهم وضعفهم
+3. **التحليل المالي**: قدّر رأس المال المطلوب، التكاليف التشغيلية، الإيرادات المتوقعة، ROI، نقطة التعادل
+4. **التراخيص والمتطلبات القانونية**: حدد جميع التراخيص المطلوبة والجهات المانحة والتكاليف التقريبية
+5. **الهيكل القانوني**: اقترح أفضل شكل قانوني للمنشأة مع الأسباب
+6. **المخاطر**: حدد المخاطر المحتملة وخطط التخفيف
+7. **التوافق مع الشركة**: هل يتوافق مع موارد وقدرات الشركة الحالية
+8. **الموظفين المناسبين**: من يمكنه إدارة هذا البزنس من الفريق الحالي
+9. **الجدول الزمني**: خطة تنفيذ مقترحة بمراحل واضحة
+10. **التوصية النهائية**: هل يُنصح بالمضي قدماً أم لا ولماذا
 
 بيانات الشركة الحالية:
 ${JSON.stringify(companyContext, null, 2)}
 
-حلل الإجابات التالية وقدم تحليل شامل يشمل:
+**مهم جداً**: لا تطلب معلومات إضافية من المستخدم. ابحث وقدّر كل شيء بنفسك بناءً على خبرتك ومعرفتك بالسوق. قدم أرقام وتقديرات واقعية مبنية على معايير السوق الفعلية.`;
 
-1. **نقاط القوة** - ما الذي يجعل هذا البزنس فرصة جيدة
-2. **المخاطر** - المخاطر المحتملة وكيفية التخفيف منها
-3. **التحليل المالي** - تقدير التكاليف والإيرادات المتوقعة والعائد على الاستثمار
-4. **التوافق مع الشركة** - هل يتوافق مع موارد وقدرات الشركة الحالية
-5. **الموظفين المناسبين** - من يمكنه إدارة هذا البزنس من الفريق الحالي
-6. **الجدول الزمني** - خطة تنفيذ مقترحة
-7. **التوصية النهائية** - هل يُنصح بالمضي قدماً أم لا ولماذا
-8. **درجة الجدوى** - من 0 إلى 100
-9. **درجة المخاطر** - من 0 إلى 100`;
+    const userPrompt = `فكرة البزنس الجديد:
 
-    const userPrompt = `إجابات المستخدم على أسئلة تحليل البزنس الجديد:\n\n${JSON.stringify(answers, null, 2)}`;
+- الاسم: ${answers.name || 'غير محدد'}
+- القطاع: ${answers.type || 'غير محدد'}
+- وصف الفكرة: ${answers.description || 'غير محدد'}
+- الموقع الجغرافي: ${answers.location || 'غير محدد'}
+- ملاحظات إضافية: ${answers.additional_notes || 'لا يوجد'}
+
+حلل هذه الفكرة بالكامل وقدم تقريراً شاملاً.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -80,7 +93,7 @@ ${JSON.stringify(companyContext, null, 2)}
           type: "function",
           function: {
             name: "analyze_business_feasibility",
-            description: "Analyze business feasibility and return structured results",
+            description: "Analyze business feasibility and return structured results including market research, competitors, licenses",
             parameters: {
               type: "object",
               properties: {
@@ -88,14 +101,62 @@ ${JSON.stringify(companyContext, null, 2)}
                 risk_score: { type: "number", description: "0-100 risk score" },
                 recommendation: { type: "string", enum: ["strongly_recommended", "recommended", "cautious", "not_recommended"] },
                 recommendation_text: { type: "string", description: "التوصية النهائية بالعربي" },
+                summary: { type: "string", description: "ملخص تنفيذي شامل" },
                 strengths: { type: "array", items: { type: "string" } },
                 risks: { type: "array", items: { type: "object", properties: { risk: { type: "string" }, severity: { type: "string", enum: ["low", "medium", "high", "critical"] }, mitigation: { type: "string" } }, required: ["risk", "severity", "mitigation"] } },
+                market_research: {
+                  type: "object",
+                  description: "بحث وتحليل السوق - يبحث عنه الذكاء الاصطناعي",
+                  properties: {
+                    market_size: { type: "string", description: "حجم السوق المقدر بالأرقام" },
+                    growth_trend: { type: "string", description: "اتجاه النمو في السوق" },
+                    target_demographics: { type: "string", description: "الفئة المستهدفة بالتفصيل" },
+                    demand_analysis: { type: "string", description: "تحليل الطلب الحالي والمتوقع" },
+                  },
+                },
+                competitors_analysis: {
+                  type: "array",
+                  description: "تحليل المنافسين الرئيسيين - يبحث عنهم الذكاء الاصطناعي",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", description: "اسم المنافس" },
+                      strengths: { type: "string", description: "نقاط قوته" },
+                      weaknesses: { type: "string", description: "نقاط ضعفه" },
+                      market_share: { type: "string", description: "حصته السوقية التقريبية" },
+                    },
+                    required: ["name"],
+                  },
+                },
+                required_licenses: {
+                  type: "array",
+                  description: "التراخيص المطلوبة - يبحث عنها الذكاء الاصطناعي",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", description: "اسم الترخيص" },
+                      issuing_authority: { type: "string", description: "الجهة المانحة" },
+                      estimated_cost: { type: "string", description: "التكلفة التقريبية" },
+                      duration: { type: "string", description: "مدة الإصدار المتوقعة" },
+                    },
+                    required: ["name"],
+                  },
+                },
+                recommended_legal_structure: {
+                  type: "object",
+                  description: "الهيكل القانوني المقترح",
+                  properties: {
+                    type: { type: "string", description: "نوع الكيان القانوني المقترح" },
+                    reason: { type: "string", description: "سبب الاختيار" },
+                    requirements: { type: "string", description: "المتطلبات الأساسية" },
+                  },
+                },
                 financial_analysis: {
                   type: "object",
                   properties: {
-                    estimated_startup_cost: { type: "string" },
-                    estimated_monthly_expenses: { type: "string" },
-                    estimated_monthly_revenue: { type: "string" },
+                    estimated_startup_cost: { type: "string", description: "رأس المال المقترح - يقدره الذكاء الاصطناعي" },
+                    estimated_monthly_expenses: { type: "string", description: "المصاريف الشهرية المتوقعة" },
+                    estimated_monthly_revenue: { type: "string", description: "الإيرادات الشهرية المتوقعة" },
                     estimated_roi_months: { type: "number" },
                     break_even_months: { type: "number" },
                     profit_margin_estimate: { type: "string" },
@@ -105,9 +166,8 @@ ${JSON.stringify(companyContext, null, 2)}
                 suitable_employees: { type: "array", items: { type: "object", properties: { name: { type: "string" }, reason: { type: "string" }, role_suggestion: { type: "string" } }, required: ["name", "reason"] } },
                 timeline: { type: "array", items: { type: "object", properties: { phase: { type: "string" }, duration: { type: "string" }, tasks: { type: "array", items: { type: "string" } } }, required: ["phase", "duration", "tasks"] } },
                 key_metrics: { type: "array", items: { type: "object", properties: { label: { type: "string" }, value: { type: "string" }, status: { type: "string", enum: ["positive", "neutral", "negative"] } }, required: ["label", "value", "status"] } },
-                summary: { type: "string", description: "ملخص تنفيذي شامل" },
               },
-              required: ["feasibility_score", "risk_score", "recommendation", "recommendation_text", "strengths", "risks", "financial_analysis", "summary"],
+              required: ["feasibility_score", "risk_score", "recommendation", "recommendation_text", "strengths", "risks", "financial_analysis", "market_research", "competitors_analysis", "required_licenses", "recommended_legal_structure", "summary"],
             },
           },
         }],
