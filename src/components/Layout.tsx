@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
   Menu, X, ChevronLeft, ChevronDown, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User, ListTodo, FileUp,
-  BarChart3, Activity, AlertTriangle, FileText, Sparkles, BookOpen
+  BarChart3, Activity, AlertTriangle, FileText, Sparkles, BookOpen, Building2
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
