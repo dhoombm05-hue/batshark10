@@ -32,6 +32,8 @@ import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import Tasks from "./pages/Tasks";
 import ImportCenter from "./pages/ImportCenter";
+import TaskDistribution from "./pages/TaskDistribution";
+import TaskDistributionDetail from "./pages/TaskDistributionDetail";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 import BatSharkGuide from "./components/BatSharkGuide";
@@ -66,6 +68,8 @@ const App = () => (
             <Route path="/news/:id" element={<ProtectedRoute><NewsDetail /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/import" element={<ProtectedRoute><ImportCenter /></ProtectedRoute>} />
+            <Route path="/task-distribution" element={<ProtectedRoute><TaskDistribution /></ProtectedRoute>} />
+            <Route path="/task-distribution/:id" element={<ProtectedRoute><TaskDistributionDetail /></ProtectedRoute>} />
             <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
             <Route path="/operational" element={<ProtectedRoute><OperationalDashboard /></ProtectedRoute>} />
             <Route path="/projects-dashboard" element={<ProtectedRoute><ProjectsDashboard /></ProtectedRoute>} />
