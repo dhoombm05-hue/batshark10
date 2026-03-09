@@ -76,7 +76,7 @@ export default function TaskDistribution() {
         description,
         sourceType,
         sourceFileName: fileName || undefined,
-        projectId: projectId || undefined,
+        projectId: projectId && projectId !== 'none' ? projectId : undefined,
       });
 
       // Auto-analyze
