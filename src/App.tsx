@@ -71,6 +71,7 @@ const App = () => (
             <Route path="/import" element={<ProtectedRoute><ImportCenter /></ProtectedRoute>} />
             <Route path="/task-distribution" element={<ProtectedRoute><TaskDistribution /></ProtectedRoute>} />
             <Route path="/task-distribution/:id" element={<ProtectedRoute><TaskDistributionDetail /></ProtectedRoute>} />
+            <Route path="/business-feasibility" element={<ProtectedRoute><BusinessFeasibility /></ProtectedRoute>} />
             <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
             <Route path="/operational" element={<ProtectedRoute><OperationalDashboard /></ProtectedRoute>} />
             <Route path="/projects-dashboard" element={<ProtectedRoute><ProjectsDashboard /></ProtectedRoute>} />
