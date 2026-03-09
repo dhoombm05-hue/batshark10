@@ -82,6 +82,10 @@ export default function BatSharkRobot() {
   const [response, setResponse] = useState<{ answer: string; route?: string } | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Only fly on dashboard (root path)
+  const isDashboard = location.pathname === '/';
 
   const posX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 400);
   const posY = useMotionValue(80);
@@ -90,8 +94,17 @@ export default function BatSharkRobot() {
   const [facingLeft, setFacingLeft] = useState(false);
   const waypointTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Free-fly only on dashboard
   useEffect(() => {
-    if (open) return;
+    if (open || !isDashboard) {
+      // Reset to center-top when not on dashboard
+      if (!isDashboard) {
+        posX.set(typeof window !== 'undefined' ? window.innerWidth / 2 : 400);
+        posY.set(40);
+        setFacingLeft(false);
+      }
+      return;
+    }
 
     const fly = () => {
       const wp = getRandomWaypoint();
