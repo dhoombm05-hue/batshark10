@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-export interface BusinessFeasibility {
+export interface BusinessFeasibilityRecord {
   id: string;
   title: string;
   business_type: string | null;
