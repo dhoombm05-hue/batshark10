@@ -48,7 +48,7 @@ export function useBusinessFeasibilities() {
         .select()
         .single();
       if (error) throw error;
-      return data as unknown as BusinessFeasibility;
+      return data as unknown as BusinessFeasibilityRecord;
     },
   });
 

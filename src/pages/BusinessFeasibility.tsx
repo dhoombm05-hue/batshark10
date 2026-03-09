@@ -49,7 +49,7 @@ const recommendationConfig: Record<string, { label: string; color: string; icon:
 export default function BusinessFeasibility() {
   const { feasibilities, isLoading, createFeasibility, analyzeBusiness, deleteFeasibility } = useBusinessFeasibilities();
   const [showForm, setShowForm] = useState(false);
-  const [showResult, setShowResult] = useState<BusinessFeasibility | null>(null);
+  const [showResult, setShowResult] = useState<BusinessFeasibilityRecord | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [analyzing, setAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
