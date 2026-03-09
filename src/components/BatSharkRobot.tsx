@@ -153,16 +153,18 @@ export default function BatSharkRobot() {
 
   return (
     <>
-      {/* ═══════ FREE-FLYING BAT ═══════ */}
+      {/* ═══════ BAT: flies on dashboard, fixed top-center elsewhere ═══════ */}
       <motion.div
         className="fixed z-50 print:hidden"
-        style={{ left: springX, top: springY, x: '-50%', y: '-50%', pointerEvents: 'none' }}
+        style={isDashboard ? { left: springX, top: springY, x: '-50%', y: '-50%', pointerEvents: 'none' } : { left: '50%', top: '16px', x: '-50%', y: '0%', pointerEvents: 'none' }}
       >
         <motion.button
           onClick={() => setOpen(!open)}
           className="relative flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
-          style={{ pointerEvents: 'auto', scaleX: facingLeft && !open ? -1 : 1 }}
+          style={{ pointerEvents: 'auto', scaleX: facingLeft && !open && isDashboard ? -1 : 1 }}
           whileTap={{ scale: 0.88 }}
+          animate={!isDashboard && !open ? { y: [0, -8, 0] } : undefined}
+          transition={!isDashboard ? { repeat: Infinity, duration: 3, ease: 'easeInOut' } : undefined}
         >
           <motion.span
             className="absolute bottom-[-12px] w-8 h-2 rounded-full bg-foreground/6 blur-md"
