@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useBusinessFeasibilities } from '@/hooks/useBusinessFeasibility';
+import { useBusinessFeasibilities, type BusinessFeasibilityRecord } from '@/hooks/useBusinessFeasibility';
 import { Building2, Brain, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Trash2, Eye, Plus, Loader2, Shield, DollarSign, Users, Clock, BarChart3, Target } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
