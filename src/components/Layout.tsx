@@ -322,7 +322,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main
-        className={`flex-1 min-h-screen overflow-auto ${currentTheme === 'dark' ? 'text-[hsl(210,20%,90%)]' : ''}`}
+        className={`flex-1 min-h-screen overflow-auto relative ${currentTheme === 'dark' ? 'text-[hsl(210,20%,90%)]' : ''}`}
         style={{
           background: getBodyBg(),
           ...(currentTheme === 'custom' && prefs?.custom_bg_url ? {
