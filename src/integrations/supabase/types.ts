@@ -1542,6 +1542,142 @@ export type Database = {
         }
         Relationships: []
       }
+      task_distribution_items: {
+        Row: {
+          assigned_to: string | null
+          assigned_to_name: string | null
+          assignment_reason: string | null
+          category: string | null
+          completion_score: number | null
+          created_at: string
+          description: string | null
+          distribution_id: string
+          due_date: string | null
+          employee_development_notes: string | null
+          estimated_hours: number | null
+          feedback: string | null
+          id: string
+          priority: string
+          required_skills: string[] | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          assignment_reason?: string | null
+          category?: string | null
+          completion_score?: number | null
+          created_at?: string
+          description?: string | null
+          distribution_id: string
+          due_date?: string | null
+          employee_development_notes?: string | null
+          estimated_hours?: number | null
+          feedback?: string | null
+          id?: string
+          priority?: string
+          required_skills?: string[] | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          assignment_reason?: string | null
+          category?: string | null
+          completion_score?: number | null
+          created_at?: string
+          description?: string | null
+          distribution_id?: string
+          due_date?: string | null
+          employee_development_notes?: string | null
+          estimated_hours?: number | null
+          feedback?: string | null
+          id?: string
+          priority?: string
+          required_skills?: string[] | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_distribution_items_distribution_id_fkey"
+            columns: ["distribution_id"]
+            isOneToOne: false
+            referencedRelation: "task_distributions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_distributions: {
+        Row: {
+          ai_analysis: Json | null
+          assigned_tasks: number
+          completed_tasks: number
+          created_at: string
+          created_by: string
+          description: string | null
+          employee_insights: Json | null
+          id: string
+          project_id: string | null
+          source_file_name: string | null
+          source_file_url: string | null
+          source_type: string
+          status: string
+          title: string
+          total_tasks: number
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          assigned_tasks?: number
+          completed_tasks?: number
+          created_at?: string
+          created_by: string
+          description?: string | null
+          employee_insights?: Json | null
+          id?: string
+          project_id?: string | null
+          source_file_name?: string | null
+          source_file_url?: string | null
+          source_type?: string
+          status?: string
+          title: string
+          total_tasks?: number
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          assigned_tasks?: number
+          completed_tasks?: number
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          employee_insights?: Json | null
+          id?: string
+          project_id?: string | null
+          source_file_name?: string | null
+          source_file_url?: string | null
+          source_type?: string
+          status?: string
+          title?: string
+          total_tasks?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_distributions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string | null
