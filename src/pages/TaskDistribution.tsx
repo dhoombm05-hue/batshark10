@@ -26,7 +26,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 export default function TaskDistribution() {
   const navigate = useNavigate();
   const { distributions, isLoading, createDistribution, analyzeAndDistribute, deleteDistribution } = useTaskDistributions();
-  const { projects } = useProjects();
+  const { data: projects = [] } = useProjects();
   const [showCreate, setShowCreate] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
