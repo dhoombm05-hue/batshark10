@@ -30,7 +30,7 @@ export function useBusinessFeasibilities() {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as BusinessFeasibility[];
+      return (data || []) as unknown as BusinessFeasibilityRecord[];
     },
   });
 
