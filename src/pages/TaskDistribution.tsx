@@ -76,7 +76,7 @@ export default function TaskDistribution() {
         description,
         sourceType,
         sourceFileName: fileName || undefined,
-        projectId: projectId || undefined,
+        projectId: projectId && projectId !== 'none' ? projectId : undefined,
       });
 
       // Auto-analyze
@@ -165,7 +165,7 @@ export default function TaskDistribution() {
                 <Select value={projectId} onValueChange={setProjectId}>
                   <SelectTrigger><SelectValue placeholder="ربط بمشروع (اختياري)" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">بدون مشروع</SelectItem>
+                    <SelectItem value="none">بدون مشروع</SelectItem>
                     {projects.map(p => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
