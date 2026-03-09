@@ -116,6 +116,51 @@ export type Database = {
         }
         Relationships: []
       }
+      business_feasibility: {
+        Row: {
+          ai_analysis: Json | null
+          answers: Json
+          business_type: string | null
+          created_at: string
+          created_by: string
+          feasibility_score: number | null
+          id: string
+          recommendation: string | null
+          risk_score: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          answers?: Json
+          business_type?: string | null
+          created_at?: string
+          created_by: string
+          feasibility_score?: number | null
+          id?: string
+          recommendation?: string | null
+          risk_score?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          answers?: Json
+          business_type?: string | null
+          created_at?: string
+          created_by?: string
+          feasibility_score?: number | null
+          id?: string
+          recommendation?: string | null
+          risk_score?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chart_of_accounts: {
         Row: {
           account_type: string
