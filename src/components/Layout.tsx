@@ -229,7 +229,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           transition-all duration-300 ease-in-out
           ${collapsed ? 'w-20' : 'w-64'}
           ${mobileOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
-          flex flex-col border-l border-border
+          flex flex-col border-l border-border lg:z-10
         `}
         style={{ background: 'var(--gradient-sidebar)' }}
       >
@@ -322,7 +322,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main
-        className={`flex-1 min-h-screen overflow-auto ${currentTheme === 'dark' ? 'text-[hsl(210,20%,90%)]' : ''}`}
+        className={`flex-1 min-h-screen overflow-auto relative ${currentTheme === 'dark' ? 'text-[hsl(210,20%,90%)]' : ''}`}
         style={{
           background: getBodyBg(),
           ...(currentTheme === 'custom' && prefs?.custom_bg_url ? {
@@ -334,7 +334,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         }}
       >
         {currentTheme === 'custom' && prefs?.custom_bg_url && (
-          <div className="fixed inset-0 bg-background/60 backdrop-blur-sm pointer-events-none" style={{ zIndex: 0 }} />
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm pointer-events-none" style={{ zIndex: 0 }} />
         )}
         <div className="p-3 sm:p-4 lg:p-8 max-w-7xl mx-auto relative safe-bottom" style={{ zIndex: 1 }}>
           {children}
