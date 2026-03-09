@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { X, Sparkles, ArrowLeft, Volume2, Send } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import assistantLogo from '@/assets/batshark-assistant.png';
 
 const GUIDE_RESPONSES: Record<string, { answer: string; route?: string }> = {
