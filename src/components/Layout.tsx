@@ -229,7 +229,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           transition-all duration-300 ease-in-out
           ${collapsed ? 'w-20' : 'w-64'}
           ${mobileOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
-          flex flex-col border-l border-border
+          flex flex-col border-l border-border lg:z-10
         `}
         style={{ background: 'var(--gradient-sidebar)' }}
       >
