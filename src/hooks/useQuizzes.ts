@@ -63,22 +63,32 @@ export function useMyQuiz() {
         });
       }
 
-      // For CEO: if no match found, get the quiz assigned to the CEO's employee record
+      // For CEO or unmatched: try matching by employee position/role
       if (!match) {
-        // Check if user email matches any employee, or find by user_roles
         const { data: employees } = await supabase
           .from('employees')
-          .select('name');
+          .select('name, position');
         
         if (employees) {
-          for (const emp of employees) {
-            const empQuiz = quizzes.find((q: any) => q.employee_name === emp.name);
-            if (empQuiz) {
-              // Check if this employee name contains any word from displayName or vice versa
-              const empFirstName = emp.name.split(' ')[0];
-              if (displayName.includes(empFirstName) || empFirstName.includes(displayName)) {
-                match = empQuiz;
-                break;
+          // If user is CEO (display_name contains "رئيس"), find CEO employee
+          const isCeoUser = displayName.includes('رئيس') || displayName.includes('CEO');
+          if (isCeoUser) {
+            const ceoEmp = employees.find((e: any) => e.position?.includes('رئيس') || e.position?.includes('CEO'));
+            if (ceoEmp) {
+              match = quizzes.find((q: any) => q.employee_name === ceoEmp.name);
+            }
+          }
+          
+          // Fallback: try first name matching
+          if (!match) {
+            for (const emp of employees) {
+              const empQuiz = quizzes.find((q: any) => q.employee_name === emp.name);
+              if (empQuiz) {
+                const empFirstName = emp.name.split(' ')[0];
+                if (displayName.includes(empFirstName) || empFirstName.includes(displayName)) {
+                  match = empQuiz;
+                  break;
+                }
               }
             }
           }
