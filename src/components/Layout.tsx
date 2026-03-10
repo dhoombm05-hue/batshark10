@@ -45,6 +45,7 @@ const navGroups: { groupLabel: string; groupIcon: React.ElementType; groupColor:
       { path: '/tasks', label: 'إدارة المهام', icon: ListTodo, color: 'section-employees' },
       { path: '/task-distribution', label: 'توزيع المهام الذكي', icon: Sparkles, color: 'section-ai' },
       { path: '/business-feasibility', label: 'تحليل جدوى البزنس', icon: Building2, color: 'section-invest' },
+      { path: '/quizzes', label: 'الاختبارات الأسبوعية', icon: GraduationCap, color: 'section-strategic' },
     ],
   },
   {
