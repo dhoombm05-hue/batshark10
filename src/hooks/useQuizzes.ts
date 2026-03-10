@@ -25,7 +25,6 @@ export function useMyQuiz() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      // Get profile display name
       const { data: profile } = await supabase
         .from('profiles')
         .select('display_name')
@@ -34,20 +33,26 @@ export function useMyQuiz() {
 
       if (!profile) return null;
 
-      // Find active quiz for this employee (by name match)
+      // Get all active quizzes with valid deadline
       const now = new Date().toISOString();
-      const { data, error } = await supabase
+      const { data: quizzes, error } = await supabase
         .from('quizzes' as any)
         .select('*')
-        .eq('employee_name', profile.display_name)
         .eq('status', 'active')
         .gte('deadline', now)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as any;
+      if (error || !quizzes?.length) return null;
+
+      // Match by partial name (display_name is short like "سعد", employee_name is full like "سعد سلطان المحبوب")
+      const displayName = profile.display_name.trim();
+      const match = quizzes.find((q: any) => 
+        q.employee_name === displayName || 
+        q.employee_name?.startsWith(displayName) ||
+        q.employee_name?.includes(displayName)
+      );
+
+      return match as any || null;
     },
   });
 }
@@ -87,7 +92,7 @@ export function useMyAttempt(quizId: string) {
   });
 }
 
-// All attempts for all quizzes (CEO view)
+// All attempts (CEO sees all, others see own)
 export function useAllAttempts() {
   return useQuery({
     queryKey: ['all-quiz-attempts'],
@@ -95,7 +100,6 @@ export function useAllAttempts() {
       const { data, error } = await supabase
         .from('quiz_attempts' as any)
         .select('*')
-        .eq('status', 'submitted')
         .order('submitted_at', { ascending: false });
       if (error) throw error;
       return data as any[];

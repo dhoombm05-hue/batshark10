@@ -168,6 +168,10 @@ export default function Quizzes() {
 
   if (takingQuiz) return <Layout><TakeQuizView quizId={takingQuiz} onBack={() => setTakingQuiz('')} /></Layout>;
 
+  // Check if user already submitted their quiz
+  const myAttempt = myQuiz ? allAttempts?.find((a: any) => a.quiz_id === myQuiz.id) : null;
+  const hasSubmitted = myAttempt?.status === 'submitted';
+
   // Group results by week
   const weekGroups: Record<number, any[]> = {};
   allQuizzes?.forEach((q: any) => {
@@ -198,41 +202,68 @@ export default function Quizzes() {
           </div>
         </div>
 
-        {isCEO ? (
-          /* CEO VIEW: Just results */
-          <div className="space-y-6">
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="p-4 flex items-center gap-3">
-                <CalendarDays className="h-5 w-5 text-primary" />
-                <p className="text-sm text-foreground">الاختبارات تُنشأ تلقائياً كل يوم ثلاثاء · النتائج تظهر هنا فقط لك</p>
+        {/* MY QUIZ SECTION - for everyone */}
+        <div className="space-y-4">
+          {loadingMyQuiz ? (
+            <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+          ) : myQuiz && !hasSubmitted ? (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <Card className="border-primary/20 overflow-hidden">
+                <div className="bg-primary/5 p-6 border-b border-primary/10">
+                  <div className="flex items-center gap-3 mb-3">
+                    <GraduationCap className="h-8 w-8 text-primary" />
+                    <div>
+                      <h2 className="text-xl font-black text-foreground">{myQuiz.title}</h2>
+                      <p className="text-sm text-muted-foreground">{myQuiz.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {myQuiz.duration_hours} ساعة</span>
+                    <span>{myQuiz.total_questions} سؤال</span>
+                    <span className="flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(myQuiz.quiz_date).toLocaleDateString('ar-SA')}</span>
+                  </div>
+                </div>
+                <CardContent className="p-6 text-center">
+                  <p className="text-lg font-bold text-foreground mb-2">مرحباً {profile?.display_name} 👋</p>
+                  <p className="text-muted-foreground mb-6">اختبارك جاهز! اضغط لبدء الاختبار</p>
+                  <Button size="lg" onClick={() => setTakingQuiz(myQuiz.id)} className="gap-2 text-lg px-8">
+                    ابدأ الاختبار <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : hasSubmitted ? (
+            <Card className="border-primary/30">
+              <CardContent className="p-8 text-center space-y-3">
+                <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
+                <h2 className="text-xl font-bold text-foreground">تم تسليم اختبارك ✅</h2>
+                <p className="text-3xl font-black text-primary">{myAttempt.score}%</p>
+                <p className="text-muted-foreground">{myAttempt.correct_count} صحيح من {myQuiz.total_questions}</p>
+                <p className="text-sm text-muted-foreground">الاختبار القادم يوم الثلاثاء {nextTuesday.toLocaleDateString('ar-SA')}</p>
               </CardContent>
             </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <CalendarDays className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-lg font-bold text-muted-foreground">لا يوجد اختبار حالياً</p>
+                <p className="text-sm text-muted-foreground mt-1">الاختبار القادم يوم الثلاثاء {nextTuesday.toLocaleDateString('ar-SA')}</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
-            {/* My quiz if available */}
-            {myQuiz && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <Card className="border-primary/30 overflow-hidden">
-                  <div className="bg-primary/5 p-4 border-b border-primary/10 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="h-6 w-6 text-primary" />
-                      <div>
-                        <h2 className="text-lg font-bold text-foreground">اختبارك هذا الأسبوع</h2>
-                        <p className="text-xs text-muted-foreground">{myQuiz.total_questions} سؤال · {myQuiz.duration_hours} ساعات</p>
-                      </div>
-                    </div>
-                    <Button onClick={() => setTakingQuiz(myQuiz.id)} className="gap-2">
-                      ابدأ <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Results by week */}
+        {/* RESULTS - CEO only */}
+        {isCEO && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              نتائج الموظفين
+            </h2>
             {loadingAll ? (
-              <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+              <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
             ) : Object.keys(weekGroups).length === 0 ? (
-              <Card><CardContent className="p-12 text-center text-muted-foreground">لا توجد اختبارات بعد · ستظهر تلقائياً يوم الثلاثاء</CardContent></Card>
+              <Card><CardContent className="p-8 text-center text-muted-foreground">لا توجد نتائج بعد</CardContent></Card>
             ) : (
               Object.entries(weekGroups)
                 .sort(([a], [b]) => Number(b) - Number(a))
@@ -276,47 +307,6 @@ export default function Quizzes() {
                     </CardContent>
                   </Card>
                 ))
-            )}
-          </div>
-        ) : (
-          /* EMPLOYEE VIEW: Just their quiz */
-          <div className="space-y-4">
-            {loadingMyQuiz ? (
-              <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-            ) : myQuiz ? (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <Card className="border-primary/20 overflow-hidden">
-                  <div className="bg-primary/5 p-6 border-b border-primary/10">
-                    <div className="flex items-center gap-3 mb-3">
-                      <GraduationCap className="h-8 w-8 text-primary" />
-                      <div>
-                        <h2 className="text-xl font-black text-foreground">{myQuiz.title}</h2>
-                        <p className="text-sm text-muted-foreground">{myQuiz.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {myQuiz.duration_hours} ساعات</span>
-                      <span>{myQuiz.total_questions} سؤال</span>
-                      <span className="flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(myQuiz.quiz_date).toLocaleDateString('ar-SA')}</span>
-                    </div>
-                  </div>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-lg font-bold text-foreground mb-2">مرحباً {profile?.display_name} 👋</p>
-                    <p className="text-muted-foreground mb-6">اختبارك جاهز! اضغط لبدء الاختبار</p>
-                    <Button size="lg" onClick={() => setTakingQuiz(myQuiz.id)} className="gap-2 text-lg px-8">
-                      ابدأ الاختبار <ChevronRight className="h-5 w-5" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ) : (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <CalendarDays className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <p className="text-lg font-bold text-muted-foreground">لا يوجد اختبار حالياً</p>
-                  <p className="text-sm text-muted-foreground mt-1">الاختبار القادم يوم الثلاثاء {nextTuesday.toLocaleDateString('ar-SA')}</p>
-                </CardContent>
-              </Card>
             )}
           </div>
         )}
