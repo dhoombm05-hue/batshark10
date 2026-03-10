@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, Plus, Clock, CheckCircle2, AlertCircle, Trophy, ChevronRight, Users, Loader2, Eye } from 'lucide-react';
+import { GraduationCap, Plus, Clock, CheckCircle2, AlertCircle, Trophy, ChevronRight, Users, Loader2, Eye, Sparkles } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ function QuizCard({ quiz, isCEO, onTake, onViewResults }: { quiz: any; isCEO: bo
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <Badge variant={isActive ? 'default' : 'secondary'} className={isActive ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''}>
+              <Badge variant={isActive ? 'default' : 'secondary'}>
                 {isActive ? 'نشط' : 'منتهي'}
               </Badge>
               <div className="flex gap-1">
@@ -90,14 +90,13 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
     setSubmitted(true);
   };
 
-  // Already submitted
   if (isSubmitted) {
     return (
       <div className="space-y-6">
         <Button variant="ghost" onClick={onBack}>← العودة</Button>
-        <Card className="border-green-500/30 bg-green-500/5">
+        <Card className="border-primary/30">
           <CardContent className="p-8 text-center space-y-4">
-            <Trophy className="h-16 w-16 text-yellow-400 mx-auto" />
+            <Trophy className="h-16 w-16 text-primary mx-auto" />
             <h2 className="text-2xl font-bold text-foreground">تم تسليم الاختبار</h2>
             <p className="text-4xl font-black text-primary">{attempt.score}%</p>
             <p className="text-muted-foreground">{attempt.correct_count} صحيح من {questions.length}</p>
@@ -108,14 +107,13 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
     );
   }
 
-  // Show result after submit
   if (submitted && result) {
     return (
       <div className="space-y-6">
         <Button variant="ghost" onClick={onBack}>← العودة</Button>
         <Card className="border-primary/30">
           <CardContent className="p-8 text-center space-y-4">
-            <Trophy className="h-16 w-16 text-yellow-400 mx-auto" />
+            <Trophy className="h-16 w-16 text-primary mx-auto" />
             <h2 className="text-2xl font-bold text-foreground">نتيجتك</h2>
             <p className="text-5xl font-black text-primary">{result.score}%</p>
             <p className="text-muted-foreground">{result.correct} إجابة صحيحة من {result.total}</p>
@@ -127,7 +125,6 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
     );
   }
 
-  // Not started yet
   if (!attempt) {
     return (
       <div className="space-y-6">
@@ -152,7 +149,6 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
     );
   }
 
-  // Quiz in progress
   const q = questions[currentQ];
   const answeredCount = Object.keys(answers).length;
 
@@ -166,7 +162,6 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
         </div>
       </div>
 
-      {/* Question navigation */}
       <div className="flex flex-wrap gap-1.5">
         {questions.map((_: any, i: number) => (
           <button
@@ -176,7 +171,7 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
               i === currentQ
                 ? 'bg-primary text-primary-foreground'
                 : answers[questions[i].id]
-                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                ? 'bg-accent text-accent-foreground border border-primary/30'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
           >
@@ -185,7 +180,6 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
         ))}
       </div>
 
-      {/* Current question */}
       <AnimatePresence mode="wait">
         <motion.div key={currentQ} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
           <Card className="border-primary/20">
@@ -239,7 +233,7 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
                 {currentQ < questions.length - 1 ? (
                   <Button size="sm" onClick={() => setCurrentQ(currentQ + 1)}>التالي</Button>
                 ) : (
-                  <Button size="sm" onClick={handleSubmit} disabled={submitQuiz.isPending} className="bg-green-600 hover:bg-green-700">
+                  <Button size="sm" onClick={handleSubmit} disabled={submitQuiz.isPending}>
                     {submitQuiz.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <CheckCircle2 className="h-4 w-4 ml-2" />}
                     تسليم الاختبار
                   </Button>
@@ -274,16 +268,16 @@ function ResultsView({ quizId, onBack }: { quizId: string; onBack: () => void })
             <p className="text-sm text-muted-foreground">أكملوا الاختبار</p>
           </CardContent>
         </Card>
-        <Card className="border-green-500/20">
+        <Card className="border-accent/40">
           <CardContent className="p-5 text-center">
-            <Trophy className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
+            <Trophy className="h-8 w-8 text-primary mx-auto mb-2" />
             <p className="text-3xl font-black text-foreground">{avgScore}%</p>
             <p className="text-sm text-muted-foreground">المعدل العام</p>
           </CardContent>
         </Card>
-        <Card className="border-orange-500/20">
+        <Card className="border-destructive/20">
           <CardContent className="p-5 text-center">
-            <AlertCircle className="h-8 w-8 text-orange-400 mx-auto mb-2" />
+            <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
             <p className="text-3xl font-black text-foreground">{(attempts?.length || 0) - submitted.length}</p>
             <p className="text-sm text-muted-foreground">لم يسلموا بعد</p>
           </CardContent>
@@ -293,7 +287,7 @@ function ResultsView({ quizId, onBack }: { quizId: string; onBack: () => void })
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-400" />
+            <Trophy className="h-5 w-5 text-primary" />
             نتائج الموظفين
           </CardTitle>
         </CardHeader>
@@ -304,7 +298,7 @@ function ResultsView({ quizId, onBack }: { quizId: string; onBack: () => void })
             <div className="space-y-3">
               {submitted.map((a: any, i: number) => (
                 <div key={a.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 border border-border/50">
-                  <span className={`text-lg font-black w-8 text-center ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-muted-foreground'}`}>
+                  <span className={`text-lg font-black w-8 text-center ${i === 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                     {i + 1}
                   </span>
                   <div className="flex-1">
@@ -314,7 +308,7 @@ function ResultsView({ quizId, onBack }: { quizId: string; onBack: () => void })
                     </p>
                   </div>
                   <div className="text-left">
-                    <p className={`text-2xl font-black ${a.score >= 70 ? 'text-green-400' : a.score >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                    <p className={`text-2xl font-black ${a.score >= 70 ? 'text-primary' : 'text-destructive'}`}>
                       {a.score}%
                     </p>
                   </div>
@@ -330,7 +324,7 @@ function ResultsView({ quizId, onBack }: { quizId: string; onBack: () => void })
 }
 
 export default function Quizzes() {
-  const { isCEO, profile } = useAuthContext();
+  const { isCEO } = useAuthContext();
   const { data: quizzes, isLoading } = useQuizzes();
   const generateQuiz = useGenerateQuiz();
   const [view, setView] = useState<'list' | 'take' | 'results'>('list');
@@ -350,7 +344,6 @@ export default function Quizzes() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-primary/10">
@@ -394,7 +387,6 @@ export default function Quizzes() {
           )}
         </div>
 
-        {/* Info banner */}
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4 flex items-center gap-3">
             <Clock className="h-5 w-5 text-primary shrink-0" />
@@ -405,7 +397,6 @@ export default function Quizzes() {
           </CardContent>
         </Card>
 
-        {/* Quiz list */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         ) : !quizzes?.length ? (
@@ -435,6 +426,3 @@ export default function Quizzes() {
     </Layout>
   );
 }
-
-// Need to import Sparkles in the component
-import { Sparkles } from 'lucide-react';
