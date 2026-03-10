@@ -2,9 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export function useQuizzes() {
+// Get all quizzes (for CEO results view)
+export function useAllQuizzes() {
   return useQuery({
-    queryKey: ['quizzes'],
+    queryKey: ['all-quizzes'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quizzes' as any)
@@ -12,6 +13,41 @@ export function useQuizzes() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as any[];
+    },
+  });
+}
+
+// Get quiz assigned to current user (by matching employee name to profile)
+export function useMyQuiz() {
+  return useQuery({
+    queryKey: ['my-quiz'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      // Get profile display name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) return null;
+
+      // Find active quiz for this employee (by name match)
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('quizzes' as any)
+        .select('*')
+        .eq('employee_name', profile.display_name)
+        .eq('status', 'active')
+        .gte('deadline', now)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as any;
     },
   });
 }
@@ -51,34 +87,19 @@ export function useMyAttempt(quizId: string) {
   });
 }
 
-export function useQuizAttempts(quizId: string) {
+// All attempts for all quizzes (CEO view)
+export function useAllAttempts() {
   return useQuery({
-    queryKey: ['quiz-attempts-all', quizId],
+    queryKey: ['all-quiz-attempts'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quiz_attempts' as any)
         .select('*')
-        .eq('quiz_id', quizId)
-        .order('score', { ascending: false });
+        .eq('status', 'submitted')
+        .order('submitted_at', { ascending: false });
       if (error) throw error;
       return data as any[];
     },
-    enabled: !!quizId,
-  });
-}
-
-export function useMyAnswers(attemptId: string) {
-  return useQuery({
-    queryKey: ['quiz-answers', attemptId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quiz_answers' as any)
-        .select('*')
-        .eq('attempt_id', attemptId);
-      if (error) throw error;
-      return data as any[];
-    },
-    enabled: !!attemptId,
   });
 }
 
@@ -116,79 +137,53 @@ export function useSubmitQuiz() {
       const answerRows = questions.map((q: any) => {
         const userAnswer = answers[q.id] || '';
         let isCorrect = false;
-
         if (q.question_type === 'text') {
-          // For text questions, check if key words match
           const keywords = q.correct_answer.split(/[,،\s]+/).filter(Boolean);
           isCorrect = keywords.some((kw: string) => userAnswer.toLowerCase().includes(kw.toLowerCase()));
         } else {
           isCorrect = userAnswer === q.correct_answer;
         }
-
-        if (isCorrect) {
-          correct++;
-          earnedPoints += q.points;
-        }
+        if (isCorrect) { correct++; earnedPoints += q.points; }
         totalPoints += q.points;
-
-        return {
-          attempt_id: attemptId,
-          question_id: q.id,
-          user_answer: userAnswer,
-          is_correct: isCorrect,
-          points_earned: isCorrect ? q.points : 0,
-        };
+        return { attempt_id: attemptId, question_id: q.id, user_answer: userAnswer, is_correct: isCorrect, points_earned: isCorrect ? q.points : 0 };
       });
 
-      // Insert answers
       const { error: aErr } = await supabase.from('quiz_answers' as any).insert(answerRows as any);
       if (aErr) throw aErr;
 
-      // Update attempt
       const score = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
       const { error: uErr } = await supabase
         .from('quiz_attempts' as any)
-        .update({
-          status: 'submitted',
-          submitted_at: new Date().toISOString(),
-          score,
-          total_points: totalPoints,
-          correct_count: correct,
-          wrong_count: questions.length - correct,
-        } as any)
+        .update({ status: 'submitted', submitted_at: new Date().toISOString(), score, total_points: totalPoints, correct_count: correct, wrong_count: questions.length - correct } as any)
         .eq('id', attemptId);
       if (uErr) throw uErr;
-
       return { score, correct, total: questions.length };
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['quiz-attempt'] });
-      qc.invalidateQueries({ queryKey: ['quiz-attempts-all'] });
+      qc.invalidateQueries({ queryKey: ['all-quiz-attempts'] });
       toast.success(`تم تسليم الاختبار! النتيجة: ${data.score}%`);
     },
     onError: () => toast.error('فشل تسليم الاختبار'),
   });
 }
 
-export function useGenerateQuiz() {
+export function useGenerateQuizzes() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (title: string) => {
+    mutationFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
-
-      const res = await supabase.functions.invoke('generate-quiz', {
-        body: { title },
-      });
-
+      const res = await supabase.functions.invoke('generate-quiz', { body: {} });
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
       return res.data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['quizzes'] });
-      toast.success('تم إنشاء الاختبار بنجاح! 🎯');
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['all-quizzes'] });
+      qc.invalidateQueries({ queryKey: ['my-quiz'] });
+      toast.success(`تم إنشاء ${data.quizzes_created} اختبار بنجاح! 🎯`);
     },
-    onError: (e: any) => toast.error(`فشل إنشاء الاختبار: ${e.message}`),
+    onError: (e: any) => toast.error(`فشل إنشاء الاختبارات: ${e.message}`),
   });
 }

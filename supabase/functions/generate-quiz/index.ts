@@ -1,27 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 function extractJsonFromResponse(response: string): any {
-  let cleaned = response
-    .replace(/```json\s*/gi, "")
-    .replace(/```\s*/g, "")
-    .trim();
-
+  let cleaned = response.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
   const jsonStart = cleaned.search(/[\{\[]/);
   const jsonEnd = cleaned.lastIndexOf(jsonStart !== -1 && cleaned[jsonStart] === '[' ? ']' : '}');
-
-  if (jsonStart === -1 || jsonEnd === -1) {
-    throw new Error("No JSON object found in AI response");
-  }
-
+  if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found");
   cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
-
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    cleaned = cleaned
-      .replace(/,\s*}/g, "}")
-      .replace(/,\s*]/g, "]")
-      .replace(/[\x00-\x1F\x7F]/g, "");
+  try { return JSON.parse(cleaned); } catch {
+    cleaned = cleaned.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]").replace(/[\x00-\x1F\x7F]/g, "");
     return JSON.parse(cleaned);
   }
 }
@@ -40,33 +26,34 @@ Deno.serve(async (req) => {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization");
-
     const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (authError || !user) throw new Error("Unauthorized");
-
-    // Check CEO role
     const { data: roleData } = await supabase.rpc("has_role", { _user_id: user.id, _role: "ceo" });
     if (!roleData) throw new Error("Only CEO can generate quizzes");
 
-    const { title } = await req.json();
+    // Get all employees
+    const { data: employees, error: empError } = await supabase.from("employees").select("id, name, position, department");
+    if (empError || !employees?.length) throw new Error("No employees found");
 
-    // Get employees list for context
-    const { data: employees } = await supabase.from("employees").select("name, position, department");
-    
-    // Calculate deadline: today + 9 hours
     const now = new Date();
     const deadline = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    // Calculate week number (ISO week)
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
 
-    const systemPrompt = `أنت مسؤول عن إنشاء اختبارات أسبوعية للموظفين حول نظام إدارة الأعمال BatShark.
-    
+    const results: any[] = [];
+
+    // Generate a unique quiz for each employee
+    for (const emp of employees) {
+      const systemPrompt = `أنت مسؤول عن إنشاء اختبار أسبوعي مخصص للموظف "${emp.name}" (${emp.position} - ${emp.department}) حول نظام إدارة الأعمال BatShark.
+
 النظام يتضمن:
-- لوحات تحكم (تنفيذية، تشغيلية، مشاريع) مع رسوم بيانية ومؤشرات أداء
-- إدارة المشاريع (إضافة، تعديل، حذف مشاريع مع تتبع المصاريف والإيرادات)
+- لوحات تحكم (تنفيذية، تشغيلية، مشاريع)
+- إدارة المشاريع (إضافة، تعديل، حذف مع تتبع المصاريف والإيرادات)
 - إدارة الموظفين (ملفات شخصية، تقييمات، أداء شهري)
-- نظام المهام (إنشاء، توزيع، تتبع المهام مع أولويات وتواريخ)
+- نظام المهام (إنشاء، توزيع، تتبع)
 - توزيع المهام الذكي بالذكاء الاصطناعي
 - تحليل جدوى البزنس
 - غرف النقاشات والرسائل الخاصة
@@ -75,91 +62,73 @@ Deno.serve(async (req) => {
 - التقارير ومركز الملفات والاستيراد
 - الجداول المخصصة (إنشاء جداول مرنة مع معادلات)
 - نظام التنبيهات الذكية
-- التحليل الاستراتيجي
-- نظام سجل التعديلات (Audit Trail)
-- قاموس البيانات
+- التحليل الاستراتيجي وسجل التعديلات
 
-أنشئ 25 سؤال بالعربية:
+أنشئ 25 سؤال فريد بالعربية مختلف عن باقي الموظفين:
 - 15 سؤال اختيار من متعدد (4 خيارات A,B,C,D) - question_type: "mcq"
-- 5 أسئلة صح وخطأ - question_type: "true_false"  
+- 5 أسئلة صح وخطأ - question_type: "true_false"
 - 5 أسئلة تحريرية قصيرة - question_type: "text"
 
-الأسئلة يجب أن تكون عملية عن كيفية استخدام النظام، مثل:
-- كيف تضيف مشروع جديد؟
-- أين تجد تقارير الأداء؟
-- ما هو نظام سجل التعديلات؟
-- كيف تنشر خبر في المنصة؟
-- ما هي صلاحيات كل دور؟
+ركز على أسئلة عملية حول كيفية استخدام النظام بشكل يومي.
 
-أجب بصيغة JSON فقط بدون أي نص إضافي:
-{
-  "questions": [
-    {
-      "question_text": "نص السؤال",
-      "question_type": "mcq",
-      "options": [{"label":"A","text":"..."},{"label":"B","text":"..."},{"label":"C","text":"..."},{"label":"D","text":"..."}],
-      "correct_answer": "A",
-      "explanation": "شرح مختصر",
-      "points": 4
+أجب بصيغة JSON فقط:
+{"questions":[{"question_text":"...","question_type":"mcq","options":[{"label":"A","text":"..."},{"label":"B","text":"..."},{"label":"C","text":"..."},{"label":"D","text":"..."}],"correct_answer":"A","explanation":"...","points":4}]}
+
+لأسئلة صح/خطأ: options=[{"label":"صح","text":"صح"},{"label":"خطأ","text":"خطأ"}]
+لأسئلة التحرير: options=[] و correct_answer=كلمات مفتاحية`;
+
+      const response = await fetch("https://api.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `أنشئ اختبار فريد للموظف ${emp.name} - الأسبوع ${weekNumber} - تاريخ ${now.toLocaleDateString('ar-SA')}` },
+          ],
+          temperature: 0.8,
+        }),
+      });
+
+      const aiResult = await response.json();
+      const content = aiResult.choices?.[0]?.message?.content || "";
+      const parsed = extractJsonFromResponse(content);
+
+      // Create quiz for this employee
+      const { data: quiz, error: quizError } = await supabase.from("quizzes").insert({
+        title: `اختبار ${emp.name} - الأسبوع ${weekNumber}`,
+        description: `اختبار أسبوعي مخصص لـ ${emp.name}`,
+        quiz_date: now.toISOString().split("T")[0],
+        deadline: deadline.toISOString(),
+        total_questions: 25,
+        duration_hours: 9,
+        status: "active",
+        created_by: user.id,
+        employee_id: emp.id,
+        employee_name: emp.name,
+        week_number: weekNumber,
+      }).select().single();
+
+      if (quizError) throw quizError;
+
+      const questions = parsed.questions.map((q: any, i: number) => ({
+        quiz_id: quiz.id,
+        question_text: q.question_text,
+        question_type: q.question_type,
+        options: q.options,
+        correct_answer: q.correct_answer,
+        explanation: q.explanation || "",
+        sort_order: i + 1,
+        points: q.points || 4,
+      }));
+
+      const { error: qError } = await supabase.from("quiz_questions").insert(questions);
+      if (qError) throw qError;
+
+      results.push({ employee: emp.name, quiz_id: quiz.id });
     }
-  ]
-}
 
-لأسئلة صح/خطأ: options يكون [{"label":"صح","text":"صح"},{"label":"خطأ","text":"خطأ"}] و correct_answer إما "صح" أو "خطأ"
-لأسئلة التحرير: options يكون [] و correct_answer يكون الإجابة المتوقعة (كلمات مفتاحية)`;
-
-    const response = await fetch("https://api.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${lovableKey}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `أنشئ اختبار بعنوان: "${title || 'اختبار الثلاثاء الأسبوعي'}" - تاريخ ${now.toLocaleDateString('ar-SA')}` },
-        ],
-        temperature: 0.7,
-      }),
-    });
-
-    const aiResult = await response.json();
-    let content = aiResult.choices?.[0]?.message?.content || "";
-    
-    // Robust JSON extraction
-    const parsed = extractJsonFromResponse(content);
-
-    // Create quiz
-    const { data: quiz, error: quizError } = await supabase.from("quizzes").insert({
-      title: title || "اختبار الثلاثاء الأسبوعي",
-      description: `اختبار أسبوعي حول نظام BatShark - ${now.toLocaleDateString('ar-SA')}`,
-      quiz_date: now.toISOString().split("T")[0],
-      deadline: deadline.toISOString(),
-      total_questions: 25,
-      duration_hours: 9,
-      status: "active",
-      created_by: user.id,
-    }).select().single();
-
-    if (quizError) throw quizError;
-
-    // Insert questions
-    const questions = parsed.questions.map((q: any, i: number) => ({
-      quiz_id: quiz.id,
-      question_text: q.question_text,
-      question_type: q.question_type,
-      options: q.options,
-      correct_answer: q.correct_answer,
-      explanation: q.explanation || "",
-      sort_order: i + 1,
-      points: q.points || 4,
-    }));
-
-    const { error: qError } = await supabase.from("quiz_questions").insert(questions);
-    if (qError) throw qError;
-
-    return new Response(JSON.stringify({ success: true, quiz_id: quiz.id }), {
+    return new Response(JSON.stringify({ success: true, quizzes_created: results.length, results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
