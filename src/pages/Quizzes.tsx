@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, Plus, Clock, CheckCircle2, Trophy, ChevronRight, Loader2, Sparkles, CalendarDays, User, BarChart3 } from 'lucide-react';
+import { GraduationCap, Clock, CheckCircle2, Trophy, ChevronRight, Loader2, CalendarDays, User, BarChart3 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthContext } from '@/contexts/AuthContext';
 import {
   useMyQuiz, useQuizQuestions, useMyAttempt, useAllQuizzes, useAllAttempts,
-  useStartQuiz, useSubmitQuiz, useGenerateQuizzes
+  useStartQuiz, useSubmitQuiz
 } from '@/hooks/useQuizzes';
 
 /* ─── TAKE QUIZ VIEW ─── */
@@ -164,7 +164,6 @@ export default function Quizzes() {
   const { data: myQuiz, isLoading: loadingMyQuiz } = useMyQuiz();
   const { data: allQuizzes, isLoading: loadingAll } = useAllQuizzes();
   const { data: allAttempts } = useAllAttempts();
-  const generateQuizzes = useGenerateQuizzes();
   const [takingQuiz, setTakingQuiz] = useState('');
 
   if (takingQuiz) return <Layout><TakeQuizView quizId={takingQuiz} onBack={() => setTakingQuiz('')} /></Layout>;
@@ -177,88 +176,63 @@ export default function Quizzes() {
     weekGroups[wk].push(q);
   });
 
-  // Match attempts to quizzes
   const getAttemptForQuiz = (quizId: string) => allAttempts?.find((a: any) => a.quiz_id === quizId);
+
+  // Calculate next Tuesday
+  const now = new Date();
+  const daysUntilTuesday = (2 - now.getDay() + 7) % 7 || 7;
+  const nextTuesday = new Date(now);
+  nextTuesday.setDate(now.getDate() + daysUntilTuesday);
 
   return (
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10">
-              <GraduationCap className="h-7 w-7 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-foreground">اختبار الثلاثاء</h1>
-              <p className="text-sm text-muted-foreground">اختبار أسبوعي كل ثلاثاء لجميع الموظفين</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary/10">
+            <GraduationCap className="h-7 w-7 text-primary" />
           </div>
-          {isCEO && (
-            <Button onClick={() => generateQuizzes.mutate()} disabled={generateQuizzes.isPending} className="gap-2">
-              {generateQuizzes.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              إنشاء اختبارات الثلاثاء
-            </Button>
-          )}
+          <div>
+            <h1 className="text-2xl font-black text-foreground">اختبار الثلاثاء</h1>
+            <p className="text-sm text-muted-foreground">اختبار أسبوعي تلقائي كل ثلاثاء · ادخل اختبر واطلع</p>
+          </div>
         </div>
 
-        <Tabs defaultValue="my-quiz" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="my-quiz" className="gap-2"><User className="h-4 w-4" /> اختباري</TabsTrigger>
-            {isCEO ? (
-              <TabsTrigger value="results" className="gap-2"><BarChart3 className="h-4 w-4" /> نتائج الموظفين</TabsTrigger>
-            ) : (
-              <TabsTrigger value="results" className="gap-2" disabled><BarChart3 className="h-4 w-4" /> النتائج</TabsTrigger>
-            )}
-          </TabsList>
+        {isCEO ? (
+          /* CEO VIEW: Just results */
+          <div className="space-y-6">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-4 flex items-center gap-3">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                <p className="text-sm text-foreground">الاختبارات تُنشأ تلقائياً كل يوم ثلاثاء · النتائج تظهر هنا فقط لك</p>
+              </CardContent>
+            </Card>
 
-          {/* MY QUIZ TAB */}
-          <TabsContent value="my-quiz" className="space-y-4">
-            {loadingMyQuiz ? (
-              <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-            ) : myQuiz ? (
+            {/* My quiz if available */}
+            {myQuiz && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <Card className="border-primary/20 overflow-hidden">
-                  <div className="bg-primary/5 p-6 border-b border-primary/10">
-                    <div className="flex items-center gap-3 mb-3">
-                      <GraduationCap className="h-8 w-8 text-primary" />
+                <Card className="border-primary/30 overflow-hidden">
+                  <div className="bg-primary/5 p-4 border-b border-primary/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <GraduationCap className="h-6 w-6 text-primary" />
                       <div>
-                        <h2 className="text-xl font-black text-foreground">{myQuiz.title}</h2>
-                        <p className="text-sm text-muted-foreground">{myQuiz.description}</p>
+                        <h2 className="text-lg font-bold text-foreground">اختبارك هذا الأسبوع</h2>
+                        <p className="text-xs text-muted-foreground">{myQuiz.total_questions} سؤال · {myQuiz.duration_hours} ساعات</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {myQuiz.duration_hours} ساعات</span>
-                      <span>{myQuiz.total_questions} سؤال</span>
-                      <span className="flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(myQuiz.quiz_date).toLocaleDateString('ar-SA')}</span>
-                    </div>
-                  </div>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-lg font-bold text-foreground mb-2">مرحباً {profile?.display_name} 👋</p>
-                    <p className="text-muted-foreground mb-6">اختبارك جاهز! اضغط لبدء الاختبار</p>
-                    <Button size="lg" onClick={() => setTakingQuiz(myQuiz.id)} className="gap-2 text-lg px-8">
-                      ابدأ الاختبار <ChevronRight className="h-5 w-5" />
+                    <Button onClick={() => setTakingQuiz(myQuiz.id)} className="gap-2">
+                      ابدأ <ChevronRight className="h-4 w-4" />
                     </Button>
-                  </CardContent>
+                  </div>
                 </Card>
               </motion.div>
-            ) : (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <CalendarDays className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <p className="text-lg font-bold text-muted-foreground">لا يوجد اختبار حالياً</p>
-                  <p className="text-sm text-muted-foreground mt-1">الاختبار القادم يوم الثلاثاء إن شاء الله</p>
-                </CardContent>
-              </Card>
             )}
-          </TabsContent>
 
-          {/* RESULTS TAB (CEO only) */}
-          <TabsContent value="results" className="space-y-6">
+            {/* Results by week */}
             {loadingAll ? (
-              <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+              <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
             ) : Object.keys(weekGroups).length === 0 ? (
-              <Card><CardContent className="p-12 text-center text-muted-foreground">لا توجد اختبارات بعد</CardContent></Card>
+              <Card><CardContent className="p-12 text-center text-muted-foreground">لا توجد اختبارات بعد · ستظهر تلقائياً يوم الثلاثاء</CardContent></Card>
             ) : (
               Object.entries(weekGroups)
                 .sort(([a], [b]) => Number(b) - Number(a))
@@ -303,8 +277,49 @@ export default function Quizzes() {
                   </Card>
                 ))
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        ) : (
+          /* EMPLOYEE VIEW: Just their quiz */
+          <div className="space-y-4">
+            {loadingMyQuiz ? (
+              <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            ) : myQuiz ? (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="border-primary/20 overflow-hidden">
+                  <div className="bg-primary/5 p-6 border-b border-primary/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <GraduationCap className="h-8 w-8 text-primary" />
+                      <div>
+                        <h2 className="text-xl font-black text-foreground">{myQuiz.title}</h2>
+                        <p className="text-sm text-muted-foreground">{myQuiz.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {myQuiz.duration_hours} ساعات</span>
+                      <span>{myQuiz.total_questions} سؤال</span>
+                      <span className="flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(myQuiz.quiz_date).toLocaleDateString('ar-SA')}</span>
+                    </div>
+                  </div>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-lg font-bold text-foreground mb-2">مرحباً {profile?.display_name} 👋</p>
+                    <p className="text-muted-foreground mb-6">اختبارك جاهز! اضغط لبدء الاختبار</p>
+                    <Button size="lg" onClick={() => setTakingQuiz(myQuiz.id)} className="gap-2 text-lg px-8">
+                      ابدأ الاختبار <ChevronRight className="h-5 w-5" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <CalendarDays className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className="text-lg font-bold text-muted-foreground">لا يوجد اختبار حالياً</p>
+                  <p className="text-sm text-muted-foreground mt-1">الاختبار القادم يوم الثلاثاء {nextTuesday.toLocaleDateString('ar-SA')}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
     </Layout>
   );

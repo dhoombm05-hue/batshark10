@@ -26,12 +26,26 @@ Deno.serve(async (req) => {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // Support both: cron calls (with anon key) and user calls (with user token)
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (authError || !user) throw new Error("Unauthorized");
-    const { data: roleData } = await supabase.rpc("has_role", { _user_id: user.id, _role: "ceo" });
-    if (!roleData) throw new Error("Only CEO can generate quizzes");
+    let isCronCall = false;
+    
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+      if (token === anonKey) {
+        // Cron call with anon key - allowed
+        isCronCall = true;
+      } else {
+        // User call - verify CEO role
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error("Unauthorized");
+        const { data: roleData } = await supabase.rpc("has_role", { _user_id: user.id, _role: "ceo" });
+        if (!roleData) throw new Error("Only CEO can generate quizzes");
+      }
+    } else {
+      throw new Error("No authorization");
+    }
 
     // Get all employees
     const { data: employees, error: empError } = await supabase.from("employees").select("id, name, position, department");
@@ -110,6 +124,10 @@ Deno.serve(async (req) => {
       const parsed = extractJsonFromResponse(content);
 
       // Create quiz for this employee
+      // Get a CEO user for created_by
+      const { data: ceoRole } = await supabase.from("user_roles").select("user_id").eq("role", "ceo").limit(1).single();
+      const creatorId = ceoRole?.user_id || "00000000-0000-0000-0000-000000000000";
+
       const { data: quiz, error: quizError } = await supabase.from("quizzes").insert({
         title: `اختبار ${emp.name} - الأسبوع ${weekNumber}`,
         description: `اختبار أسبوعي مخصص لـ ${emp.name}`,
@@ -118,7 +136,7 @@ Deno.serve(async (req) => {
         total_questions: 25,
         duration_hours: 9,
         status: "active",
-        created_by: user.id,
+        created_by: creatorId,
         employee_id: emp.id,
         employee_name: emp.name,
         week_number: weekNumber,
