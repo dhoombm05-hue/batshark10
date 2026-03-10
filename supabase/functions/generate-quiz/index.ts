@@ -101,9 +101,8 @@ Deno.serve(async (req) => {
     const aiResult = await response.json();
     let content = aiResult.choices?.[0]?.message?.content || "";
     
-    // Clean JSON
-    content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const parsed = JSON.parse(content);
+    // Robust JSON extraction
+    const parsed = extractJsonFromResponse(content);
 
     // Create quiz
     const { data: quiz, error: quizError } = await supabase.from("quizzes").insert({
