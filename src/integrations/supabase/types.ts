@@ -1372,6 +1372,7 @@ export type Database = {
           created_at: string
           department: string | null
           display_name: string
+          employee_id: string | null
           id: string
           job_title: string | null
           updated_at: string
@@ -1382,6 +1383,7 @@ export type Database = {
           created_at?: string
           department?: string | null
           display_name: string
+          employee_id?: string | null
           id?: string
           job_title?: string | null
           updated_at?: string
@@ -1392,12 +1394,21 @@ export type Database = {
           created_at?: string
           department?: string | null
           display_name?: string
+          employee_id?: string | null
           id?: string
           job_title?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_analysis: {
         Row: {
