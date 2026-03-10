@@ -168,22 +168,3 @@ export function useSubmitQuiz() {
   });
 }
 
-export function useGenerateQuizzes() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-      const res = await supabase.functions.invoke('generate-quiz', { body: {} });
-      if (res.error) throw res.error;
-      if (res.data?.error) throw new Error(res.data.error);
-      return res.data;
-    },
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['all-quizzes'] });
-      qc.invalidateQueries({ queryKey: ['my-quiz'] });
-      toast.success(`تم إنشاء ${data.quizzes_created} اختبار بنجاح! 🎯`);
-    },
-    onError: (e: any) => toast.error(`فشل إنشاء الاختبارات: ${e.message}`),
-  });
-}
