@@ -44,13 +44,56 @@ export function useMyQuiz() {
 
       if (error || !quizzes?.length) return null;
 
-      // Match by partial name (display_name is short like "سعد", employee_name is full like "سعد سلطان المحبوب")
       const displayName = profile.display_name.trim();
-      const match = quizzes.find((q: any) => 
-        q.employee_name === displayName || 
-        q.employee_name?.startsWith(displayName) ||
-        q.employee_name?.includes(displayName)
-      );
+
+      // Try exact match first, then partial match
+      let match = quizzes.find((q: any) => q.employee_name === displayName);
+      if (!match) {
+        match = quizzes.find((q: any) => 
+          q.employee_name?.startsWith(displayName) ||
+          q.employee_name?.includes(displayName)
+        );
+      }
+
+      // If still no match, try matching first name from employee_name to display_name
+      if (!match) {
+        match = quizzes.find((q: any) => {
+          const firstName = q.employee_name?.split(' ')?.[0];
+          return firstName && displayName.includes(firstName);
+        });
+      }
+
+      // For CEO or unmatched: try matching by employee position/role
+      if (!match) {
+        const { data: employees } = await supabase
+          .from('employees')
+          .select('name, position');
+        
+        if (employees) {
+          // If user is CEO (display_name contains "رئيس"), find CEO employee
+          const isCeoUser = displayName.includes('رئيس') || displayName.includes('CEO');
+          if (isCeoUser) {
+            const ceoEmp = employees.find((e: any) => e.position?.includes('رئيس') || e.position?.includes('CEO'));
+            if (ceoEmp) {
+              match = quizzes.find((q: any) => q.employee_name === ceoEmp.name);
+            }
+          }
+          
+          // Fallback: try first name matching
+          if (!match) {
+            for (const emp of employees) {
+              const empQuiz = quizzes.find((q: any) => q.employee_name === emp.name);
+              if (empQuiz) {
+                const empFirstName = emp.name.split(' ')[0];
+                if (displayName.includes(empFirstName) || empFirstName.includes(displayName)) {
+                  match = empQuiz;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
 
       return match as any || null;
     },
