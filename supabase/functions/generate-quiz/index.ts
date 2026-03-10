@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 لأسئلة صح/خطأ: options=[{"label":"صح","text":"صح"},{"label":"خطأ","text":"خطأ"}]
 لأسئلة التحرير: options=[] و correct_answer=كلمات مفتاحية`;
 
-      const response = await fetch("https://api.lovable.dev/v1/chat/completions", {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
         body: JSON.stringify({
@@ -90,8 +90,23 @@ Deno.serve(async (req) => {
         }),
       });
 
-      const aiResult = await response.json();
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("AI gateway error:", response.status, errText);
+        throw new Error(`AI gateway error: ${response.status}`);
+      }
+
+      const rawText = await response.text();
+      let aiResult;
+      try {
+        aiResult = JSON.parse(rawText);
+      } catch (parseErr) {
+        console.error("Failed to parse AI response:", rawText.substring(0, 500));
+        throw new Error("Failed to parse AI gateway response");
+      }
       const content = aiResult.choices?.[0]?.message?.content || "";
+      if (!content) throw new Error("Empty AI response content");
+      console.log("AI content for", emp.name, "length:", content.length);
       const parsed = extractJsonFromResponse(content);
 
       // Create quiz for this employee
