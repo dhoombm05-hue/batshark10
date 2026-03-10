@@ -584,9 +584,8 @@ export default function Quizzes() {
                 <Card className="border-primary/30">
                   <CardContent className="p-8 text-center space-y-3">
                     <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
-                    <h2 className="text-xl font-bold text-foreground">تم تسليم اختبارك ✅</h2>
-                    <p className="text-3xl font-black text-primary">{myAttempt.score}%</p>
-                    <p className="text-muted-foreground">{myAttempt.correct_count} صحيح من {myQuiz.total_questions}</p>
+                    <h2 className="text-xl font-bold text-foreground">تم تسليم اختبارك بنجاح ✅</h2>
+                    <p className="text-muted-foreground">شكراً لك! تم إرسال إجاباتك للمراجعة</p>
                     <p className="text-sm text-muted-foreground">الاختبار القادم يوم الثلاثاء {nextTuesday.toLocaleDateString('ar-SA')}</p>
                   </CardContent>
                 </Card>
