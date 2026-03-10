@@ -298,7 +298,7 @@ export default function BatSharkGuide() {
       {/* ================================================================== */}
       <motion.button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-6 z-50 flex items-center gap-3 group print:hidden"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 group print:hidden"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         initial={{ opacity: 0, y: 20 }}
