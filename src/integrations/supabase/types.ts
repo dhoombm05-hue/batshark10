@@ -1587,6 +1587,184 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_answers: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          is_correct: boolean | null
+          points_earned: number | null
+          question_id: string
+          user_answer: string | null
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean | null
+          points_earned?: number | null
+          question_id: string
+          user_answer?: string | null
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean | null
+          points_earned?: number | null
+          question_id?: string
+          user_answer?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_attempts: {
+        Row: {
+          correct_count: number | null
+          employee_name: string
+          id: string
+          quiz_id: string
+          score: number | null
+          started_at: string
+          status: string
+          submitted_at: string | null
+          total_points: number | null
+          user_id: string
+          wrong_count: number | null
+        }
+        Insert: {
+          correct_count?: number | null
+          employee_name?: string
+          id?: string
+          quiz_id: string
+          score?: number | null
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          total_points?: number | null
+          user_id: string
+          wrong_count?: number | null
+        }
+        Update: {
+          correct_count?: number | null
+          employee_name?: string
+          id?: string
+          quiz_id?: string
+          score?: number | null
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          total_points?: number | null
+          user_id?: string
+          wrong_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          correct_answer: string
+          explanation: string | null
+          id: string
+          options: Json | null
+          points: number
+          question_text: string
+          question_type: string
+          quiz_id: string
+          sort_order: number
+        }
+        Insert: {
+          correct_answer: string
+          explanation?: string | null
+          id?: string
+          options?: Json | null
+          points?: number
+          question_text: string
+          question_type?: string
+          quiz_id: string
+          sort_order?: number
+        }
+        Update: {
+          correct_answer?: string
+          explanation?: string | null
+          id?: string
+          options?: Json | null
+          points?: number
+          question_text?: string
+          question_type?: string
+          quiz_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          created_at: string
+          created_by: string
+          deadline: string
+          description: string | null
+          duration_hours: number
+          id: string
+          quiz_date: string
+          status: string
+          title: string
+          total_questions: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          deadline: string
+          description?: string | null
+          duration_hours?: number
+          id?: string
+          quiz_date?: string
+          status?: string
+          title: string
+          total_questions?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deadline?: string
+          description?: string | null
+          duration_hours?: number
+          id?: string
+          quiz_date?: string
+          status?: string
+          title?: string
+          total_questions?: number
+        }
+        Relationships: []
+      }
       task_distribution_items: {
         Row: {
           assigned_to: string | null
