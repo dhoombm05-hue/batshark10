@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     if (empError || !employees?.length) throw new Error("No employees found");
 
     const now = new Date();
-    const deadline = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const deadline = new Date(now.getTime() + 12 * 60 * 60 * 1000); // 12 hours (9PM to 9AM)
     // Calculate week number (ISO week)
     const startOfYear = new Date(now.getFullYear(), 0, 1);
     const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
