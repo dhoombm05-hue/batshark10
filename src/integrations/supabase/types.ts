@@ -1733,11 +1733,14 @@ export type Database = {
           deadline: string
           description: string | null
           duration_hours: number
+          employee_id: string | null
+          employee_name: string | null
           id: string
           quiz_date: string
           status: string
           title: string
           total_questions: number
+          week_number: number | null
         }
         Insert: {
           created_at?: string
@@ -1745,11 +1748,14 @@ export type Database = {
           deadline: string
           description?: string | null
           duration_hours?: number
+          employee_id?: string | null
+          employee_name?: string | null
           id?: string
           quiz_date?: string
           status?: string
           title: string
           total_questions?: number
+          week_number?: number | null
         }
         Update: {
           created_at?: string
@@ -1757,13 +1763,24 @@ export type Database = {
           deadline?: string
           description?: string | null
           duration_hours?: number
+          employee_id?: string | null
+          employee_name?: string | null
           id?: string
           quiz_date?: string
           status?: string
           title?: string
           total_questions?: number
+          week_number?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       task_distribution_items: {
         Row: {
