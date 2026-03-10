@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
         quiz_date: now.toISOString().split("T")[0],
         deadline: deadline.toISOString(),
         total_questions: 25,
-        duration_hours: 9,
+        duration_hours: 12,
         status: "active",
         created_by: creatorId,
         employee_id: emp.id,
