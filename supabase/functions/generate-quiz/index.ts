@@ -124,6 +124,10 @@ Deno.serve(async (req) => {
       const parsed = extractJsonFromResponse(content);
 
       // Create quiz for this employee
+      // Get a CEO user for created_by
+      const { data: ceoRole } = await supabase.from("user_roles").select("user_id").eq("role", "ceo").limit(1).single();
+      const creatorId = ceoRole?.user_id || "00000000-0000-0000-0000-000000000000";
+
       const { data: quiz, error: quizError } = await supabase.from("quizzes").insert({
         title: `اختبار ${emp.name} - الأسبوع ${weekNumber}`,
         description: `اختبار أسبوعي مخصص لـ ${emp.name}`,
@@ -132,7 +136,7 @@ Deno.serve(async (req) => {
         total_questions: 25,
         duration_hours: 9,
         status: "active",
-        created_by: user.id,
+        created_by: creatorId,
         employee_id: emp.id,
         employee_name: emp.name,
         week_number: weekNumber,
