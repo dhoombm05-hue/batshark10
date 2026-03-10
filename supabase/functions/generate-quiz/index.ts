@@ -26,12 +26,26 @@ Deno.serve(async (req) => {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // Support both: cron calls (with anon key) and user calls (with user token)
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (authError || !user) throw new Error("Unauthorized");
-    const { data: roleData } = await supabase.rpc("has_role", { _user_id: user.id, _role: "ceo" });
-    if (!roleData) throw new Error("Only CEO can generate quizzes");
+    let isCronCall = false;
+    
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+      if (token === anonKey) {
+        // Cron call with anon key - allowed
+        isCronCall = true;
+      } else {
+        // User call - verify CEO role
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error("Unauthorized");
+        const { data: roleData } = await supabase.rpc("has_role", { _user_id: user.id, _role: "ceo" });
+        if (!roleData) throw new Error("Only CEO can generate quizzes");
+      }
+    } else {
+      throw new Error("No authorization");
+    }
 
     // Get all employees
     const { data: employees, error: empError } = await supabase.from("employees").select("id, name, position, department");
