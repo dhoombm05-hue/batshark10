@@ -92,7 +92,7 @@ export function useMyAttempt(quizId: string) {
   });
 }
 
-// All attempts for all quizzes (CEO view)
+// All attempts (CEO sees all, others see own)
 export function useAllAttempts() {
   return useQuery({
     queryKey: ['all-quiz-attempts'],
@@ -100,7 +100,6 @@ export function useAllAttempts() {
       const { data, error } = await supabase
         .from('quiz_attempts' as any)
         .select('*')
-        .eq('status', 'submitted')
         .order('submitted_at', { ascending: false });
       if (error) throw error;
       return data as any[];
