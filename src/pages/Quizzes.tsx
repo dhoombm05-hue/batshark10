@@ -64,11 +64,10 @@ function TakeQuizView({ quizId, onBack }: { quizId: string; onBack: () => void }
         <Button variant="ghost" onClick={onBack}>← العودة</Button>
         <Card className="border-primary/30">
           <CardContent className="p-8 text-center space-y-4">
-            <Trophy className="h-16 w-16 text-primary mx-auto" />
-            <h2 className="text-2xl font-bold text-foreground">تم تسليم اختبارك ✅</h2>
-            <p className="text-5xl font-black text-primary">{attempt.score}%</p>
-            <p className="text-muted-foreground">{attempt.correct_count} صحيح من {questions.length}</p>
-            <Progress value={attempt.score} className="h-3 max-w-xs mx-auto" />
+            <CheckCircle2 className="h-16 w-16 text-primary mx-auto" />
+            <h2 className="text-2xl font-bold text-foreground">تم تسليم اختبارك بنجاح ✅</h2>
+            <p className="text-muted-foreground">شكراً لك! تم إرسال إجاباتك للمراجعة</p>
+            <Button onClick={onBack} className="mt-4">العودة</Button>
           </CardContent>
         </Card>
       </div>
