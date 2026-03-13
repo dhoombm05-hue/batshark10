@@ -161,6 +161,107 @@ export type Database = {
         }
         Relationships: []
       }
+      business_proposals: {
+        Row: {
+          action_plan: Json | null
+          ai_analysis: Json | null
+          ai_research: Json | null
+          auto_generated: boolean | null
+          business_type: string | null
+          ceo_decision: string | null
+          ceo_notes: string | null
+          competitors: Json | null
+          created_at: string
+          decided_at: string | null
+          description: string | null
+          excel_data: Json | null
+          feasibility_score: number | null
+          financial_plan: Json | null
+          generation_cycle: number | null
+          id: string
+          licenses: Json | null
+          location: string | null
+          market_data: Json | null
+          next_generation_at: string | null
+          project_id: string | null
+          recommendation: string | null
+          risk_assessment: Json | null
+          risk_score: number | null
+          sector: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_plan?: Json | null
+          ai_analysis?: Json | null
+          ai_research?: Json | null
+          auto_generated?: boolean | null
+          business_type?: string | null
+          ceo_decision?: string | null
+          ceo_notes?: string | null
+          competitors?: Json | null
+          created_at?: string
+          decided_at?: string | null
+          description?: string | null
+          excel_data?: Json | null
+          feasibility_score?: number | null
+          financial_plan?: Json | null
+          generation_cycle?: number | null
+          id?: string
+          licenses?: Json | null
+          location?: string | null
+          market_data?: Json | null
+          next_generation_at?: string | null
+          project_id?: string | null
+          recommendation?: string | null
+          risk_assessment?: Json | null
+          risk_score?: number | null
+          sector?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_plan?: Json | null
+          ai_analysis?: Json | null
+          ai_research?: Json | null
+          auto_generated?: boolean | null
+          business_type?: string | null
+          ceo_decision?: string | null
+          ceo_notes?: string | null
+          competitors?: Json | null
+          created_at?: string
+          decided_at?: string | null
+          description?: string | null
+          excel_data?: Json | null
+          feasibility_score?: number | null
+          financial_plan?: Json | null
+          generation_cycle?: number | null
+          id?: string
+          licenses?: Json | null
+          location?: string | null
+          market_data?: Json | null
+          next_generation_at?: string | null
+          project_id?: string | null
+          recommendation?: string | null
+          risk_assessment?: Json | null
+          risk_score?: number | null
+          sector?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chart_of_accounts: {
         Row: {
           account_type: string
