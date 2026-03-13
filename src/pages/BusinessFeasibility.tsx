@@ -597,6 +597,8 @@ export default function BusinessFeasibility() {
             })
           )}
         </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
