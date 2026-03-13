@@ -551,7 +551,7 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
 
 export default function BusinessProposals() {
   const { proposals, pendingProposals, acceptedProposals, rejectedProposals, isLoading, generateProposal, acceptProposal, rejectProposal, deleteProposal } = useBusinessProposals();
-  const { userRole } = useAuthContext();
+  const { isCEO } = useAuthContext();
   const [selectedProposal, setSelectedProposal] = useState<BusinessProposal | null>(null);
   const [generating, setGenerating] = useState(false);
   const [accepting, setAccepting] = useState(false);
