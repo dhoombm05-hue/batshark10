@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBusinessFeasibilities, type BusinessFeasibilityRecord } from '@/hooks/useBusinessFeasibility';
-import { Building2, Brain, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Trash2, Plus, Loader2, Shield, DollarSign, Users, Clock, BarChart3, Target, Lightbulb, Scale, TrendingDown, ArrowRight, Sparkles, FileText, Gavel, Search } from 'lucide-react';
+import { Building2, Brain, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Trash2, Plus, Loader2, Shield, DollarSign, Users, Clock, BarChart3, Target, Lightbulb, Scale, TrendingDown, ArrowRight, Sparkles, FileText, Gavel, Search, Rocket } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Progress } from '@/components/ui/progress';
+import BusinessProposals from '@/components/BusinessProposals';
 
 const SECTORS = [
   { value: 'food_beverage', label: '🍽️ مطاعم وكافيهات ومأكولات' },
