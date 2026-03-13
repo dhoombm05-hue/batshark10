@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.generate-quiz]
 verify_jwt = false
+
+[functions.generate-proposal]
+verify_jwt = false
+
+[functions.accept-proposal]
+verify_jwt = false
