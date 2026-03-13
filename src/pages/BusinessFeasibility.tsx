@@ -386,8 +386,26 @@ export default function BusinessFeasibility() {
               </div>
               محلل جدوى الأعمال الذكي
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">أدخل فكرتك والذكاء الاصطناعي يتكفل بالباقي — بحث السوق، المنافسين، التكاليف، التراخيص</p>
+            <p className="text-muted-foreground text-sm mt-1">تحليل الجدوى ومقترحات البزنس الذكية</p>
           </div>
+        </div>
+
+        <Tabs defaultValue="proposals" className="w-full">
+          <TabsList className="h-auto p-1 bg-card/80 flex flex-wrap gap-1">
+            <TabsTrigger value="proposals" className="gap-2">
+              <Rocket className="w-4 h-4" /> مقترحات البزنس الذكية
+            </TabsTrigger>
+            <TabsTrigger value="feasibility" className="gap-2">
+              <Brain className="w-4 h-4" /> تحليل جدوى يدوي
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="proposals" className="mt-4">
+            <BusinessProposals />
+          </TabsContent>
+
+          <TabsContent value="feasibility" className="mt-4 space-y-6">
+        <div className="flex justify-end">
           <Button onClick={() => { setShowForm(true); setAnswers({}); }} className="gap-2 bg-section-invest hover:bg-section-invest/90">
             <Plus className="w-4 h-4" /> تحليل فرصة جديدة
           </Button>
