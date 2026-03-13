@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBusinessFeasibilities, type BusinessFeasibilityRecord } from '@/hooks/useBusinessFeasibility';
-import { Building2, Brain, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Trash2, Plus, Loader2, Shield, DollarSign, Users, Clock, BarChart3, Target, Lightbulb, Scale, TrendingDown, ArrowRight, Sparkles, FileText, Gavel, Search } from 'lucide-react';
+import { Building2, Brain, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Trash2, Plus, Loader2, Shield, DollarSign, Users, Clock, BarChart3, Target, Lightbulb, Scale, TrendingDown, ArrowRight, Sparkles, FileText, Gavel, Search, Rocket } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Progress } from '@/components/ui/progress';
+import BusinessProposals from '@/components/BusinessProposals';
 
 const SECTORS = [
   { value: 'food_beverage', label: '🍽️ مطاعم وكافيهات ومأكولات' },
@@ -384,8 +386,26 @@ export default function BusinessFeasibility() {
               </div>
               محلل جدوى الأعمال الذكي
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">أدخل فكرتك والذكاء الاصطناعي يتكفل بالباقي — بحث السوق، المنافسين، التكاليف، التراخيص</p>
+            <p className="text-muted-foreground text-sm mt-1">تحليل الجدوى ومقترحات البزنس الذكية</p>
           </div>
+        </div>
+
+        <Tabs defaultValue="proposals" className="w-full">
+          <TabsList className="h-auto p-1 bg-card/80 flex flex-wrap gap-1">
+            <TabsTrigger value="proposals" className="gap-2">
+              <Rocket className="w-4 h-4" /> مقترحات البزنس الذكية
+            </TabsTrigger>
+            <TabsTrigger value="feasibility" className="gap-2">
+              <Brain className="w-4 h-4" /> تحليل جدوى يدوي
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="proposals" className="mt-4">
+            <BusinessProposals />
+          </TabsContent>
+
+          <TabsContent value="feasibility" className="mt-4 space-y-6">
+        <div className="flex justify-end">
           <Button onClick={() => { setShowForm(true); setAnswers({}); }} className="gap-2 bg-section-invest hover:bg-section-invest/90">
             <Plus className="w-4 h-4" /> تحليل فرصة جديدة
           </Button>
@@ -577,6 +597,8 @@ export default function BusinessFeasibility() {
             })
           )}
         </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
