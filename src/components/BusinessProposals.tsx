@@ -555,7 +555,7 @@ export default function BusinessProposals() {
   const [selectedProposal, setSelectedProposal] = useState<BusinessProposal | null>(null);
   const [generating, setGenerating] = useState(false);
   const [accepting, setAccepting] = useState(false);
-  const isCeo = userRole === 'ceo';
+  const isCeo = isCEO;
 
   const handleGenerate = async () => {
     setGenerating(true);
