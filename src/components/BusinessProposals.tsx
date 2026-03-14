@@ -311,15 +311,20 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
                   <TableHead className="text-right">المنافس</TableHead>
                   <TableHead className="text-right">نقاط القوة</TableHead>
                   <TableHead className="text-right">نقاط الضعف</TableHead>
+                  <TableHead className="text-right">التسعير</TableHead>
                   <TableHead className="text-right">الحصة السوقية</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {competitors.map((c: any, i: number) => (
                   <TableRow key={i}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {c.name}
+                      {c.location && <span className="block text-xs text-muted-foreground">{c.location}</span>}
+                    </TableCell>
                     <TableCell className="text-sm">{c.strengths}</TableCell>
                     <TableCell className="text-sm">{c.weaknesses}</TableCell>
+                    <TableCell className="text-sm">{c.pricing || '-'}</TableCell>
                     <TableCell><Badge variant="outline">{c.market_share || '-'}</Badge></TableCell>
                   </TableRow>
                 ))}
