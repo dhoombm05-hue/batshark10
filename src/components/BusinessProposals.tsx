@@ -529,7 +529,7 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
                     <TableRow className="bg-muted/30 font-bold">
                       <TableCell>الإجمالي</TableCell>
                       <TableCell>{expenseBreakdown.reduce((s: number, i: any) => s + Number(i.amount || 0), 0).toLocaleString()}</TableCell>
-                      <TableCell colSpan={2}></TableCell>
+                      <TableCell colSpan={3}></TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
