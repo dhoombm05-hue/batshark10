@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json().catch(() => ({}));
-    const { mode = "auto" } = body; // "auto" = scheduled, "manual" = on-demand
+    const { mode = "auto" } = body;
 
     // Get company context
     const { data: projects } = await supabase.from("projects").select("*");
@@ -40,16 +40,15 @@ serve(async (req) => {
       previousFeasibilities: (feasibilities || []).map(f => f.title),
     };
 
-    // Get the current cycle number
     const { count } = await supabase.from("business_proposals").select("*", { count: "exact", head: true });
     const cycleNumber = (count || 0) + 1;
 
-    const systemPrompt = `أنت مستشار استثماري خبير ومحلل أعمال استراتيجي في منصة BatShark. مهمتك اقتراح فرصة بزنس جديدة مبتكرة ومربحة بناءً على تحليل شامل للسوق وموارد الشركة الحالية.
+    const systemPrompt = `أنت مستشار استثماري خبير ومحلل أعمال استراتيجي في منصة BatShark. مهمتك اقتراح فرصة بزنس جديدة مبتكرة ومربحة بناءً على بحث عميق وتحليل شامل للسوق.
 
 ## السياق:
 - الشركة لديها ${companyContext.currentProjects.length} مشاريع حالية
 - إجمالي الإيرادات: ${companyContext.totalRevenue.toLocaleString()} ريال
-- إجمالي الأرباح: ${companyContext.totalProfit.toLocaleString()} ريال  
+- إجمالي الأرباح: ${companyContext.totalProfit.toLocaleString()} ريال
 - عدد الموظفين: ${companyContext.totalEmployees}
 - المشاريع الحالية: ${JSON.stringify(companyContext.currentProjects)}
 - الموظفين وأدائهم: ${JSON.stringify(companyContext.employees)}
@@ -57,14 +56,43 @@ serve(async (req) => {
 ## الاقتراحات السابقة (تجنب التكرار):
 ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
 
-## المطلوب:
-اقترح فكرة بزنس جديدة ومبتكرة تتناسب مع قدرات الشركة. يجب أن تكون:
-1. فكرة واقعية وقابلة للتنفيذ
-2. مختلفة عن الاقتراحات السابقة
-3. تستفيد من موارد الشركة الحالية
-4. مدروسة بالكامل من كل الجوانب
+## تعليمات البحث العميق والاحترافي:
+أنت مطالب بتقديم دراسة جدوى احترافية وعميقة جداً كأنك فريق استشاري كامل. يجب أن تشمل:
 
-ابحث وحلل بنفسك: حجم السوق، المنافسين، التكاليف، التراخيص، الأرباح المتوقعة، المخاطر، خطة العمل، الموظفين المناسبين.`;
+1. **لماذا هذا البزنس**: اشرح بالتفصيل لماذا تقترح هذا البزنس تحديداً، ما الفرصة في السوق، ولماذا هو مناسب للشركة الآن.
+
+2. **دراسة السوق العميقة**: حجم السوق الفعلي بالأرقام، معدل النمو، الفجوات، الطلب، التوجهات.
+
+3. **الموردين والمصادر**: لكل مكون أو معدة مطلوبة:
+   - من أين تُشترى (اسم المورد أو المنصة أو الموقع)
+   - السعر التقريبي بالريال السعودي
+   - البديل الأرخص إن وجد
+   - نصائح للشراء (جملة/تجزئة، استيراد/محلي)
+   مثال: "آلة إسبريسو احترافية - من شركة La Marzocca أو من علي إكسبريس - السعر 15,000-25,000 ريال - الأفضل شراؤها من موزع محلي للضمان"
+
+4. **سيناريوهات متعددة**: قدم 3 سيناريوهات:
+   - سيناريو متفائل (أفضل حالة)
+   - سيناريو واقعي (الأرجح)
+   - سيناريو متشائم (أسوأ حالة)
+   لكل سيناريو: الإيرادات، المصاريف، الربح، فترة الاسترداد
+
+5. **خطوات التنفيذ التفصيلية**: خطوة بخطوة من الصفر:
+   - ماذا تفعل أولاً؟ ثانياً؟ ثالثاً؟
+   - أين تذهب؟ من تتواصل معه؟
+   - ما المستندات المطلوبة؟
+   - كم يستغرق كل شيء؟
+
+6. **التكاليف المفصلة بدقة**: كل بند مصروف مع:
+   - المبلغ الدقيق
+   - هل هو مرة واحدة أم شهري أم سنوي
+   - من أين يُشترى
+   - هل يمكن توفير المبلغ
+
+7. **تحليل المنافسين الحقيقي**: أسماء منافسين فعليين في السوق السعودي مع نقاط قوتهم وضعفهم.
+
+8. **نصائح ذهبية**: نصائح عملية من واقع السوق لضمان النجاح.
+
+كن محترفاً جداً وأعطِ تفاصيل حقيقية وعملية كأنك مستشار يتقاضى مليون ريال.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -73,36 +101,120 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `اقترح فكرة بزنس جديدة رقم ${cycleNumber}. قدم تحليلاً شاملاً ومفصلاً.` },
+          { role: "user", content: `اقترح فكرة بزنس جديدة رقم ${cycleNumber}. قدم دراسة جدوى عميقة واحترافية جداً مع تفاصيل الموردين والأسعار والسيناريوهات. خذ وقتك وأعطني نتائج احترافية.` },
         ],
         tools: [{
           type: "function",
           function: {
             name: "propose_business",
-            description: "Propose a new business opportunity with full analysis",
+            description: "Propose a new business with deep professional feasibility study",
             parameters: {
               type: "object",
               properties: {
                 title: { type: "string", description: "اسم البزنس المقترح" },
                 business_type: { type: "string", description: "نوع/قطاع البزنس" },
                 sector: { type: "string", description: "القطاع الرئيسي" },
-                location: { type: "string", description: "الموقع المقترح" },
-                description: { type: "string", description: "وصف شامل للفكرة" },
-                why_this_business: { type: "string", description: "لماذا هذا البزنس مناسب للشركة الآن" },
+                location: { type: "string", description: "الموقع المقترح مع التفاصيل" },
+                description: { type: "string", description: "وصف شامل ومفصل للفكرة (فقرتين على الأقل)" },
+                why_this_business: { type: "string", description: "شرح مفصل لماذا هذا البزنس مناسب الآن - فقرتين على الأقل تشرح الفرصة والتوقيت" },
                 feasibility_score: { type: "number", description: "درجة الجدوى 0-100" },
                 risk_score: { type: "number", description: "درجة المخاطر 0-100" },
                 recommendation: { type: "string", enum: ["strongly_recommended", "recommended", "cautious"] },
                 market_research: {
                   type: "object",
                   properties: {
-                    market_size: { type: "string" },
-                    growth_trend: { type: "string" },
-                    target_audience: { type: "string" },
-                    demand_analysis: { type: "string" },
-                    market_gap: { type: "string", description: "الفجوة في السوق" },
+                    market_size: { type: "string", description: "حجم السوق بالأرقام الفعلية" },
+                    growth_trend: { type: "string", description: "اتجاه النمو مع نسب" },
+                    target_audience: { type: "string", description: "الفئة المستهدفة بالتفصيل" },
+                    demand_analysis: { type: "string", description: "تحليل الطلب المفصل" },
+                    market_gap: { type: "string", description: "الفجوة في السوق التي سنستغلها" },
+                    market_trends: { type: "string", description: "التوجهات الحالية في السوق" },
+                    customer_behavior: { type: "string", description: "سلوك العملاء المستهدفين" },
+                  },
+                },
+                suppliers: {
+                  type: "array",
+                  description: "قائمة الموردين ومصادر الشراء التفصيلية",
+                  items: {
+                    type: "object",
+                    properties: {
+                      item_name: { type: "string", description: "اسم المنتج/المعدة" },
+                      supplier_name: { type: "string", description: "اسم المورد أو المنصة" },
+                      price_range: { type: "string", description: "نطاق السعر بالريال" },
+                      alternative: { type: "string", description: "البديل الأرخص" },
+                      purchase_advice: { type: "string", description: "نصيحة الشراء (جملة/تجزئة/استيراد)" },
+                      where_to_buy: { type: "string", description: "من أين بالتحديد (موقع/محل/منصة)" },
+                      warranty_info: { type: "string", description: "معلومات الضمان" },
+                    },
+                    required: ["item_name", "supplier_name", "price_range"],
+                  },
+                },
+                scenarios: {
+                  type: "object",
+                  description: "3 سيناريوهات مالية",
+                  properties: {
+                    optimistic: {
+                      type: "object",
+                      properties: {
+                        label: { type: "string" },
+                        monthly_revenue: { type: "number" },
+                        monthly_expenses: { type: "number" },
+                        monthly_profit: { type: "number" },
+                        roi_months: { type: "number" },
+                        description: { type: "string" },
+                      },
+                      required: ["label", "monthly_revenue", "monthly_expenses", "monthly_profit", "roi_months", "description"],
+                    },
+                    realistic: {
+                      type: "object",
+                      properties: {
+                        label: { type: "string" },
+                        monthly_revenue: { type: "number" },
+                        monthly_expenses: { type: "number" },
+                        monthly_profit: { type: "number" },
+                        roi_months: { type: "number" },
+                        description: { type: "string" },
+                      },
+                      required: ["label", "monthly_revenue", "monthly_expenses", "monthly_profit", "roi_months", "description"],
+                    },
+                    pessimistic: {
+                      type: "object",
+                      properties: {
+                        label: { type: "string" },
+                        monthly_revenue: { type: "number" },
+                        monthly_expenses: { type: "number" },
+                        monthly_profit: { type: "number" },
+                        roi_months: { type: "number" },
+                        description: { type: "string" },
+                      },
+                      required: ["label", "monthly_revenue", "monthly_expenses", "monthly_profit", "roi_months", "description"],
+                    },
+                  },
+                  required: ["optimistic", "realistic", "pessimistic"],
+                },
+                golden_tips: {
+                  type: "array",
+                  description: "نصائح ذهبية عملية من واقع السوق",
+                  items: { type: "string" },
+                },
+                step_by_step_guide: {
+                  type: "array",
+                  description: "دليل خطوة بخطوة للتنفيذ من الصفر",
+                  items: {
+                    type: "object",
+                    properties: {
+                      step_number: { type: "number" },
+                      title: { type: "string" },
+                      description: { type: "string", description: "شرح تفصيلي للخطوة" },
+                      where_to_go: { type: "string", description: "أين تذهب أو من تتواصل معه" },
+                      estimated_time: { type: "string", description: "الوقت المتوقع" },
+                      estimated_cost: { type: "string", description: "التكلفة المتوقعة" },
+                      documents_needed: { type: "string", description: "المستندات المطلوبة" },
+                    },
+                    required: ["step_number", "title", "description"],
                   },
                 },
                 competitors: {
@@ -110,11 +222,14 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                   items: {
                     type: "object",
                     properties: {
-                      name: { type: "string" },
+                      name: { type: "string", description: "اسم المنافس الحقيقي في السوق السعودي" },
                       strengths: { type: "string" },
                       weaknesses: { type: "string" },
                       market_share: { type: "string" },
+                      pricing: { type: "string", description: "تسعيرهم" },
+                      location: { type: "string", description: "مواقعهم" },
                     },
+                    required: ["name", "strengths", "weaknesses"],
                   },
                 },
                 financial_plan: {
@@ -133,7 +248,7 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                 },
                 expense_breakdown: {
                   type: "array",
-                  description: "تفصيل المصاريف لجدول Excel",
+                  description: "تفصيل المصاريف مع مصادر الشراء",
                   items: {
                     type: "object",
                     properties: {
@@ -141,13 +256,14 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                       amount: { type: "number" },
                       frequency: { type: "string", enum: ["once", "monthly", "yearly"] },
                       notes: { type: "string" },
+                      where_to_buy: { type: "string", description: "من أين يُشترى" },
+                      can_save: { type: "string", description: "هل يمكن التوفير وكيف" },
                     },
                     required: ["category", "amount", "frequency"],
                   },
                 },
                 revenue_streams: {
                   type: "array",
-                  description: "مصادر الإيرادات لجدول Excel",
                   items: {
                     type: "object",
                     properties: {
@@ -168,6 +284,7 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                       authority: { type: "string" },
                       cost: { type: "string" },
                       duration: { type: "string" },
+                      how_to_get: { type: "string", description: "كيف تحصل عليها خطوة بخطوة" },
                     },
                   },
                 },
@@ -210,7 +327,6 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                 },
                 action_plan: {
                   type: "array",
-                  description: "خطة العمل المقترحة بالمراحل",
                   items: {
                     type: "object",
                     properties: {
@@ -225,7 +341,6 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                 },
                 kpis: {
                   type: "array",
-                  description: "مؤشرات الأداء الرئيسية",
                   items: {
                     type: "object",
                     properties: {
@@ -235,9 +350,9 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                     },
                   },
                 },
-                summary: { type: "string", description: "ملخص تنفيذي شامل" },
+                summary: { type: "string", description: "ملخص تنفيذي شامل واحترافي - 3 فقرات على الأقل" },
               },
-              required: ["title", "business_type", "description", "feasibility_score", "risk_score", "recommendation", "market_research", "financial_plan", "expense_breakdown", "revenue_streams", "risks", "action_plan", "summary"],
+              required: ["title", "business_type", "description", "why_this_business", "feasibility_score", "risk_score", "recommendation", "market_research", "suppliers", "scenarios", "golden_tips", "step_by_step_guide", "financial_plan", "expense_breakdown", "revenue_streams", "risks", "action_plan", "summary"],
             },
           },
         }],
@@ -281,6 +396,10 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
         threats: result.threats || [],
         kpis: result.kpis || [],
         suitable_employees: result.suitable_employees || [],
+        golden_tips: result.golden_tips || [],
+        step_by_step_guide: result.step_by_step_guide || [],
+        suppliers: result.suppliers || [],
+        scenarios: result.scenarios || {},
       },
       ai_analysis: {
         market_research: result.market_research,
