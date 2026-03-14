@@ -505,6 +505,7 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
                       <TableHead className="text-right">البند</TableHead>
                       <TableHead className="text-right">المبلغ (ريال)</TableHead>
                       <TableHead className="text-right">التكرار</TableHead>
+                      <TableHead className="text-right">مصدر الشراء</TableHead>
                       <TableHead className="text-right">ملاحظات</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -518,7 +519,11 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
                             {item.frequency === 'once' ? 'مرة واحدة' : item.frequency === 'monthly' ? 'شهري' : item.frequency === 'yearly' ? 'سنوي' : item.frequency}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{item.notes || '-'}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{item.where_to_buy || '-'}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {item.notes || '-'}
+                          {item.can_save && <span className="block text-xs text-primary mt-1">💡 {item.can_save}</span>}
+                        </TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-muted/30 font-bold">
