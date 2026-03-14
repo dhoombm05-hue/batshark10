@@ -422,6 +422,7 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
                   <TableHead className="text-right">الجهة المانحة</TableHead>
                   <TableHead className="text-right">التكلفة</TableHead>
                   <TableHead className="text-right">المدة</TableHead>
+                  <TableHead className="text-right">كيفية الحصول</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -431,6 +432,7 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
                     <TableCell>{l.authority || '-'}</TableCell>
                     <TableCell>{l.cost || '-'}</TableCell>
                     <TableCell>{l.duration || '-'}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{l.how_to_get || '-'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
