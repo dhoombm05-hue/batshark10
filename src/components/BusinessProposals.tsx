@@ -473,6 +473,26 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
           </div>
         </TabsContent>
 
+        {/* Golden Tips Tab */}
+        <TabsContent value="tips" className="space-y-3">
+          {(research.golden_tips || []).length > 0 ? (
+            <div className="space-y-3">
+              {(research.golden_tips || []).map((tip: string, i: number) => (
+                <Card key={i} className="bg-card/60 border-amber-500/20">
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+                      <Star className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <p className="text-foreground text-sm leading-relaxed">{tip}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground p-8">لا توجد نصائح - جرب توليد اقتراح جديد</p>
+          )}
+        </TabsContent>
+
         {/* Excel Tab */}
         <TabsContent value="excel" className="space-y-4">
           {expenseBreakdown.length > 0 && (
