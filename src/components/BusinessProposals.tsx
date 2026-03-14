@@ -148,6 +148,9 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
       <Tabs defaultValue="financial" className="w-full">
         <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-card/80">
           <TabsTrigger value="financial" className="gap-1 text-xs"><DollarSign className="w-3 h-3" />المالية</TabsTrigger>
+          <TabsTrigger value="suppliers" className="gap-1 text-xs"><ShoppingCart className="w-3 h-3" />الموردين</TabsTrigger>
+          <TabsTrigger value="scenarios" className="gap-1 text-xs"><BarChart3 className="w-3 h-3" />السيناريوهات</TabsTrigger>
+          <TabsTrigger value="guide" className="gap-1 text-xs"><Navigation className="w-3 h-3" />دليل التنفيذ</TabsTrigger>
           <TabsTrigger value="market" className="gap-1 text-xs"><Search className="w-3 h-3" />السوق</TabsTrigger>
           <TabsTrigger value="competitors" className="gap-1 text-xs"><Users className="w-3 h-3" />المنافسين</TabsTrigger>
           <TabsTrigger value="risks" className="gap-1 text-xs"><AlertTriangle className="w-3 h-3" />المخاطر</TabsTrigger>
@@ -155,6 +158,7 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
           <TabsTrigger value="plan" className="gap-1 text-xs"><Clock className="w-3 h-3" />الخطة</TabsTrigger>
           <TabsTrigger value="licenses" className="gap-1 text-xs"><Gavel className="w-3 h-3" />التراخيص</TabsTrigger>
           <TabsTrigger value="team" className="gap-1 text-xs"><Award className="w-3 h-3" />الفريق</TabsTrigger>
+          <TabsTrigger value="tips" className="gap-1 text-xs"><Star className="w-3 h-3" />نصائح ذهبية</TabsTrigger>
           <TabsTrigger value="excel" className="gap-1 text-xs"><FileSpreadsheet className="w-3 h-3" />Excel</TabsTrigger>
         </TabsList>
 
