@@ -187,6 +187,101 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
           </div>
         </TabsContent>
 
+        {/* Suppliers Tab */}
+        <TabsContent value="suppliers" className="space-y-3">
+          {(research.suppliers || []).length > 0 ? (
+            <div className="space-y-3">
+              {(research.suppliers || []).map((s: any, i: number) => (
+                <Card key={i} className="bg-card/60">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                        <Package className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-foreground">{s.item_name}</h4>
+                          <Badge variant="outline" className="text-primary">{s.price_range}</Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                          <div><span className="text-muted-foreground">🏪 المورد:</span> <span className="text-foreground">{s.supplier_name}</span></div>
+                          <div><span className="text-muted-foreground">📍 مكان الشراء:</span> <span className="text-foreground">{s.where_to_buy || '-'}</span></div>
+                          {s.alternative && <div><span className="text-muted-foreground">💡 بديل أرخص:</span> <span className="text-foreground">{s.alternative}</span></div>}
+                          {s.warranty_info && <div><span className="text-muted-foreground">🛡️ الضمان:</span> <span className="text-foreground">{s.warranty_info}</span></div>}
+                        </div>
+                        {s.purchase_advice && <p className="text-xs text-muted-foreground bg-muted/30 rounded p-2">💬 {s.purchase_advice}</p>}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground p-8">لا توجد بيانات موردين - جرب توليد اقتراح جديد</p>
+          )}
+        </TabsContent>
+
+        {/* Scenarios Tab */}
+        <TabsContent value="scenarios" className="space-y-4">
+          {research.scenarios ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { key: 'optimistic', label: '🟢 سيناريو متفائل', color: 'border-emerald-500/30 bg-emerald-500/5', data: research.scenarios.optimistic },
+                { key: 'realistic', label: '🔵 سيناريو واقعي', color: 'border-blue-500/30 bg-blue-500/5', data: research.scenarios.realistic },
+                { key: 'pessimistic', label: '🔴 سيناريو متشائم', color: 'border-destructive/30 bg-destructive/5', data: research.scenarios.pessimistic },
+              ].map((scenario) => scenario.data && (
+                <Card key={scenario.key} className={`${scenario.color}`}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">{scenario.label}</CardTitle>
+                    {scenario.data.label && <CardDescription>{scenario.data.label}</CardDescription>}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-muted-foreground">الإيرادات الشهرية</span><span className="font-bold text-foreground">{Number(scenario.data.monthly_revenue || 0).toLocaleString()} ر.س</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">المصاريف الشهرية</span><span className="font-bold text-foreground">{Number(scenario.data.monthly_expenses || 0).toLocaleString()} ر.س</span></div>
+                      <div className="flex justify-between border-t border-border/50 pt-2"><span className="text-muted-foreground">الربح الشهري</span><span className={`font-bold ${scenario.data.monthly_profit > 0 ? 'text-emerald-400' : 'text-destructive'}`}>{Number(scenario.data.monthly_profit || 0).toLocaleString()} ر.س</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">فترة الاسترداد</span><span className="font-bold text-foreground">{scenario.data.roi_months} شهر</span></div>
+                    </div>
+                    {scenario.data.description && <p className="text-xs text-muted-foreground bg-card/50 rounded p-2">{scenario.data.description}</p>}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground p-8">لا توجد سيناريوهات - جرب توليد اقتراح جديد</p>
+          )}
+        </TabsContent>
+
+        {/* Step-by-Step Guide Tab */}
+        <TabsContent value="guide" className="space-y-3">
+          {(research.step_by_step_guide || []).length > 0 ? (
+            <div className="space-y-3">
+              {(research.step_by_step_guide || []).map((step: any, i: number) => (
+                <Card key={i} className="bg-card/60">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg shrink-0">
+                        {step.step_number || i + 1}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <h4 className="font-bold text-foreground text-base">{step.title}</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                          {step.where_to_go && <div className="bg-muted/30 rounded p-2"><span className="text-muted-foreground">📍 أين تذهب:</span> <span className="text-foreground">{step.where_to_go}</span></div>}
+                          {step.estimated_time && <div className="bg-muted/30 rounded p-2"><span className="text-muted-foreground">⏱️ الوقت:</span> <span className="text-foreground">{step.estimated_time}</span></div>}
+                          {step.estimated_cost && <div className="bg-muted/30 rounded p-2"><span className="text-muted-foreground">💰 التكلفة:</span> <span className="text-foreground">{step.estimated_cost}</span></div>}
+                          {step.documents_needed && <div className="bg-muted/30 rounded p-2"><span className="text-muted-foreground">📄 المستندات:</span> <span className="text-foreground">{step.documents_needed}</span></div>}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground p-8">لا يوجد دليل تنفيذ - جرب توليد اقتراح جديد</p>
+          )}
+        </TabsContent>
         {/* Market Tab */}
         <TabsContent value="market">
           <Card className="bg-card/80">
