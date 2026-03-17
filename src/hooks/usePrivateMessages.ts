@@ -66,12 +66,15 @@ export function useConversations() {
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
-  // Realtime
+  // Realtime - listen to both messages and conversation updates
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel('private-convos')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'private_messages' }, () => {
+        fetchConversations();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'private_conversations' }, () => {
         fetchConversations();
       })
       .subscribe();
