@@ -381,7 +381,7 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                   },
                 },
               },
-              required: ["title", "business_type", "description", "why_this_business", "feasibility_score", "risk_score", "recommendation", "market_research", "suppliers", "scenarios", "golden_tips", "step_by_step_guide", "financial_plan", "expense_breakdown", "revenue_streams", "risks", "action_plan", "summary"],
+              required: ["title", "business_type", "description", "why_this_business", "feasibility_score", "risk_score", "recommendation", "market_research", "suppliers", "scenarios", "golden_tips", "step_by_step_guide", "financial_plan", "expense_breakdown", "revenue_streams", "risks", "action_plan", "summary", "detailed_explanation", "youtube_links"],
             },
           },
         }],
