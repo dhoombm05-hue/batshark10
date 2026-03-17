@@ -121,7 +121,7 @@ async function computeEmployeeMetrics(employeeId: string, employeeSlug: string, 
   }
 
   // Performance = evaluation component (60%) + activity component (40%)
-  const performance = Math.round(Math.min(100, evalScore + activityScore));
+  const performance = Math.round(Math.min(100, evalScore + activityScore + quizScore));
 
   // ============================================
   // COMPUTE KPI ACHIEVEMENT (0-100)
