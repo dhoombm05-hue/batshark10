@@ -54,6 +54,7 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
   const [notes, setNotes] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [showExitOptions, setShowExitOptions] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   const research = proposal.ai_research || {};
