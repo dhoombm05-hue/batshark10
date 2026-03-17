@@ -81,6 +81,23 @@ async function computeEmployeeMetrics(employeeId: string, employeeSlug: string, 
     );
   }
 
+  // Also factor in quiz scores
+  let quizScore = 0;
+  if (matchedProfile) {
+    const { data: attempts } = await supabase
+      .from('quiz_attempts' as any)
+      .select('score, status')
+      .eq('user_id', matchedProfile.user_id)
+      .eq('status', 'submitted');
+    
+    const submittedAttempts = (attempts || []) as any[];
+    if (submittedAttempts.length > 0) {
+      const avgScore = submittedAttempts.reduce((s: number, a: any) => s + (Number(a.score) || 0), 0) / submittedAttempts.length;
+      // Quiz contributes up to 10 points bonus
+      quizScore = Math.min(10, Math.round(avgScore / 10));
+    }
+  }
+
   // ============================================
   // COMPUTE PERFORMANCE (0-100)
   // ============================================
@@ -105,7 +122,7 @@ async function computeEmployeeMetrics(employeeId: string, employeeSlug: string, 
   }
 
   // Performance = evaluation component (60%) + activity component (40%)
-  const performance = Math.round(Math.min(100, evalScore + activityScore));
+  const performance = Math.round(Math.min(100, evalScore + activityScore + quizScore));
 
   // ============================================
   // COMPUTE KPI ACHIEVEMENT (0-100)

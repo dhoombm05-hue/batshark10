@@ -13,8 +13,9 @@ import {
   Loader2, Shield, DollarSign, Users, Clock, BarChart3, Target, Lightbulb,
   Scale, Building2, Rocket, ThumbsUp, ThumbsDown, ArrowRight, FileSpreadsheet,
   Gavel, Search, Eye, MapPin, Calendar, RefreshCw, ChevronDown, ChevronUp,
-  Briefcase, Zap, TrendingDown, Award, ExternalLink, ShoppingCart, Drama,
-  FootprintsIcon, Star, Package, Store, Navigation
+  Briefcase, Zap, TrendingDown, Award, ExternalLink, ShoppingCart,
+  Star, Package, Store, Navigation, BookOpen, PlayCircle, Banknote,
+  HandCoins, PieChart, ArchiveX
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -53,6 +54,7 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
   const [notes, setNotes] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [showExitOptions, setShowExitOptions] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   const research = proposal.ai_research || {};
@@ -148,6 +150,8 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
       <Tabs defaultValue="financial" className="w-full">
         <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-card/80">
           <TabsTrigger value="financial" className="gap-1 text-xs"><DollarSign className="w-3 h-3" />المالية</TabsTrigger>
+          <TabsTrigger value="explanation" className="gap-1 text-xs"><BookOpen className="w-3 h-3" />شرح تفصيلي</TabsTrigger>
+          <TabsTrigger value="youtube" className="gap-1 text-xs"><PlayCircle className="w-3 h-3" />فيديوهات تعليمية</TabsTrigger>
           <TabsTrigger value="suppliers" className="gap-1 text-xs"><ShoppingCart className="w-3 h-3" />الموردين</TabsTrigger>
           <TabsTrigger value="scenarios" className="gap-1 text-xs"><BarChart3 className="w-3 h-3" />السيناريوهات</TabsTrigger>
           <TabsTrigger value="guide" className="gap-1 text-xs"><Navigation className="w-3 h-3" />دليل التنفيذ</TabsTrigger>
@@ -185,6 +189,97 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        {/* Detailed Explanation Tab */}
+        <TabsContent value="explanation" className="space-y-4">
+          {research.detailed_explanation ? (
+            <Card className="bg-card/80 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  شرح تفصيلي كامل للبزنس
+                </CardTitle>
+                <CardDescription>كل ما تحتاج معرفته عن هذا البزنس من الصفر</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="prose max-w-none">
+                  {research.detailed_explanation.split('\n').map((para: string, i: number) => (
+                    para.trim() ? <p key={i} className="text-foreground leading-relaxed mb-4 text-base">{para}</p> : null
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-card/60">
+              <CardContent className="p-8 text-center text-muted-foreground">
+                <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p>لا يوجد شرح تفصيلي - جرب توليد اقتراح جديد</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* YouTube Links Tab */}
+        <TabsContent value="youtube" className="space-y-4">
+          {(research.youtube_links || []).length > 0 ? (
+            <div className="space-y-3">
+              <Card className="bg-gradient-to-br from-destructive/5 to-destructive/10 border-destructive/20">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <PlayCircle className="w-8 h-8 text-destructive" />
+                  <div>
+                    <p className="font-bold text-foreground">فيديوهات تعليمية مقترحة</p>
+                    <p className="text-xs text-muted-foreground">ابحث عن هذه الفيديوهات في يوتيوب لتعلّم كل شيء عن هذا البزنس</p>
+                  </div>
+                </CardContent>
+              </Card>
+              {(research.youtube_links || []).map((video: any, i: number) => {
+                const categoryLabels: Record<string, { label: string; emoji: string; color: string }> = {
+                  beginner: { label: 'للمبتدئين', emoji: '🟢', color: 'bg-emerald-500/20 text-emerald-400' },
+                  advanced: { label: 'متقدم', emoji: '🔵', color: 'bg-blue-500/20 text-blue-400' },
+                  success_story: { label: 'قصة نجاح', emoji: '⭐', color: 'bg-amber-500/20 text-amber-400' },
+                  equipment: { label: 'معدات وأدوات', emoji: '🔧', color: 'bg-violet-500/20 text-violet-400' },
+                  marketing: { label: 'تسويق', emoji: '📢', color: 'bg-rose-500/20 text-rose-400' },
+                };
+                const cat = categoryLabels[video.category] || categoryLabels.beginner;
+                return (
+                  <Card key={i} className="bg-card/60 hover:bg-card/80 transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
+                          <PlayCircle className="w-6 h-6 text-destructive" />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-foreground">{video.title}</h4>
+                            <Badge className={cat.color}>{cat.emoji} {cat.label}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{video.description}</p>
+                          <a
+                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(video.search_query)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm text-destructive hover:text-destructive/80 font-medium"
+                          >
+                            <Search className="w-3 h-3" />
+                            ابحث في يوتيوب: "{video.search_query}"
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="bg-card/60">
+              <CardContent className="p-8 text-center text-muted-foreground">
+                <PlayCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p>لا توجد فيديوهات تعليمية - جرب توليد اقتراح جديد</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Suppliers Tab */}

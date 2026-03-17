@@ -92,6 +92,20 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
 
 8. **نصائح ذهبية**: نصائح عملية من واقع السوق لضمان النجاح.
 
+9. **روابط تعليمية**: قدم 5-8 روابط يوتيوب حقيقية تشرح هذا النوع من البزنس. ابحث عن فيديوهات عربية أو إنجليزية تعليمية تشرح:
+   - كيف تبدأ هذا البزنس من الصفر
+   - أخطاء يجب تجنبها
+   - قصص نجاح في نفس المجال
+   - شرح المعدات والأدوات المطلوبة
+   ملاحظة: قدم روابط وصفية واضحة بعنوان كل فيديو ووصف مختصر
+
+10. **شرح تفصيلي كامل**: اكتب شرحاً مفصلاً وعميقاً للبزنس (5 فقرات على الأقل) يغطي:
+    - ما هو هذا البزنس بالضبط وكيف يعمل
+    - من هم العملاء وكيف تصل لهم
+    - ما المهارات المطلوبة وكيف تكتسبها
+    - التحديات الشائعة وكيف تتغلب عليها
+    - رؤية مستقبلية لنمو البزنس
+
 كن محترفاً جداً وأعطِ تفاصيل حقيقية وعملية كأنك مستشار يتقاضى مليون ريال.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -351,8 +365,23 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                   },
                 },
                 summary: { type: "string", description: "ملخص تنفيذي شامل واحترافي - 3 فقرات على الأقل" },
+                detailed_explanation: { type: "string", description: "شرح تفصيلي كامل وعميق للبزنس - 5 فقرات على الأقل يغطي ماهية البزنس وكيف يعمل والعملاء والمهارات والتحديات والرؤية المستقبلية" },
+                youtube_links: {
+                  type: "array",
+                  description: "روابط يوتيوب تعليمية تشرح هذا النوع من البزنس",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string", description: "عنوان الفيديو" },
+                      description: { type: "string", description: "وصف مختصر لمحتوى الفيديو" },
+                      search_query: { type: "string", description: "عبارة البحث المقترحة في يوتيوب للعثور على فيديوهات مشابهة" },
+                      category: { type: "string", enum: ["beginner", "advanced", "success_story", "equipment", "marketing"], description: "تصنيف الفيديو" },
+                    },
+                    required: ["title", "description", "search_query"],
+                  },
+                },
               },
-              required: ["title", "business_type", "description", "why_this_business", "feasibility_score", "risk_score", "recommendation", "market_research", "suppliers", "scenarios", "golden_tips", "step_by_step_guide", "financial_plan", "expense_breakdown", "revenue_streams", "risks", "action_plan", "summary"],
+              required: ["title", "business_type", "description", "why_this_business", "feasibility_score", "risk_score", "recommendation", "market_research", "suppliers", "scenarios", "golden_tips", "step_by_step_guide", "financial_plan", "expense_breakdown", "revenue_streams", "risks", "action_plan", "summary", "detailed_explanation", "youtube_links"],
             },
           },
         }],
@@ -390,6 +419,8 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
       ai_research: {
         why_this_business: result.why_this_business,
         summary: result.summary,
+        detailed_explanation: result.detailed_explanation || '',
+        youtube_links: result.youtube_links || [],
         strengths: result.strengths || [],
         weaknesses: result.weaknesses || [],
         opportunities: result.opportunities || [],
