@@ -365,6 +365,21 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
                   },
                 },
                 summary: { type: "string", description: "ملخص تنفيذي شامل واحترافي - 3 فقرات على الأقل" },
+                detailed_explanation: { type: "string", description: "شرح تفصيلي كامل وعميق للبزنس - 5 فقرات على الأقل يغطي ماهية البزنس وكيف يعمل والعملاء والمهارات والتحديات والرؤية المستقبلية" },
+                youtube_links: {
+                  type: "array",
+                  description: "روابط يوتيوب تعليمية تشرح هذا النوع من البزنس",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string", description: "عنوان الفيديو" },
+                      description: { type: "string", description: "وصف مختصر لمحتوى الفيديو" },
+                      search_query: { type: "string", description: "عبارة البحث المقترحة في يوتيوب للعثور على فيديوهات مشابهة" },
+                      category: { type: "string", enum: ["beginner", "advanced", "success_story", "equipment", "marketing"], description: "تصنيف الفيديو" },
+                    },
+                    required: ["title", "description", "search_query"],
+                  },
+                },
               },
               required: ["title", "business_type", "description", "why_this_business", "feasibility_score", "risk_score", "recommendation", "market_research", "suppliers", "scenarios", "golden_tips", "step_by_step_guide", "financial_plan", "expense_breakdown", "revenue_streams", "risks", "action_plan", "summary"],
             },
