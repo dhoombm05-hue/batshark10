@@ -122,11 +122,14 @@ export function usePrivateMessages(conversationId: string | null) {
       .then(({ data }) => {
         setMessages((data as PrivateMessage[]) || []);
         setLoading(false);
-        // Mark as read
+        // Mark as read and update local state immediately
         if (user && data?.length) {
           const unread = data.filter(m => !m.is_read && m.sender_id !== user.id).map(m => m.id);
           if (unread.length > 0) {
-            supabase.from('private_messages').update({ is_read: true } as any).in('id', unread).then(() => {});
+            supabase.from('private_messages').update({ is_read: true } as any).in('id', unread).then(() => {
+              // Update local messages to reflect read status
+              setMessages(prev => prev.map(m => unread.includes(m.id) ? { ...m, is_read: true } : m));
+            });
           }
         }
       });
