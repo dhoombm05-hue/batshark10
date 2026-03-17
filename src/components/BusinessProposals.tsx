@@ -148,6 +148,8 @@ function ProposalDetail({ proposal, onBack, onAccept, onReject, accepting, isCeo
       <Tabs defaultValue="financial" className="w-full">
         <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-card/80">
           <TabsTrigger value="financial" className="gap-1 text-xs"><DollarSign className="w-3 h-3" />المالية</TabsTrigger>
+          <TabsTrigger value="explanation" className="gap-1 text-xs"><BookOpen className="w-3 h-3" />شرح تفصيلي</TabsTrigger>
+          <TabsTrigger value="youtube" className="gap-1 text-xs"><PlayCircle className="w-3 h-3" />فيديوهات تعليمية</TabsTrigger>
           <TabsTrigger value="suppliers" className="gap-1 text-xs"><ShoppingCart className="w-3 h-3" />الموردين</TabsTrigger>
           <TabsTrigger value="scenarios" className="gap-1 text-xs"><BarChart3 className="w-3 h-3" />السيناريوهات</TabsTrigger>
           <TabsTrigger value="guide" className="gap-1 text-xs"><Navigation className="w-3 h-3" />دليل التنفيذ</TabsTrigger>
