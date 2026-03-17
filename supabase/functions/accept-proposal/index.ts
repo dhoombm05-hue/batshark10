@@ -32,11 +32,9 @@ serve(async (req) => {
       .toLowerCase()
       .slice(0, 50) + '-' + Date.now().toString(36);
 
-    // 1. Create project
     const financialPlan = proposal.financial_plan || {};
-    const monthlyRevenue = parseFloat(String(financialPlan.expected_monthly_revenue || '0').replace(/[^\d.]/g, '')) || 0;
-    const monthlyExpenses = parseFloat(String(financialPlan.monthly_expenses || '0').replace(/[^\d.]/g, '')) || 0;
 
+    // 1. Create project
     const { data: project, error: projectError } = await supabase.from("projects").insert({
       name: proposal.title,
       slug,
@@ -76,7 +74,7 @@ serve(async (req) => {
       }
     }
 
-    // 4. Create initial journal entry
+    // 4. Create initial journal entry for startup capital
     const startupCost = parseFloat(String(financialPlan.startup_cost || '0').replace(/[^\d.]/g, '')) || 0;
     if (startupCost > 0) {
       const { data: journalEntry } = await supabase.from("journal_entries").insert({
@@ -105,7 +103,87 @@ serve(async (req) => {
       }
     }
 
-    // 5. Update proposal status
+    // 5. Create monthly data template (12 months)
+    const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    const monthlyRevenue = parseFloat(String(financialPlan.expected_monthly_revenue || '0').replace(/[^\d.]/g, '')) || 0;
+    const monthlyExpenses = parseFloat(String(financialPlan.monthly_expenses || '0').replace(/[^\d.]/g, '')) || 0;
+    
+    const monthlyData = months.map((month, i) => ({
+      project_id: project.id,
+      month,
+      month_order: i + 1,
+      revenue: i < 3 ? Math.round(monthlyRevenue * 0.3) : i < 6 ? Math.round(monthlyRevenue * 0.6) : monthlyRevenue,
+      expenses: monthlyExpenses,
+      profit: (i < 3 ? Math.round(monthlyRevenue * 0.3) : i < 6 ? Math.round(monthlyRevenue * 0.6) : monthlyRevenue) - monthlyExpenses,
+    }));
+    await supabase.from("project_monthly_data").insert(monthlyData);
+
+    // 6. Create custom table for this project's financial tracking
+    const { data: ceoRole } = await supabase.from("user_roles").select("user_id").eq("role", "ceo").limit(1).single();
+    const ceoUserId = ceoRole?.user_id;
+
+    if (ceoUserId) {
+      await supabase.from("custom_tables").insert({
+        name: `جدول ${proposal.title} - المالي`,
+        table_type: 'financial',
+        project_id: project.id,
+        created_by: ceoUserId,
+        columns: JSON.stringify([
+          { key: 'item', name: 'البند', type: 'text' },
+          { key: 'amount', name: 'المبلغ', type: 'number' },
+          { key: 'frequency', name: 'التكرار', type: 'text' },
+          { key: 'status', name: 'الحالة', type: 'text' },
+          { key: 'notes', name: 'ملاحظات', type: 'text' },
+        ]),
+      });
+    }
+
+    // 7. Create project analysis entries
+    const research = proposal.ai_research || {};
+    const analysisEntries = [];
+    
+    if (research.why_this_business) {
+      analysisEntries.push({ project_id: project.id, content: `لماذا هذا البزنس: ${research.why_this_business}`, sort_order: 1 });
+    }
+    if (research.summary) {
+      analysisEntries.push({ project_id: project.id, content: `الملخص التنفيذي: ${research.summary}`, sort_order: 2 });
+    }
+    
+    const risks = proposal.risk_assessment?.risks || [];
+    if (risks.length > 0) {
+      analysisEntries.push({ project_id: project.id, content: `تحليل المخاطر: ${risks.map((r: any) => `${r.risk} (${r.severity}) - ${r.mitigation}`).join(' | ')}`, sort_order: 3 });
+    }
+
+    if (analysisEntries.length > 0) {
+      await supabase.from("project_analysis").insert(analysisEntries);
+    }
+
+    // 8. Create chat room for the new project
+    if (ceoUserId) {
+      await supabase.from("chat_rooms").insert({
+        name: `💼 ${proposal.title}`,
+        description: `غرفة مناقشة مشروع ${proposal.title} - تم إنشاؤها تلقائياً`,
+        type: 'project',
+        project_id: project.id,
+        created_by: ceoUserId,
+      });
+    }
+
+    // 9. Send notification to all users
+    const { data: allProfiles } = await supabase.from("profiles").select("user_id");
+    if (allProfiles && allProfiles.length > 0) {
+      const notifications = allProfiles.map(p => ({
+        user_id: p.user_id,
+        title: '🚀 مشروع جديد!',
+        body: `تم إنشاء مشروع "${proposal.title}" من نظام المقترحات الذكية`,
+        type: 'project',
+        link: '/projects',
+        entity_id: project.id,
+      }));
+      await supabase.from("notifications").insert(notifications);
+    }
+
+    // 10. Update proposal status
     await supabase.from("business_proposals").update({
       status: "accepted",
       ceo_decision: "accepted",
@@ -119,7 +197,7 @@ serve(async (req) => {
       success: true,
       project_id: project.id,
       project_slug: slug,
-      message: `تم إنشاء مشروع "${proposal.title}" وربطه بالكامل`,
+      message: `تم إنشاء مشروع "${proposal.title}" وربطه بالكامل (قيود محاسبية + مصاريف + إيرادات + بيانات شهرية + جدول مالي + تحليلات + غرفة دردشة)`,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

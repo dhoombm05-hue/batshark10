@@ -14,7 +14,7 @@ function extractJsonFromResponse(response: string): any {
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -26,7 +26,6 @@ Deno.serve(async (req) => {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Support both: cron calls (with anon key) and user calls (with user token)
     const authHeader = req.headers.get("Authorization");
     let isCronCall = false;
     
@@ -34,145 +33,165 @@ Deno.serve(async (req) => {
       const token = authHeader.replace("Bearer ", "");
       const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
       if (token === anonKey) {
-        // Cron call with anon key - allowed
         isCronCall = true;
       } else {
-        // User call - verify CEO role
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error("Unauthorized");
         const { data: roleData } = await supabase.rpc("has_role", { _user_id: user.id, _role: "ceo" });
         if (!roleData) throw new Error("Only CEO can generate quizzes");
       }
     } else {
-      throw new Error("No authorization");
+      isCronCall = true; // Allow no-auth for cron
+    }
+
+    // Check if quizzes already generated this week
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+    
+    const { data: existingQuizzes } = await supabase
+      .from("quizzes")
+      .select("id")
+      .eq("week_number", weekNumber);
+    
+    if (existingQuizzes && existingQuizzes.length > 0) {
+      console.log(`Quizzes already exist for week ${weekNumber}, skipping generation`);
+      return new Response(JSON.stringify({ success: true, message: `Quizzes already generated for week ${weekNumber}`, skipped: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Get all employees
     const { data: employees, error: empError } = await supabase.from("employees").select("id, name, position, department");
     if (empError || !employees?.length) throw new Error("No employees found");
 
-    const now = new Date();
-    // Deadline: next day 9AM Saudi (6AM UTC) = 12 hours from 9PM Saudi
+    // Deadline: next day 9AM Saudi (6AM UTC) = 12 hours
     const deadlineDate = new Date(now);
     deadlineDate.setUTCDate(deadlineDate.getUTCDate() + 1);
-    deadlineDate.setUTCHours(6, 0, 0, 0); // 9AM Saudi = 6AM UTC
-    const deadline = deadlineDate;
-    // Calculate week number (ISO week)
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+    deadlineDate.setUTCHours(6, 0, 0, 0);
+
+    // Get CEO user for created_by
+    const { data: ceoRole } = await supabase.from("user_roles").select("user_id").eq("role", "ceo").limit(1).single();
+    const creatorId = ceoRole?.user_id || "00000000-0000-0000-0000-000000000000";
 
     const results: any[] = [];
 
-    // Generate a unique quiz for each employee
     for (const emp of employees) {
-      const systemPrompt = `أنت معلّم ومدرب محترف تقوم بإنشاء اختبار تعليمي أسبوعي مخصص للموظف "${emp.name}" (${emp.position} - ${emp.department}) حول نظام إدارة الأعمال BatShark.
+      try {
+        const systemPrompt = `أنت معلّم ومدرب محترف تقوم بإنشاء اختبار تعليمي أسبوعي مخصص للموظف "${emp.name}" (${emp.position} - ${emp.department}).
 
-الهدف: تعليم الموظف وتطوير مهاراته وليس تحديه أو إحراجه. الأسئلة يجب أن تكون:
-✅ تعليمية: تعلّم الموظف شيئاً جديداً في كل سؤال
-✅ عملية: تركز على المهارات اليومية المطلوبة في العمل
-✅ متنوعة: تغطي مجالات مختلفة كل أسبوع (لا تتكرر)
-✅ تطويرية: تساعد في تحسين الأداء الوظيفي
-✅ شاملة: تشمل معلومات عامة عن الإدارة والأعمال وليس فقط النظام
+الهدف: تعليم الموظف وتطوير مهاراته. الأسئلة يجب أن تكون:
+✅ تعليمية وعملية ومتنوعة
+✅ تغطي مجالات مختلفة كل أسبوع
 
-المجالات التعليمية (نوّع بينها كل أسبوع):
-1. كيفية استخدام نظام BatShark (لوحات التحكم، المشاريع، المهام، الجداول، التقارير)
-2. مهارات إدارية وقيادية عامة
-3. مفاهيم مالية ومحاسبية أساسية
-4. مهارات التواصل والعمل الجماعي
-5. أفضل ممارسات إدارة المشاريع
-6. مهارات تقنية وتحليل بيانات
-7. إدارة الوقت والإنتاجية
-8. خدمة العملاء والتعامل مع الشركاء
-9. التطوير الذاتي والمهني
-10. الأمن المعلوماتي وحماية البيانات
+المجالات: إدارة الأعمال، مهارات قيادية، مفاهيم مالية، تواصل وعمل جماعي، إدارة مشاريع، تحليل بيانات، إدارة وقت، خدمة عملاء، تطوير ذاتي، أمن معلوماتي
 
-📝 ملاحظة مهمة: في حقل "explanation" اكتب شرحاً تعليمياً مفصلاً (3-4 أسطر) يوضح المعلومة ويعلّم الموظف. هذا هو الجزء الأهم!
+📝 في "explanation" اكتب شرحاً تعليمياً مفصلاً (3-4 أسطر).
 
-أنشئ 25 سؤال فريد بالعربية:
-- 15 سؤال اختيار من متعدد (4 خيارات A,B,C,D) - question_type: "mcq"
-- 5 أسئلة صح وخطأ - question_type: "true_false"
-- 5 أسئلة تحريرية قصيرة - question_type: "text"
+أنشئ 25 سؤال بالعربية:
+- 15 اختيار من متعدد (4 خيارات A,B,C,D) - question_type: "mcq"
+- 5 صح وخطأ - question_type: "true_false"
+- 5 تحريرية قصيرة - question_type: "text"
 
-أجب بصيغة JSON فقط:
-{"questions":[{"question_text":"...","question_type":"mcq","options":[{"label":"A","text":"..."},{"label":"B","text":"..."},{"label":"C","text":"..."},{"label":"D","text":"..."}],"correct_answer":"A","explanation":"شرح تعليمي مفصل يوضح الإجابة الصحيحة ويعطي معلومة مفيدة","points":4}]}
+JSON فقط:
+{"questions":[{"question_text":"...","question_type":"mcq","options":[{"label":"A","text":"..."},{"label":"B","text":"..."},{"label":"C","text":"..."},{"label":"D","text":"..."}],"correct_answer":"A","explanation":"شرح تعليمي مفصل","points":4}]}
 
 لأسئلة صح/خطأ: options=[{"label":"صح","text":"صح"},{"label":"خطأ","text":"خطأ"}]
 لأسئلة التحرير: options=[] و correct_answer=كلمات مفتاحية`;
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `أنشئ اختبار فريد للموظف ${emp.name} - الأسبوع ${weekNumber} - تاريخ ${now.toLocaleDateString('ar-SA')}` },
-          ],
-          temperature: 0.8,
-        }),
-      });
+        const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}` },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: `أنشئ اختبار فريد للموظف ${emp.name} - الأسبوع ${weekNumber} - تاريخ ${now.toLocaleDateString('ar-SA')}` },
+            ],
+            temperature: 0.8,
+          }),
+        });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error("AI gateway error:", response.status, errText);
-        throw new Error(`AI gateway error: ${response.status}`);
+        if (!response.ok) {
+          console.error(`AI error for ${emp.name}: ${response.status}`);
+          continue;
+        }
+
+        const rawText = await response.text();
+        let aiResult;
+        try { aiResult = JSON.parse(rawText); } catch {
+          console.error(`Parse error for ${emp.name}`);
+          continue;
+        }
+        const content = aiResult.choices?.[0]?.message?.content || "";
+        if (!content) continue;
+        
+        const parsed = extractJsonFromResponse(content);
+
+        const { data: quiz, error: quizError } = await supabase.from("quizzes").insert({
+          title: `اختبار ${emp.name} - الأسبوع ${weekNumber}`,
+          description: `اختبار أسبوعي مخصص لـ ${emp.name}`,
+          quiz_date: now.toISOString().split("T")[0],
+          deadline: deadlineDate.toISOString(),
+          total_questions: 25,
+          duration_hours: 12,
+          status: "active",
+          created_by: creatorId,
+          employee_id: emp.id,
+          employee_name: emp.name,
+          week_number: weekNumber,
+        }).select().single();
+
+        if (quizError) { console.error(`Quiz insert error for ${emp.name}:`, quizError); continue; }
+
+        const questions = parsed.questions.map((q: any, i: number) => ({
+          quiz_id: quiz.id,
+          question_text: q.question_text,
+          question_type: q.question_type,
+          options: q.options,
+          correct_answer: q.correct_answer,
+          explanation: q.explanation || "",
+          sort_order: i + 1,
+          points: q.points || 4,
+        }));
+
+        const { error: qError } = await supabase.from("quiz_questions").insert(questions);
+        if (qError) console.error(`Questions insert error for ${emp.name}:`, qError);
+
+        results.push({ employee: emp.name, quiz_id: quiz.id });
+      } catch (empErr) {
+        console.error(`Error generating quiz for ${emp.name}:`, empErr);
+        continue;
       }
+    }
 
-      const rawText = await response.text();
-      let aiResult;
-      try {
-        aiResult = JSON.parse(rawText);
-      } catch (parseErr) {
-        console.error("Failed to parse AI response:", rawText.substring(0, 500));
-        throw new Error("Failed to parse AI gateway response");
+    // Send notifications to all employees that quizzes are ready
+    if (results.length > 0) {
+      const { data: allProfiles } = await supabase.from("profiles").select("user_id, employee_id");
+      
+      const notifications = [];
+      for (const profile of (allProfiles || [])) {
+        if (profile.employee_id) {
+          notifications.push({
+            user_id: profile.user_id,
+            title: '📝 اختبار أسبوعي جديد!',
+            body: `تم إنشاء اختبارك التعليمي للأسبوع ${weekNumber}. لديك 12 ساعة لإكماله.`,
+            type: 'quiz',
+            link: '/quizzes',
+          });
+        }
       }
-      const content = aiResult.choices?.[0]?.message?.content || "";
-      if (!content) throw new Error("Empty AI response content");
-      console.log("AI content for", emp.name, "length:", content.length);
-      const parsed = extractJsonFromResponse(content);
-
-      // Create quiz for this employee
-      // Get a CEO user for created_by
-      const { data: ceoRole } = await supabase.from("user_roles").select("user_id").eq("role", "ceo").limit(1).single();
-      const creatorId = ceoRole?.user_id || "00000000-0000-0000-0000-000000000000";
-
-      const { data: quiz, error: quizError } = await supabase.from("quizzes").insert({
-        title: `اختبار ${emp.name} - الأسبوع ${weekNumber}`,
-        description: `اختبار أسبوعي مخصص لـ ${emp.name}`,
-        quiz_date: now.toISOString().split("T")[0],
-        deadline: deadline.toISOString(),
-        total_questions: 25,
-        duration_hours: 12,
-        status: "active",
-        created_by: creatorId,
-        employee_id: emp.id,
-        employee_name: emp.name,
-        week_number: weekNumber,
-      }).select().single();
-
-      if (quizError) throw quizError;
-
-      const questions = parsed.questions.map((q: any, i: number) => ({
-        quiz_id: quiz.id,
-        question_text: q.question_text,
-        question_type: q.question_type,
-        options: q.options,
-        correct_answer: q.correct_answer,
-        explanation: q.explanation || "",
-        sort_order: i + 1,
-        points: q.points || 4,
-      }));
-
-      const { error: qError } = await supabase.from("quiz_questions").insert(questions);
-      if (qError) throw qError;
-
-      results.push({ employee: emp.name, quiz_id: quiz.id });
+      
+      if (notifications.length > 0) {
+        await supabase.from("notifications").insert(notifications);
+      }
     }
 
     return new Response(JSON.stringify({ success: true, quizzes_created: results.length, results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
+    console.error("generate-quiz error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
