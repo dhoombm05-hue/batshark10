@@ -13,8 +13,9 @@ import {
   Loader2, Shield, DollarSign, Users, Clock, BarChart3, Target, Lightbulb,
   Scale, Building2, Rocket, ThumbsUp, ThumbsDown, ArrowRight, FileSpreadsheet,
   Gavel, Search, Eye, MapPin, Calendar, RefreshCw, ChevronDown, ChevronUp,
-  Briefcase, Zap, TrendingDown, Award, ExternalLink, ShoppingCart, Drama,
-  FootprintsIcon, Star, Package, Store, Navigation
+  Briefcase, Zap, TrendingDown, Award, ExternalLink, ShoppingCart,
+  Star, Package, Store, Navigation, BookOpen, PlayCircle, Banknote,
+  HandCoins, PieChart, ArchiveX
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
