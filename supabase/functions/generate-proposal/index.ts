@@ -419,6 +419,8 @@ ${companyContext.previousProposals.join(', ') || 'لا يوجد'}
       ai_research: {
         why_this_business: result.why_this_business,
         summary: result.summary,
+        detailed_explanation: result.detailed_explanation || '',
+        youtube_links: result.youtube_links || [],
         strengths: result.strengths || [],
         weaknesses: result.weaknesses || [],
         opportunities: result.opportunities || [],
