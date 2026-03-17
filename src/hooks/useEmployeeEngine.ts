@@ -96,6 +96,7 @@ async function computeEmployeeMetrics(employeeId: string, employeeSlug: string, 
       // Quiz contributes up to 10 points bonus
       quizScore = Math.min(10, Math.round(avgScore / 10));
     }
+  }
 
   // ============================================
   // COMPUTE PERFORMANCE (0-100)
