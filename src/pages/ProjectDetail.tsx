@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, DollarSign, TrendingUp, Users, Megaphone, Activity, Plus, History, RotateCcw, Settings, Shield } from 'lucide-react';
+import { ArrowRight, DollarSign, TrendingUp, Users, Megaphone, Activity, Plus, History, RotateCcw, Settings, Shield, Building2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import Layout from '@/components/Layout';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -11,6 +11,7 @@ import AskMeDialog from '@/components/AskMeDialog';
 import ExpenseRow from '@/components/ExpenseRow';
 import AuditLogDialog from '@/components/AuditLogDialog';
 import PrintButton from '@/components/PrintButton';
+import ProjectManagement from '@/components/ProjectManagement';
 import ActivityFeed from '@/components/ActivityFeed';
 import { usePageViewTracker } from '@/hooks/useAutoTracker';
 import { useProject, useProjectMonthlyData, useProjectExpenses, useProjectAnalysis, useAddRecord, useDeleteRecord, useUpdateField } from '@/hooks/useProjects';
@@ -60,6 +61,7 @@ export default function ProjectDetail() {
   usePageViewTracker(project?.name, project?.id, project?.name);
 
   const [showProjectHistory, setShowProjectHistory] = useState(false);
+  const [showManagement, setShowManagement] = useState(false);
   const [addingExpense, setAddingExpense] = useState(false);
   const [newExpCategory, setNewExpCategory] = useState('');
   const [newExpAmount, setNewExpAmount] = useState('');
@@ -115,7 +117,7 @@ export default function ProjectDetail() {
           <EditableField table="projects" recordId={project.id} field="name" value={project.name} valueClassName="text-2xl font-heading font-bold text-foreground" onHistoryClick={() => setShowProjectHistory(true)} />
           <EditableField table="projects" recordId={project.id} field="description" value={project.description} valueClassName="text-sm text-muted-foreground" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <PrintButton title={`طباعة ${project.name}`} />
           <button onClick={() => setShowProjectHistory(true)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-accent/10 text-accent rounded-lg hover:bg-accent/20 transition-colors">
             <History className="w-3.5 h-3.5" /> سجل التعديلات
@@ -123,6 +125,11 @@ export default function ProjectDetail() {
           <button onClick={handleRecalculate} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-warning/10 text-warning rounded-lg hover:bg-warning/20 transition-colors">
             <RotateCcw className="w-3.5 h-3.5" /> إعادة احتساب
           </button>
+          {isCEO && (
+            <button onClick={() => setShowManagement(true)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-destructive/10 text-destructive rounded-lg hover:bg-destructive/20 transition-colors">
+              <Building2 className="w-3.5 h-3.5" /> إدارة البزنس
+            </button>
+          )}
         </div>
       </motion.div>
 
@@ -338,6 +345,13 @@ export default function ProjectDetail() {
         title={project.name}
       />
       <AskMeDialog pageKey="project" />
+      {isCEO && (
+        <ProjectManagement
+          open={showManagement}
+          onOpenChange={setShowManagement}
+          project={{ ...project, ownership_percentage: (project as any).ownership_percentage }}
+        />
+      )}
     </Layout>
   );
 }

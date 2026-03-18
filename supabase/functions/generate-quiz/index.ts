@@ -165,7 +165,7 @@ JSON فقط:
       }
     }
 
-    // Send notifications to all employees that quizzes are ready
+    // Send notifications and auto-post news
     if (results.length > 0) {
       const { data: allProfiles } = await supabase.from("profiles").select("user_id, employee_id");
       
@@ -185,6 +185,16 @@ JSON فقط:
       if (notifications.length > 0) {
         await supabase.from("notifications").insert(notifications);
       }
+
+      // Auto-post news announcement
+      await supabase.from("news").insert({
+        title: `📝 اختبارات الأسبوع ${weekNumber} جاهزة!`,
+        content: `تم إنشاء ${results.length} اختبار أسبوعي جديد لجميع الموظفين. الموعد النهائي للتسليم: 12 ساعة من الآن.\n\nالموظفين: ${results.map(r => r.employee).join('، ')}\n\nتوجه لصفحة الاختبارات لبدء اختبارك الآن! 🚀`,
+        author_id: creatorId,
+        author_name: '🤖 النظام التلقائي',
+        content_type: 'text',
+        is_pinned: false,
+      });
     }
 
     return new Response(JSON.stringify({ success: true, quizzes_created: results.length, results }), {

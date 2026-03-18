@@ -9,6 +9,7 @@ import {
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useNews, useNewsReadStatus } from '@/hooks/useNews';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import ThemeSettings from '@/components/ThemeSettings';
 import logo from '@/assets/batshark-logo-main.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -107,12 +108,16 @@ function NavSection({
   location,
   onNav,
   newsUnread,
+  pmUnread,
+  chatUnread,
 }: {
   group: typeof navGroups[0];
   collapsed: boolean;
   location: { pathname: string };
   onNav: () => void;
   newsUnread: number;
+  pmUnread: number;
+  chatUnread: number;
 }) {
   const groupColors = colorMap[group.groupColor];
 
@@ -164,6 +169,16 @@ function NavSection({
                 {newsUnread}
               </span>
             )}
+            {item.path === '/messages' && pmUnread > 0 && (
+              <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pulse">
+                {pmUnread}
+              </span>
+            )}
+            {item.path === '/chat' && chatUnread > 0 && (
+              <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pulse">
+                {chatUnread}
+              </span>
+            )}
           </Link>
         );
       })}
@@ -181,6 +196,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { readIds, unreadCount } = useNewsReadStatus();
   const newsUnread = unreadCount(allNews.map(n => n.id));
   const latestUnreadNews = allNews.find((item) => !readIds.includes(item.id));
+  const { pmUnread, chatUnread } = useUnreadCounts();
 
   const currentTheme = prefs?.theme || 'light';
 
@@ -292,6 +308,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               location={location}
               onNav={() => setMobileOpen(false)}
               newsUnread={newsUnread}
+              pmUnread={pmUnread}
+              chatUnread={chatUnread}
             />
           ))}
         </nav>
