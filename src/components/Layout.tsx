@@ -9,6 +9,7 @@ import {
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useNews, useNewsReadStatus } from '@/hooks/useNews';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import ThemeSettings from '@/components/ThemeSettings';
 import logo from '@/assets/batshark-logo-main.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
