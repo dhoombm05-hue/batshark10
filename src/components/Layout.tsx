@@ -306,6 +306,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               location={location}
               onNav={() => setMobileOpen(false)}
               newsUnread={newsUnread}
+              pmUnread={pmUnread}
+              chatUnread={chatUnread}
             />
           ))}
         </nav>
