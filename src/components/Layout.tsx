@@ -114,6 +114,8 @@ function NavSection({
   location: { pathname: string };
   onNav: () => void;
   newsUnread: number;
+  pmUnread: number;
+  chatUnread: number;
 }) {
   const groupColors = colorMap[group.groupColor];
 
