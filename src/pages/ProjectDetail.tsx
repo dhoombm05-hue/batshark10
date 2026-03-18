@@ -11,6 +11,7 @@ import AskMeDialog from '@/components/AskMeDialog';
 import ExpenseRow from '@/components/ExpenseRow';
 import AuditLogDialog from '@/components/AuditLogDialog';
 import PrintButton from '@/components/PrintButton';
+import ProjectManagement from '@/components/ProjectManagement';
 import ActivityFeed from '@/components/ActivityFeed';
 import { usePageViewTracker } from '@/hooks/useAutoTracker';
 import { useProject, useProjectMonthlyData, useProjectExpenses, useProjectAnalysis, useAddRecord, useDeleteRecord, useUpdateField } from '@/hooks/useProjects';
