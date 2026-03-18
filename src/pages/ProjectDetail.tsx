@@ -345,6 +345,13 @@ export default function ProjectDetail() {
         title={project.name}
       />
       <AskMeDialog pageKey="project" />
+      {isCEO && (
+        <ProjectManagement
+          open={showManagement}
+          onOpenChange={setShowManagement}
+          project={{ ...project, ownership_percentage: (project as any).ownership_percentage }}
+        />
+      )}
     </Layout>
   );
 }
