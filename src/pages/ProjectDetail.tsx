@@ -61,6 +61,7 @@ export default function ProjectDetail() {
   usePageViewTracker(project?.name, project?.id, project?.name);
 
   const [showProjectHistory, setShowProjectHistory] = useState(false);
+  const [showManagement, setShowManagement] = useState(false);
   const [addingExpense, setAddingExpense] = useState(false);
   const [newExpCategory, setNewExpCategory] = useState('');
   const [newExpAmount, setNewExpAmount] = useState('');
