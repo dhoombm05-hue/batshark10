@@ -1625,6 +1625,56 @@ export type Database = {
           },
         ]
       }
+      project_ownership: {
+        Row: {
+          action_type: string
+          buyer_name: string | null
+          created_at: string
+          executed_by: string
+          id: string
+          notes: string | null
+          percentage_sold: number
+          project_id: string
+          remaining_ownership: number
+          sale_amount: number | null
+          sale_date: string | null
+        }
+        Insert: {
+          action_type?: string
+          buyer_name?: string | null
+          created_at?: string
+          executed_by?: string
+          id?: string
+          notes?: string | null
+          percentage_sold?: number
+          project_id: string
+          remaining_ownership?: number
+          sale_amount?: number | null
+          sale_date?: string | null
+        }
+        Update: {
+          action_type?: string
+          buyer_name?: string | null
+          created_at?: string
+          executed_by?: string
+          id?: string
+          notes?: string | null
+          percentage_sold?: number
+          project_id?: string
+          remaining_ownership?: number
+          sale_amount?: number | null
+          sale_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_ownership_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_revenues: {
         Row: {
           amount: number
@@ -1686,6 +1736,7 @@ export type Database = {
           override_net_profit: number | null
           override_total_expenses: number | null
           override_total_revenue: number | null
+          ownership_percentage: number
           slug: string
           status: string
           total_expenses: number
@@ -1708,6 +1759,7 @@ export type Database = {
           override_net_profit?: number | null
           override_total_expenses?: number | null
           override_total_revenue?: number | null
+          ownership_percentage?: number
           slug: string
           status?: string
           total_expenses?: number
@@ -1730,6 +1782,7 @@ export type Database = {
           override_net_profit?: number | null
           override_total_expenses?: number | null
           override_total_revenue?: number | null
+          ownership_percentage?: number
           slug?: string
           status?: string
           total_expenses?: number
