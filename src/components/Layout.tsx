@@ -108,6 +108,8 @@ function NavSection({
   location,
   onNav,
   newsUnread,
+  pmUnread,
+  chatUnread,
 }: {
   group: typeof navGroups[0];
   collapsed: boolean;
