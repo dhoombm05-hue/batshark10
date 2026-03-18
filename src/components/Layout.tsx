@@ -194,6 +194,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { readIds, unreadCount } = useNewsReadStatus();
   const newsUnread = unreadCount(allNews.map(n => n.id));
   const latestUnreadNews = allNews.find((item) => !readIds.includes(item.id));
+  const { pmUnread, chatUnread } = useUnreadCounts();
 
   const currentTheme = prefs?.theme || 'light';
 
