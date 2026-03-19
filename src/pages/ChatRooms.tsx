@@ -18,6 +18,7 @@ import { useRoomSettings } from '@/hooks/useRoomSettings';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences, useUpdatePreferences, useUploadThemeImage } from '@/hooks/useUserPreferences';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
