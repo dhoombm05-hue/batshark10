@@ -10,7 +10,7 @@ export function useUnreadCounts() {
   const fetchCounts = useCallback(async () => {
     if (!user) return;
 
-    // Private messages unread
+    // Private messages unread - only count messages sent TO me that are unread
     const { count: pmCount } = await supabase
       .from('private_messages')
       .select('id', { count: 'exact', head: true })
@@ -36,21 +36,35 @@ export function useUnreadCounts() {
         total += (count || 0);
       }
       setChatUnread(total);
+    } else {
+      setChatUnread(0);
     }
   }, [user]);
 
   useEffect(() => { fetchCounts(); }, [fetchCounts]);
 
-  // Realtime updates
+  // Realtime updates - listen to INSERT, UPDATE and DELETE
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel('unread-badges')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'private_messages' }, () => fetchCounts())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, () => fetchCounts())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages' }, () => fetchCounts())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_room_members' }, () => fetchCounts())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchCounts]);
 
-  return { pmUnread, chatUnread, totalUnread: pmUnread + chatUnread, refetch: fetchCounts };
+  // Mark chat room as read
+  const markChatRoomRead = useCallback(async (roomId: string) => {
+    if (!user) return;
+    await supabase
+      .from('chat_room_members')
+      .update({ last_read_at: new Date().toISOString() })
+      .eq('room_id', roomId)
+      .eq('user_id', user.id);
+    fetchCounts();
+  }, [user, fetchCounts]);
+
+  return { pmUnread, chatUnread, totalUnread: pmUnread + chatUnread, refetch: fetchCounts, markChatRoomRead };
 }
