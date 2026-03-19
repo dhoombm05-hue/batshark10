@@ -142,6 +142,7 @@ export default function ChatRooms() {
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const { messages, loading: msgsLoading, sendMessage, editMessage, deleteMessage, togglePin, addReaction } = useChatMessages(selectedRoom?.id || null);
   const { getAvatarByUserId, getDisplayNameByUserId, getPositionByUserId, isCeoUser } = useUserAvatarMap();
+  const { markChatRoomRead } = useUnreadCounts();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
