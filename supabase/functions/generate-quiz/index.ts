@@ -44,26 +44,29 @@ Deno.serve(async (req) => {
       isCronCall = true; // Allow no-auth for cron
     }
 
-    // Check if quizzes already generated this week
+    // Check which employees already have quizzes this week
     const now = new Date();
     const startOfYear = new Date(now.getFullYear(), 0, 1);
     const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
-    
+
+    // Get all employees
+    const { data: allEmployees, error: empError } = await supabase.from("employees").select("id, name, position, department");
+    if (empError || !allEmployees?.length) throw new Error("No employees found");
+
+    // Filter out employees who already have quizzes this week
     const { data: existingQuizzes } = await supabase
       .from("quizzes")
-      .select("id")
+      .select("employee_id")
       .eq("week_number", weekNumber);
-    
-    if (existingQuizzes && existingQuizzes.length > 0) {
-      console.log(`Quizzes already exist for week ${weekNumber}, skipping generation`);
-      return new Response(JSON.stringify({ success: true, message: `Quizzes already generated for week ${weekNumber}`, skipped: true }), {
+    const existingIds = new Set((existingQuizzes || []).map((q: any) => q.employee_id));
+    const employees = allEmployees.filter(emp => !existingIds.has(emp.id));
+
+    if (employees.length === 0) {
+      console.log(`All employees already have quizzes for week ${weekNumber}`);
+      return new Response(JSON.stringify({ success: true, message: `All quizzes already generated for week ${weekNumber}`, skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Get all employees
-    const { data: employees, error: empError } = await supabase.from("employees").select("id, name, position, department");
-    if (empError || !employees?.length) throw new Error("No employees found");
 
     // Deadline: next day 9AM Saudi (6AM UTC) = 12 hours
     const deadlineDate = new Date(now);

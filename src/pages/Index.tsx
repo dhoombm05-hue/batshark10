@@ -341,6 +341,44 @@ export default function Dashboard() {
         <img src={logo} alt="" className="w-[500px] h-[500px] opacity-[0.012]" />
       </div>
 
+      {/* ═══════ EID MUBARAK BANNER ═══════ */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-20 mb-6 rounded-2xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, hsl(43,85%,55%) 0%, hsl(38,92%,50%) 30%, hsl(25,85%,52%) 70%, hsl(15,80%,50%) 100%)',
+        }}
+      >
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
+        <div className="relative px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <motion.div
+              animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
+              transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+              className="text-4xl sm:text-5xl"
+            >
+              🌙
+            </motion.div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-heading font-black text-white drop-shadow-md">
+                عيدكم مبارك 🎉
+              </h2>
+              <p className="text-white/80 text-xs sm:text-sm mt-0.5">
+                كل عام وأنتم بخير ⭐ تقبل الله طاعاتكم
+              </p>
+            </div>
+          </div>
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+            className="text-3xl sm:text-4xl hidden sm:block"
+          >
+            ✨
+          </motion.div>
+        </div>
+      </motion.div>
+
       <div className="relative z-10 pb-8">
         {/* ═══════ PREMIUM HEADER ═══════ */}
         <motion.div

@@ -18,6 +18,7 @@ import { useRoomSettings } from '@/hooks/useRoomSettings';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences, useUpdatePreferences, useUploadThemeImage } from '@/hooks/useUserPreferences';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -141,6 +142,7 @@ export default function ChatRooms() {
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const { messages, loading: msgsLoading, sendMessage, editMessage, deleteMessage, togglePin, addReaction } = useChatMessages(selectedRoom?.id || null);
   const { getAvatarByUserId, getDisplayNameByUserId, getPositionByUserId, isCeoUser } = useUserAvatarMap();
+  const { markChatRoomRead } = useUnreadCounts();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -169,6 +171,13 @@ export default function ChatRooms() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Mark chat room as read when viewing it
+  useEffect(() => {
+    if (selectedRoom?.id) {
+      markChatRoomRead(selectedRoom.id);
+    }
+  }, [selectedRoom?.id, messages.length, markChatRoomRead]);
 
   const hasAutoSelected = useRef(false);
   useEffect(() => {
