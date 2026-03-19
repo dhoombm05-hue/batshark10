@@ -172,6 +172,13 @@ export default function ChatRooms() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Mark chat room as read when viewing it
+  useEffect(() => {
+    if (selectedRoom?.id) {
+      markChatRoomRead(selectedRoom.id);
+    }
+  }, [selectedRoom?.id, messages.length, markChatRoomRead]);
+
   const hasAutoSelected = useRef(false);
   useEffect(() => {
     // Only auto-select on first load (desktop), not when user explicitly goes back on mobile
