@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
   Menu, X, ChevronLeft, ChevronDown, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User, ListTodo, FileUp,
-  BarChart3, Activity, AlertTriangle, FileText, Sparkles, BookOpen, Building2, GraduationCap
+  BarChart3, Activity, AlertTriangle, FileText, Sparkles, BookOpen, Building2, GraduationCap, Receipt
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -85,6 +85,7 @@ const navGroups: { groupLabel: string; groupIcon: React.ElementType; groupColor:
     groupColor: 'section-invest',
     items: [
       { path: '/reports', label: 'التقارير', icon: FileText, color: 'section-finance' },
+      { path: '/invoices', label: 'الفواتير', icon: Receipt, color: 'section-revenue' },
       { path: '/documents', label: 'مركز الملفات', icon: FolderOpen, color: 'section-finance' },
       { path: '/import', label: 'مركز الاستيراد', icon: FileUp, color: 'section-invest' },
       { path: '/dictionary', label: 'قاموس البيانات', icon: BookOpen, color: 'section-strategic' },
