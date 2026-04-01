@@ -1009,6 +1009,71 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          invoice_date: string
+          invoice_number: number
+          invoice_type: string
+          items: Json
+          notes: string | null
+          payment_method: string | null
+          project_id: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: number
+          invoice_type?: string
+          items?: Json
+          notes?: string | null
+          payment_method?: string | null
+          project_id?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: number
+          invoice_type?: string
+          items?: Json
+          notes?: string | null
+          payment_method?: string | null
+          project_id?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           created_at: string
