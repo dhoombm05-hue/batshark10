@@ -85,6 +85,7 @@ const navGroups: { groupLabel: string; groupIcon: React.ElementType; groupColor:
     groupColor: 'section-invest',
     items: [
       { path: '/reports', label: 'التقارير', icon: FileText, color: 'section-finance' },
+      { path: '/invoices', label: 'الفواتير', icon: Receipt, color: 'section-revenue' },
       { path: '/documents', label: 'مركز الملفات', icon: FolderOpen, color: 'section-finance' },
       { path: '/import', label: 'مركز الاستيراد', icon: FileUp, color: 'section-invest' },
       { path: '/dictionary', label: 'قاموس البيانات', icon: BookOpen, color: 'section-strategic' },
