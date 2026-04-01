@@ -82,6 +82,7 @@ const App = () => (
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/ai-insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
             <Route path="/dictionary" element={<ProtectedRoute><DataDictionary /></ProtectedRoute>} />
+            <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />
