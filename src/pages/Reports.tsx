@@ -40,7 +40,7 @@ export default function Reports() {
   const { data: projects = [] } = useProjects();
   const { data: employees = [] } = useEmployees();
   const { tasks, doneTasks } = useTasks();
-  const { profile } = useAuthContext();
+  const { settings: scheduleSettings, sendReportNow } = useReportSchedule();
   
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [reportPeriod, setReportPeriod] = useState({
