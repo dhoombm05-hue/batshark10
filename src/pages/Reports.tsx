@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { useReportSchedule, getWeekdayName } from '@/hooks/useReportSchedule';
+import ReportScheduleDialog from '@/components/ReportScheduleDialog';
 
 interface ReportTemplate {
   id: string;
