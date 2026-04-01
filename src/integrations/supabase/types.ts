@@ -2051,6 +2051,48 @@ export type Database = {
           },
         ]
       }
+      report_email_settings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          recipient_emails: string[]
+          report_types: string[]
+          send_hour: number
+          sends_per_week: number
+          timezone: string
+          updated_at: string
+          weekdays: number[]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          recipient_emails?: string[]
+          report_types?: string[]
+          send_hour?: number
+          sends_per_week?: number
+          timezone?: string
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          recipient_emails?: string[]
+          report_types?: string[]
+          send_hour?: number
+          sends_per_week?: number
+          timezone?: string
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Relationships: []
+      }
       task_distribution_items: {
         Row: {
           assigned_to: string | null

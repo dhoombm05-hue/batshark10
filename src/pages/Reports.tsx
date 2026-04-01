@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { useReportSchedule, getWeekdayName } from '@/hooks/useReportSchedule';
+import ReportScheduleDialog from '@/components/ReportScheduleDialog';
 
 interface ReportTemplate {
   id: string;
@@ -39,6 +41,7 @@ export default function Reports() {
   const { data: employees = [] } = useEmployees();
   const { tasks, doneTasks } = useTasks();
   const { profile } = useAuthContext();
+  const { settings: scheduleSettings, sendReportNow } = useReportSchedule();
   
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [reportPeriod, setReportPeriod] = useState({
@@ -327,25 +330,52 @@ export default function Reports() {
                       value={emailTo}
                       onChange={(e) => setEmailTo(e.target.value)}
                     />
-                    <Button variant="outline" size="icon" disabled={!emailTo}>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      disabled={!emailTo}
+                      onClick={() => {
+                        if (selectedTemplate && selectedReportData) {
+                          sendReportNow(selectedTemplate, selectedReportData, reportPeriod, emailTo);
+                        }
+                      }}
+                    >
                       <Send className="w-4 h-4" />
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    سيتم إرسال التقرير كملف PDF
+                    سيتم إرسال التقرير مباشرة إلى البريد المحدد
                   </p>
                 </div>
 
                 <div className="border-t border-border pt-4 space-y-3">
-                  <h4 className="text-sm font-medium">الجدولة التلقائية</h4>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    <span>إرسال تلقائي: معطل</span>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium">الجدولة التلقائية</h4>
+                    {scheduleSettings.enabled && scheduleSettings.recipient_emails.length > 0 ? (
+                      <Badge variant="default" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">مفعّل</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[10px]">معطّل</Badge>
+                    )}
                   </div>
-                  <Button variant="outline" size="sm" className="w-full" disabled>
-                    <Calendar className="w-4 h-4 ml-2" />
-                    جدولة الإرسال
-                  </Button>
+                  {scheduleSettings.enabled && scheduleSettings.recipient_emails.length > 0 ? (
+                    <div className="space-y-1.5 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>كل {scheduleSettings.weekdays.map(d => getWeekdayName(d)).join('، ')}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>الساعة {scheduleSettings.send_hour.toString().padStart(2, '0')}:00</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>{scheduleSettings.recipient_emails.length} بريد</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">اضبط الجدول لإرسال التقارير تلقائياً</p>
+                  )}
+                  <ReportScheduleDialog />
                 </div>
 
                 <div className="flex gap-2 pt-4">
