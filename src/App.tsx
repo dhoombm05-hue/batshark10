@@ -36,6 +36,7 @@ import TaskDistribution from "./pages/TaskDistribution";
 import TaskDistributionDetail from "./pages/TaskDistributionDetail";
 import BusinessFeasibility from "./pages/BusinessFeasibility";
 import Quizzes from "./pages/Quizzes";
+import Invoices from "./pages/Invoices";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 import BatSharkGuide from "./components/BatSharkGuide";
