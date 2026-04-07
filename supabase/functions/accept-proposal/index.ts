@@ -39,7 +39,7 @@ serve(async (req) => {
       name: proposal.title,
       slug,
       description: proposal.description,
-      status: 'startup',
+      status: 'breakeven',
       total_revenue: 0,
       total_expenses: 0,
       net_profit: 0,

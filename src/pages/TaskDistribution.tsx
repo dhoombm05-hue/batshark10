@@ -166,7 +166,7 @@ export default function TaskDistribution() {
                   <SelectTrigger><SelectValue placeholder="ربط بمشروع (اختياري)" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">بدون مشروع</SelectItem>
-                    {projects.map(p => (
+                    {projects.filter(p => p.id).map(p => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
                   </SelectContent>
