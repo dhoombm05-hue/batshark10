@@ -141,7 +141,7 @@ export default function TasksBoard() {
                   <Select value={newTask.project_id} onValueChange={v => setNewTask(p => ({ ...p, project_id: v }))}>
                     <SelectTrigger><SelectValue placeholder="المشروع" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">بدون مشروع</SelectItem>
+                      <SelectItem value="none">بدون مشروع</SelectItem>
                       {projects?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
