@@ -89,7 +89,7 @@ export default function TasksBoard() {
       title: newTask.title.trim(),
       description: newTask.description.trim() || null,
       priority: newTask.priority,
-      project_id: newTask.project_id || null,
+      project_id: newTask.project_id === 'none' ? null : (newTask.project_id || null),
       assigned_to_name: newTask.assigned_to_name || null,
       due_date: newTask.due_date || null,
     });
