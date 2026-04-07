@@ -248,7 +248,7 @@ export default function ImportCenter() {
                 <Select value={targetProject} onValueChange={setTargetProject}>
                   <SelectTrigger><SelectValue placeholder="ربط بمشروع (اختياري)" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">بدون ربط</SelectItem>
+                    <SelectItem value="none">بدون ربط</SelectItem>
                     {projects?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                   </SelectContent>
                 </Select>

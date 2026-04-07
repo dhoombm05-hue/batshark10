@@ -89,7 +89,7 @@ export default function TasksBoard() {
       title: newTask.title.trim(),
       description: newTask.description.trim() || null,
       priority: newTask.priority,
-      project_id: newTask.project_id || null,
+      project_id: newTask.project_id === 'none' ? null : (newTask.project_id || null),
       assigned_to_name: newTask.assigned_to_name || null,
       due_date: newTask.due_date || null,
     });
@@ -141,7 +141,7 @@ export default function TasksBoard() {
                   <Select value={newTask.project_id} onValueChange={v => setNewTask(p => ({ ...p, project_id: v }))}>
                     <SelectTrigger><SelectValue placeholder="المشروع" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">بدون مشروع</SelectItem>
+                      <SelectItem value="none">بدون مشروع</SelectItem>
                       {projects?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
