@@ -68,10 +68,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Deadline: next day 9AM Saudi (6AM UTC) = 12 hours
-    const deadlineDate = new Date(now);
-    deadlineDate.setUTCDate(deadlineDate.getUTCDate() + 1);
-    deadlineDate.setUTCHours(6, 0, 0, 0);
+    // Deadline: 24 hours from now
+    const deadlineDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
     // Get CEO user for created_by
     const { data: ceoRole } = await supabase.from("user_roles").select("user_id").eq("role", "ceo").limit(1).single();
@@ -136,8 +134,8 @@ JSON فقط:
           description: `اختبار أسبوعي مخصص لـ ${emp.name}`,
           quiz_date: now.toISOString().split("T")[0],
           deadline: deadlineDate.toISOString(),
-          total_questions: 25,
-          duration_hours: 12,
+          total_questions: parsed.questions?.length || 25,
+          duration_hours: 24,
           status: "active",
           created_by: creatorId,
           employee_id: emp.id,
@@ -178,7 +176,7 @@ JSON فقط:
           notifications.push({
             user_id: profile.user_id,
             title: '📝 اختبار أسبوعي جديد!',
-            body: `تم إنشاء اختبارك التعليمي للأسبوع ${weekNumber}. لديك 12 ساعة لإكماله.`,
+            body: `تم إنشاء اختبارك التعليمي للأسبوع ${weekNumber}. لديك 24 ساعة لإكماله.`,
             type: 'quiz',
             link: '/quizzes',
           });
@@ -192,7 +190,7 @@ JSON فقط:
       // Auto-post news announcement
       await supabase.from("news").insert({
         title: `📝 اختبارات الأسبوع ${weekNumber} جاهزة!`,
-        content: `تم إنشاء ${results.length} اختبار أسبوعي جديد لجميع الموظفين. الموعد النهائي للتسليم: 12 ساعة من الآن.\n\nالموظفين: ${results.map(r => r.employee).join('، ')}\n\nتوجه لصفحة الاختبارات لبدء اختبارك الآن! 🚀`,
+        content: `تم إنشاء ${results.length} اختبار أسبوعي جديد لجميع الموظفين. الموعد النهائي للتسليم: 24 ساعة من الآن.\n\nالموظفين: ${results.map(r => r.employee).join('، ')}\n\nتوجه لصفحة الاختبارات لبدء اختبارك الآن! 🚀`,
         author_id: creatorId,
         author_name: '🤖 النظام التلقائي',
         content_type: 'text',
