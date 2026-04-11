@@ -19,7 +19,7 @@ import { useJournalDerivedMetrics } from '@/hooks/useJournalMetrics';
 import { formatCurrency, formatPercent } from '@/data/mockData';
 import { toast } from 'sonner';
 import logo from '@/assets/batshark-logo-main.png';
-import SmartAlerts from '@/components/SmartAlerts';
+import NotificationBell from '@/components/NotificationBell';
 import AskMeDialog from '@/components/AskMeDialog';
 
 /* ───── types ───── */
