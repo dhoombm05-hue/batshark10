@@ -380,6 +380,12 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <NotificationBell
+              totalRevenue={m.totalRevenue} totalExpenses={m.totalExpenses}
+              netProfit={m.netProfit} burnRate={m.burnRate}
+              runway={m.runway} liquidityRatio={m.liquidityRatio}
+              grossMargin={m.grossMargin} healthScore={m.healthScore}
+            />
             <DashboardCustomizer
               prefs={prefs}
               onChange={handlePrefsChange}
@@ -411,13 +417,6 @@ export default function Dashboard() {
             }
           </div>
         </motion.div>
-
-        {/* Smart Alerts */}
-        <SmartAlerts
-          totalRevenue={m.totalRevenue} totalExpenses={m.totalExpenses}
-          netProfit={m.netProfit} burnRate={m.burnRate}
-          runway={m.runway} liquidityRatio={m.liquidityRatio}
-          grossMargin={m.grossMargin} healthScore={m.healthScore} />
         
 
         {/* ═══════ FINANCIAL STATS — Enterprise Cards ═══════ */}
