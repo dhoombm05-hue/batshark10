@@ -196,7 +196,7 @@ async function finalizeInvoice(invoice: Invoice, projectName: string | null, use
         invoice_type: invoice.invoice_type,
         customer_name: invoice.customer_name,
       },
-    } as any).then(() => {}).catch(() => {});
+    } as any).then(() => {}, () => {});
   }
 }
 
