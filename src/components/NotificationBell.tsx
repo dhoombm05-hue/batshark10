@@ -140,12 +140,14 @@ export default function NotificationBell(props: NotificationBellProps) {
   const [dismissed, setDismissed] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('bs_dismissed_alerts') || '[]'); } catch { return []; }
   });
+  const [seen, setSeen] = useState(false);
   const [hasPlayedSound, setHasPlayedSound] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const allAlerts = generateAlerts(props);
   const visibleAlerts = allAlerts.filter(a => !dismissed.includes(a.id));
   const count = visibleAlerts.length;
+  const badgeCount = seen ? 0 : count;
 
   // Play sound once when there are alerts
   useEffect(() => {
@@ -197,25 +199,25 @@ export default function NotificationBell(props: NotificationBellProps) {
       <motion.button
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
-        onClick={() => setOpen(!open)}
+        onClick={() => { setOpen(!open); if (!open) setSeen(true); }}
         className={`relative p-2.5 rounded-xl bg-card border border-border/50 hover:border-border transition-all ${bellColor}`}
         title="التنبيهات"
       >
         <Bell className="w-[18px] h-[18px]" />
         <AnimatePresence>
-          {count > 0 && (
+          {badgeCount > 0 && (
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
               className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-black shadow-lg"
             >
-              {count}
+              {badgeCount}
             </motion.span>
           )}
         </AnimatePresence>
         {/* Pulse ring */}
-        {count > 0 && (
+        {badgeCount > 0 && (
           <motion.div
             className="absolute inset-0 rounded-xl border-2 border-destructive/30"
             animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
