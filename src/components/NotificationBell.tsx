@@ -205,19 +205,19 @@ export default function NotificationBell(props: NotificationBellProps) {
       >
         <Bell className="w-[18px] h-[18px]" />
         <AnimatePresence>
-          {count > 0 && (
+          {badgeCount > 0 && (
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
               className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-black shadow-lg"
             >
-              {count}
+              {badgeCount}
             </motion.span>
           )}
         </AnimatePresence>
         {/* Pulse ring */}
-        {count > 0 && (
+        {badgeCount > 0 && (
           <motion.div
             className="absolute inset-0 rounded-xl border-2 border-destructive/30"
             animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
