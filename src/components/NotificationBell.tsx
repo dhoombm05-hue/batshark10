@@ -140,12 +140,14 @@ export default function NotificationBell(props: NotificationBellProps) {
   const [dismissed, setDismissed] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('bs_dismissed_alerts') || '[]'); } catch { return []; }
   });
+  const [seen, setSeen] = useState(false);
   const [hasPlayedSound, setHasPlayedSound] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const allAlerts = generateAlerts(props);
   const visibleAlerts = allAlerts.filter(a => !dismissed.includes(a.id));
   const count = visibleAlerts.length;
+  const badgeCount = seen ? 0 : count;
 
   // Play sound once when there are alerts
   useEffect(() => {
