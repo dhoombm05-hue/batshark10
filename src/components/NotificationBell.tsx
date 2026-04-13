@@ -199,7 +199,7 @@ export default function NotificationBell(props: NotificationBellProps) {
       <motion.button
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
-        onClick={() => setOpen(!open)}
+        onClick={() => { setOpen(!open); if (!open) setSeen(true); }}
         className={`relative p-2.5 rounded-xl bg-card border border-border/50 hover:border-border transition-all ${bellColor}`}
         title="التنبيهات"
       >
