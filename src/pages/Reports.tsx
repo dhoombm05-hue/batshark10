@@ -9,12 +9,15 @@ import { useProjects } from '@/hooks/useProjects';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useJournalDerivedMetrics } from '@/hooks/useJournalMetrics';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { 
-  FileText, Download, Printer, Mail, Calendar, 
+  FileText, Download, Printer, Mail,
   Building2, Users, FolderKanban, TrendingUp, DollarSign,
-  FileSpreadsheet, Send, Clock, CheckCircle2
+  FileSpreadsheet, Send, Clock, CheckCircle2, Receipt, Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
@@ -26,15 +29,48 @@ interface ReportTemplate {
   name: string;
   description: string;
   icon: any;
-  type: 'financial' | 'projects' | 'employees' | 'executive';
+  type: 'financial' | 'projects' | 'employees' | 'executive' | 'invoices' | 'activity';
 }
 
 const reportTemplates: ReportTemplate[] = [
-  { id: 'monthly-financial', name: 'التقرير المالي الشهري', description: 'ملخص الإيرادات والمصروفات والأرباح', icon: DollarSign, type: 'financial' },
+  { id: 'monthly-financial', name: 'التقرير المالي الشهري', description: 'ملخص الإيرادات والمصروفات من القيود المحاسبية', icon: DollarSign, type: 'financial' },
   { id: 'projects-status', name: 'حالة المشاريع', description: 'تقرير شامل عن أداء جميع المشاريع', icon: FolderKanban, type: 'projects' },
   { id: 'employee-performance', name: 'أداء الموظفين', description: 'تقييم ومتابعة أداء فريق العمل', icon: Users, type: 'employees' },
   { id: 'executive-summary', name: 'الملخص التنفيذي', description: 'نظرة شاملة للإدارة العليا', icon: Building2, type: 'executive' },
+  { id: 'invoices-report', name: 'تقرير الفواتير', description: 'جميع الفواتير الصادرة والمدفوعة', icon: Receipt, type: 'invoices' },
+  { id: 'activity-report', name: 'سجل النشاطات', description: 'جميع العمليات والأنشطة المسجلة', icon: Activity, type: 'activity' },
 ];
+
+// Hook for invoices data in reports
+function useInvoicesForReports() {
+  return useQuery({
+    queryKey: ['invoices-reports'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoices' as any)
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+}
+
+// Hook for activity log
+function useActivityForReports() {
+  return useQuery({
+    queryKey: ['activity-reports'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('activity_impact_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
 
 export default function Reports() {
   const { data: projects = [] } = useProjects();
@@ -42,6 +78,9 @@ export default function Reports() {
   const { tasks, doneTasks } = useTasks();
   const { profile } = useAuthContext();
   const { settings: scheduleSettings, sendReportNow } = useReportSchedule();
+  const { data: journalData } = useJournalDerivedMetrics();
+  const { data: invoices = [] } = useInvoicesForReports();
+  const { data: activities = [] } = useActivityForReports();
   
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [reportPeriod, setReportPeriod] = useState({
@@ -52,49 +91,85 @@ export default function Reports() {
   const [additionalNotes, setAdditionalNotes] = useState('');
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const totalRevenue = projects.reduce((sum, p) => sum + p.total_revenue, 0);
-  const totalExpenses = projects.reduce((sum, p) => sum + p.total_expenses, 0);
-  const netProfit = totalRevenue - totalExpenses;
+  // Use journal-derived metrics as the SINGLE SOURCE OF TRUTH
+  const totalRevenue = journalData?.companyMetrics?.totalRevenue || 0;
+  const totalExpenses = journalData?.companyMetrics?.totalExpenses || 0;
+  const netProfit = journalData?.companyMetrics?.netProfit || 0;
+  const grossMargin = journalData?.companyMetrics?.grossMargin || 0;
+  const roi = journalData?.companyMetrics?.roi || 0;
+  const healthScore = journalData?.companyMetrics?.healthScore || 0;
+  const monthlyGrowth = journalData?.companyMetrics?.monthlyGrowth || 0;
+  const burnRate = journalData?.companyMetrics?.burnRate || 0;
+  const runway = journalData?.companyMetrics?.runway || 0;
+
+  // Invoices stats
+  const paidInvoices = invoices.filter((i: any) => i.status === 'paid');
+  const totalInvoiceRevenue = paidInvoices
+    .filter((i: any) => i.invoice_type === 'customer' || i.invoice_type === 'umbrex_customer')
+    .reduce((s: number, i: any) => s + (Number(i.total_amount) || 0), 0);
+  const totalInvoiceExpenses = paidInvoices
+    .filter((i: any) => i.invoice_type === 'internal' || i.invoice_type === 'umbrex_internal')
+    .reduce((s: number, i: any) => s + (Number(i.total_amount) || 0), 0);
 
   // Generate report data based on template
   const generateReportData = (templateId: string) => {
     switch (templateId) {
       case 'monthly-financial':
         return {
-          title: 'التقرير المالي الشهري',
+          title: 'التقرير المالي الشهري (من القيود المحاسبية)',
           data: [
             ['البند', 'القيمة (ر.س)'],
-            ['إجمالي الإيرادات', totalRevenue],
-            ['إجمالي المصروفات', totalExpenses],
-            ['صافي الربح', netProfit],
-            ['هامش الربح', `${totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0}%`],
+            ['إجمالي الإيرادات (قيود)', totalRevenue.toLocaleString()],
+            ['إجمالي المصروفات (قيود)', totalExpenses.toLocaleString()],
+            ['صافي الربح', netProfit.toLocaleString()],
+            ['هامش الربح', `${grossMargin}%`],
+            ['العائد على الاستثمار (ROI)', `${roi}%`],
+            ['النمو الشهري', `${monthlyGrowth}%`],
+            ['معدل الحرق الشهري', burnRate.toLocaleString()],
+            ['المدى الزمني المتوقع (أشهر)', runway],
+            ['مؤشر الصحة المالية', `${healthScore}/100`],
             ['عدد المشاريع', projects.length],
+            ['الفواتير المدفوعة', paidInvoices.length],
+            ['إيرادات الفواتير', totalInvoiceRevenue.toLocaleString()],
+            ['مصروفات الفواتير', totalInvoiceExpenses.toLocaleString()],
+            ...(journalData?.expenseBreakdown?.length ? [
+              ['', ''],
+              ['--- توزيع المصروفات ---', ''],
+              ...journalData.expenseBreakdown.map(e => [e.category, e.amount.toLocaleString()]),
+            ] : []),
           ]
         };
-      case 'projects-status':
+      case 'projects-status': {
+        const projectMetrics = journalData?.companyMetrics?.projectMetrics;
         return {
           title: 'تقرير حالة المشاريع',
           data: [
-            ['المشروع', 'الإيرادات', 'المصروفات', 'الربح', 'الحالة'],
-            ...projects.map(p => [
-              p.name,
-              p.total_revenue,
-              p.total_expenses,
-              p.total_revenue - p.total_expenses,
-              p.status === 'profitable' ? 'مربح' : p.status === 'loss' ? 'خاسر' : 'متعادل'
-            ])
+            ['المشروع', 'الإيرادات (قيود)', 'المصروفات (قيود)', 'الربح', 'النمو', 'الحالة'],
+            ...projects.map(p => {
+              const pm = projectMetrics?.get(p.id);
+              return [
+                p.name,
+                pm ? pm.totalRevenue.toLocaleString() : '0',
+                pm ? pm.totalExpenses.toLocaleString() : '0',
+                pm ? pm.netProfit.toLocaleString() : '0',
+                pm ? `${pm.growthRate}%` : '0%',
+                pm?.status === 'profitable' ? 'مربح' : pm?.status === 'loss' ? 'خاسر' : 'متعادل',
+              ];
+            })
           ]
         };
+      }
       case 'employee-performance':
         return {
           title: 'تقرير أداء الموظفين',
           data: [
-            ['الموظف', 'المنصب', 'الأداء', 'التقييم الشهري'],
+            ['الموظف', 'المنصب', 'الأداء', 'التقييم الشهري', 'المساهمة في الربح'],
             ...employees.map(e => [
               e.name,
               e.position,
               `${e.performance || 0}%`,
-              e.monthly_rating || 0
+              e.monthly_rating || 0,
+              `${e.profit_contribution || 0}%`,
             ])
           ]
         };
@@ -103,12 +178,66 @@ export default function Reports() {
           title: 'الملخص التنفيذي',
           data: [
             ['المؤشر', 'القيمة'],
-            ['إجمالي الإيرادات', `${totalRevenue.toLocaleString()} ر.س`],
+            ['إجمالي الإيرادات (قيود)', `${totalRevenue.toLocaleString()} ر.س`],
+            ['إجمالي المصروفات (قيود)', `${totalExpenses.toLocaleString()} ر.س`],
             ['صافي الربح', `${netProfit.toLocaleString()} ر.س`],
+            ['هامش الربح', `${grossMargin}%`],
+            ['ROI', `${roi}%`],
+            ['مؤشر الصحة', `${healthScore}/100`],
+            ['النمو الشهري', `${monthlyGrowth}%`],
             ['عدد المشاريع', projects.length],
             ['عدد الموظفين', employees.length],
-            ['المهام المكتملة', doneTasks.length],
-            ['إجمالي المهام', tasks.length],
+            ['المهام المكتملة', `${doneTasks.length} / ${tasks.length}`],
+            ['الفواتير المدفوعة', paidInvoices.length],
+            ['إجمالي الفواتير', invoices.length],
+          ]
+        };
+      case 'invoices-report':
+        return {
+          title: 'تقرير الفواتير',
+          data: [
+            ['رقم الفاتورة', 'النوع', 'العميل/المورد', 'المبلغ (ر.س)', 'الحالة', 'التاريخ'],
+            ...invoices.map((inv: any) => {
+              const typeMap: Record<string, string> = {
+                internal: 'بادل-داخلية', customer: 'بادل-زبون',
+                umbrex_internal: 'أومبركس-داخلية', umbrex_customer: 'أومبركس-زبون',
+              };
+              const statusMap: Record<string, string> = {
+                draft: 'مسودة', sent: 'مرسلة', paid: 'مدفوعة', cancelled: 'ملغاة',
+              };
+              return [
+                `#${inv.invoice_number}`,
+                typeMap[inv.invoice_type] || inv.invoice_type,
+                inv.customer_name || '-',
+                Number(inv.total_amount).toLocaleString(),
+                statusMap[inv.status] || inv.status,
+                inv.invoice_date ? format(new Date(inv.invoice_date), 'yyyy/MM/dd') : '-',
+              ];
+            }),
+            ['', '', '', '', '', ''],
+            ['الإجمالي المدفوع (مبيعات)', '', '', totalInvoiceRevenue.toLocaleString(), '', ''],
+            ['الإجمالي المدفوع (مشتريات)', '', '', totalInvoiceExpenses.toLocaleString(), '', ''],
+          ]
+        };
+      case 'activity-report':
+        return {
+          title: 'سجل النشاطات',
+          data: [
+            ['المستخدم', 'العملية', 'القسم', 'الكيان', 'الأثر المالي', 'التاريخ'],
+            ...activities.slice(0, 50).map((a: any) => {
+              const actionMap: Record<string, string> = {
+                page_view: 'عرض صفحة', update: 'تعديل', create: 'إنشاء',
+                delete: 'حذف', invoice_finalized: 'إنهاء فاتورة',
+              };
+              return [
+                a.user_name || '-',
+                actionMap[a.action_type] || a.action_type,
+                a.section || a.entity_type || '-',
+                a.entity_name || a.entity_id?.slice(0, 8) || '-',
+                a.impact_on_net_profit ? `${Number(a.impact_on_net_profit).toLocaleString()} ر.س` : '-',
+                a.created_at ? format(new Date(a.created_at), 'MM/dd HH:mm') : '-',
+              ];
+            }),
           ]
         };
       default:
@@ -164,7 +293,7 @@ export default function Reports() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-heading font-bold text-foreground">التقارير الاحترافية</h1>
-            <p className="text-muted-foreground text-sm">إنشاء وتصدير تقارير مخصصة</p>
+            <p className="text-muted-foreground text-sm">جميع البيانات مستخرجة من القيود المحاسبية والفواتير والنشاطات</p>
           </div>
           <div className="flex gap-2">
             <Input
@@ -183,17 +312,45 @@ export default function Reports() {
           </div>
         </div>
 
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Card className="border-border/50 bg-card/80">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">الإيرادات (قيود)</p>
+              <p className="text-lg font-bold text-section-revenue">{totalRevenue.toLocaleString()} <span className="text-xs">ر.س</span></p>
+            </CardContent>
+          </Card>
+          <Card className="border-border/50 bg-card/80">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">المصروفات (قيود)</p>
+              <p className="text-lg font-bold text-destructive">{totalExpenses.toLocaleString()} <span className="text-xs">ر.س</span></p>
+            </CardContent>
+          </Card>
+          <Card className="border-border/50 bg-card/80">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">صافي الربح</p>
+              <p className={`text-lg font-bold ${netProfit >= 0 ? 'text-success' : 'text-destructive'}`}>{netProfit.toLocaleString()} <span className="text-xs">ر.س</span></p>
+            </CardContent>
+          </Card>
+          <Card className="border-border/50 bg-card/80">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">الفواتير المنجزة</p>
+              <p className="text-lg font-bold text-primary">{paidInvoices.length}</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Report Templates */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {reportTemplates.map((template, i) => (
             <motion.div
               key={template.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.05 }}
             >
               <Card 
-                className={`cursor-pointer transition-all hover:shadow-lg border-border/50 ${
+                className={`cursor-pointer transition-all hover:shadow-lg border-border/50 relative ${
                   selectedTemplate === template.id ? 'ring-2 ring-primary bg-primary/5' : 'bg-card/80 backdrop-blur-sm'
                 }`}
                 onClick={() => setSelectedTemplate(template.id)}
@@ -204,12 +361,16 @@ export default function Reports() {
                       template.type === 'financial' ? 'bg-section-revenue/10' :
                       template.type === 'projects' ? 'bg-section-forecast/10' :
                       template.type === 'employees' ? 'bg-section-employees/10' :
+                      template.type === 'invoices' ? 'bg-accent/10' :
+                      template.type === 'activity' ? 'bg-section-growth/10' :
                       'bg-primary/10'
                     }`}>
                       <template.icon className={`w-5 h-5 ${
                         template.type === 'financial' ? 'text-section-revenue' :
                         template.type === 'projects' ? 'text-section-forecast' :
                         template.type === 'employees' ? 'text-section-employees' :
+                        template.type === 'invoices' ? 'text-accent' :
+                        template.type === 'activity' ? 'text-section-growth' :
                         'text-primary'
                       }`} />
                     </div>
@@ -249,7 +410,7 @@ export default function Reports() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div ref={reportRef} className="p-6 bg-white dark:bg-background rounded-lg border border-border">
+                <div ref={reportRef} className="p-6 bg-white dark:bg-background rounded-lg border border-border overflow-x-auto">
                   {/* Report Header */}
                   <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
                     <div>
@@ -265,11 +426,11 @@ export default function Reports() {
                   </div>
 
                   {/* Report Table */}
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr className="bg-muted/50">
                         {selectedReportData.data[0]?.map((header: string, i: number) => (
-                          <th key={i} className="border border-border p-3 text-right font-medium text-foreground">
+                          <th key={i} className="border border-border p-2.5 text-right font-medium text-foreground">
                             {header}
                           </th>
                         ))}
@@ -279,7 +440,7 @@ export default function Reports() {
                       {selectedReportData.data.slice(1).map((row: any[], rowIndex: number) => (
                         <tr key={rowIndex} className="hover:bg-muted/30">
                           {row.map((cell, cellIndex) => (
-                            <td key={cellIndex} className="border border-border p-3 text-foreground">
+                            <td key={cellIndex} className="border border-border p-2.5 text-foreground">
                               {typeof cell === 'number' ? cell.toLocaleString() : cell}
                             </td>
                           ))}
@@ -294,6 +455,7 @@ export default function Reports() {
                       <span>تم الإنشاء بواسطة: {profile?.display_name}</span>
                       <span>{format(new Date(), 'd MMMM yyyy - HH:mm', { locale: ar })}</span>
                     </div>
+                    <p className="text-xs mt-2 opacity-60">* جميع الأرقام المالية مستخرجة من القيود المحاسبية (دفتر اليومية)</p>
                     {additionalNotes && (
                       <div className="mt-3 p-3 bg-muted/30 rounded-lg">
                         <p className="font-medium mb-1">ملاحظات:</p>
