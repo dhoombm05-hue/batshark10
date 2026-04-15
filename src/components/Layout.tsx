@@ -13,6 +13,7 @@ import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import ThemeSettings from '@/components/ThemeSettings';
 import logo from '@/assets/batshark-logo-main.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import BackgroundMusic from '@/components/BackgroundMusic';
 
 const ROLE_LABELS: Record<string, string> = {
   ceo: '👑 عبدالرحمن CEO',
@@ -262,12 +263,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <p className="text-[10px] text-muted-foreground">Economy Intelligence</p>
             </div>
           )}
-          <button
-            onClick={() => { setCollapsed(!collapsed); setMobileOpen(false); }}
-            className="text-muted-foreground hover:text-foreground transition-colors hidden lg:block"
-          >
-            <ChevronLeft className={`w-4 h-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
-          </button>
+          <div className="flex items-center gap-1">
+            <BackgroundMusic />
+            <button
+              onClick={() => { setCollapsed(!collapsed); setMobileOpen(false); }}
+              className="text-muted-foreground hover:text-foreground transition-colors hidden lg:block"
+            >
+              <ChevronLeft className={`w-4 h-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
           <button onClick={() => setMobileOpen(false)} className="lg:hidden text-muted-foreground">
             <X className="w-5 h-5" />
           </button>
