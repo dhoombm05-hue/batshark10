@@ -37,6 +37,7 @@ import TaskDistributionDetail from "./pages/TaskDistributionDetail";
 import BusinessFeasibility from "./pages/BusinessFeasibility";
 import Quizzes from "./pages/Quizzes";
 import Invoices from "./pages/Invoices";
+import Batshare99 from "./pages/Batshare99";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 import BatSharkGuide from "./components/BatSharkGuide";
@@ -83,6 +84,7 @@ const App = () => (
             <Route path="/ai-insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
             <Route path="/dictionary" element={<ProtectedRoute><DataDictionary /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+            <Route path="/batshare99" element={<ProtectedRoute><Batshare99 /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />
