@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, FolderKanban, Users, TrendingUp, Shield,
   Menu, X, ChevronLeft, ChevronDown, Brain, FlaskConical, LogOut, UserCog, FolderOpen, MessageSquare, Newspaper, Mail, User, ListTodo, FileUp,
-  BarChart3, Activity, AlertTriangle, FileText, Sparkles, BookOpen, Building2, GraduationCap, Receipt
+  BarChart3, Activity, AlertTriangle, FileText, Sparkles, BookOpen, Building2, GraduationCap, Receipt, Rocket
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -47,6 +47,7 @@ const navGroups: { groupLabel: string; groupIcon: React.ElementType; groupColor:
       { path: '/tasks', label: 'إدارة المهام', icon: ListTodo, color: 'section-employees' },
       { path: '/task-distribution', label: 'توزيع المهام الذكي', icon: Sparkles, color: 'section-ai' },
       { path: '/business-feasibility', label: 'تحليل جدوى البزنس', icon: Building2, color: 'section-invest' },
+      { path: '/batshare99', label: '🚀 Batshare 99 - مولد البزنس', icon: Rocket, color: 'section-ai' },
       { path: '/quizzes', label: 'الاختبارات الأسبوعية', icon: GraduationCap, color: 'section-strategic' },
     ],
   },

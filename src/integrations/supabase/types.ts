@@ -116,6 +116,333 @@ export type Database = {
         }
         Relationships: []
       }
+      batshare_assessments: {
+        Row: {
+          ai_summary: string | null
+          answers: Json
+          behavior_analysis: Json
+          completed_at: string | null
+          created_at: string
+          id: string
+          match_score: number | null
+          questions: Json
+          status: string
+          track: string
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          answers?: Json
+          behavior_analysis?: Json
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          match_score?: number | null
+          questions?: Json
+          status?: string
+          track: string
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          answers?: Json
+          behavior_analysis?: Json
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          match_score?: number | null
+          questions?: Json
+          status?: string
+          track?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      batshare_diagnostics: {
+        Row: {
+          ai_recommendations: Json
+          business_name: string | null
+          created_at: string
+          health_score: number | null
+          id: string
+          improvement_roadmap: Json
+          project_id: string | null
+          strong_areas: Json
+          user_id: string
+          weak_areas: Json
+        }
+        Insert: {
+          ai_recommendations?: Json
+          business_name?: string | null
+          created_at?: string
+          health_score?: number | null
+          id?: string
+          improvement_roadmap?: Json
+          project_id?: string | null
+          strong_areas?: Json
+          user_id: string
+          weak_areas?: Json
+        }
+        Update: {
+          ai_recommendations?: Json
+          business_name?: string | null
+          created_at?: string
+          health_score?: number | null
+          id?: string
+          improvement_roadmap?: Json
+          project_id?: string | null
+          strong_areas?: Json
+          user_id?: string
+          weak_areas?: Json
+        }
+        Relationships: []
+      }
+      batshare_recommendations: {
+        Row: {
+          action_steps: Json
+          ai_analysis: Json
+          assessment_id: string | null
+          business_type: string | null
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          estimated_roi: number | null
+          id: string
+          is_customized: boolean
+          market_research: Json
+          match_percentage: number
+          project_id: string | null
+          required_budget: number | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_steps?: Json
+          ai_analysis?: Json
+          assessment_id?: string | null
+          business_type?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          estimated_roi?: number | null
+          id?: string
+          is_customized?: boolean
+          market_research?: Json
+          match_percentage?: number
+          project_id?: string | null
+          required_budget?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_steps?: Json
+          ai_analysis?: Json
+          assessment_id?: string | null
+          business_type?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          estimated_roi?: number | null
+          id?: string
+          is_customized?: boolean
+          market_research?: Json
+          match_percentage?: number
+          project_id?: string | null
+          required_budget?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      batshare_revival_plans: {
+        Row: {
+          ai_analysis: string | null
+          core_mistakes: Json
+          created_at: string
+          failed_project_name: string
+          failure_reasons: Json
+          id: string
+          new_project_id: string | null
+          revival_strategy: Json
+          risk_reduction: Json
+          status: string
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: string | null
+          core_mistakes?: Json
+          created_at?: string
+          failed_project_name: string
+          failure_reasons?: Json
+          id?: string
+          new_project_id?: string | null
+          revival_strategy?: Json
+          risk_reduction?: Json
+          status?: string
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: string | null
+          core_mistakes?: Json
+          created_at?: string
+          failed_project_name?: string
+          failure_reasons?: Json
+          id?: string
+          new_project_id?: string | null
+          revival_strategy?: Json
+          risk_reduction?: Json
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      batshare_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          features: Json
+          id: string
+          starts_at: string
+          status: string
+          tier: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          features?: Json
+          id?: string
+          starts_at?: string
+          status?: string
+          tier?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          features?: Json
+          id?: string
+          starts_at?: string
+          status?: string
+          tier?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      batshare_user_profiles: {
+        Row: {
+          available_time: string | null
+          behavior_data: Json
+          budget_amount: number | null
+          budget_range: string | null
+          business_efficiency: number | null
+          created_at: string
+          experience_level: string | null
+          has_business: boolean
+          id: string
+          interests: Json
+          is_visitor: boolean
+          location: string | null
+          risk_tolerance: string | null
+          skills: Json
+          updated_at: string
+          user_id: string
+          user_track: string
+        }
+        Insert: {
+          available_time?: string | null
+          behavior_data?: Json
+          budget_amount?: number | null
+          budget_range?: string | null
+          business_efficiency?: number | null
+          created_at?: string
+          experience_level?: string | null
+          has_business?: boolean
+          id?: string
+          interests?: Json
+          is_visitor?: boolean
+          location?: string | null
+          risk_tolerance?: string | null
+          skills?: Json
+          updated_at?: string
+          user_id: string
+          user_track?: string
+        }
+        Update: {
+          available_time?: string | null
+          behavior_data?: Json
+          budget_amount?: number | null
+          budget_range?: string | null
+          business_efficiency?: number | null
+          created_at?: string
+          experience_level?: string | null
+          has_business?: boolean
+          id?: string
+          interests?: Json
+          is_visitor?: boolean
+          location?: string | null
+          risk_tolerance?: string | null
+          skills?: Json
+          updated_at?: string
+          user_id?: string
+          user_track?: string
+        }
+        Relationships: []
+      }
+      batshare_websites: {
+        Row: {
+          content: Json
+          created_at: string
+          generated_html: string | null
+          id: string
+          is_published: boolean
+          preview_url: string | null
+          project_id: string | null
+          recommendation_id: string | null
+          site_name: string
+          site_type: string | null
+          template: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          generated_html?: string | null
+          id?: string
+          is_published?: boolean
+          preview_url?: string | null
+          project_id?: string | null
+          recommendation_id?: string | null
+          site_name: string
+          site_type?: string | null
+          template?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          generated_html?: string | null
+          id?: string
+          is_published?: boolean
+          preview_url?: string | null
+          project_id?: string | null
+          recommendation_id?: string | null
+          site_name?: string
+          site_type?: string | null
+          template?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       business_feasibility: {
         Row: {
           ai_analysis: Json | null

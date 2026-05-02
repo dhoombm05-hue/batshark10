@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.send-report]
 verify_jwt = false
+
+[functions.batshare99-ai]
+verify_jwt = false
