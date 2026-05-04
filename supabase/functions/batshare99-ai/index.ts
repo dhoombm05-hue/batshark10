@@ -44,7 +44,8 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { action, payload, userId } = await req.json();
+    const { action, payload, userId, guest } = await req.json();
+    const isGuest = !!guest || !userId;
 
     if (!action) throw new Error("action required");
 
