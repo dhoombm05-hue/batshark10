@@ -478,38 +478,39 @@ export default function Batshare99() {
           </p>
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          {!activeTrack ? (
-            <motion.div key="tracks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {TRACKS.map((t, i) => (
-                <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-                  <Card
-                    onClick={() => setActiveTrack(t.id)}
-                    className={`p-5 cursor-pointer hover:shadow-xl transition-all border-2 bg-gradient-to-br ${t.gradient} ${colorMap[t.color]} hover:scale-[1.02]`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`p-3 rounded-xl ${colorMap[t.color].split(' ')[0]} bg-current/10`}>
-                        <t.icon className="w-7 h-7" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-heading font-bold text-xl mb-1">مسار {t.title}</h3>
-                        <p className="text-xs font-bold text-muted-foreground mb-2">{t.subtitle}</p>
-                        <p className="text-sm text-muted-foreground/80">{t.desc}</p>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div key={activeTrack} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              {activeTrack === 'beginner' && <BeginnerAssessment onBack={() => setActiveTrack(null)} />}
-              {activeTrack === 'intermediate' && <IntermediateDiagnose onBack={() => setActiveTrack(null)} />}
-              {activeTrack === 'professional' && <ProfessionalRevival onBack={() => setActiveTrack(null)} />}
-              {activeTrack === 'analysis' && <AnalysisOnly onBack={() => setActiveTrack(null)} />}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <Card className="p-6 bg-gradient-to-br from-primary/10 via-section-ai/5 to-transparent border-primary/30">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
+            <div className="flex items-start gap-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-500 shadow-lg">
+                <Rocket className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-lg">بناء بزنس معين</h3>
+                <p className="text-sm text-muted-foreground max-w-xl mt-1">
+                  منصة مستقلة بواجهة خاصة ورابط مستقل. تتعرف عليك تلقائياً عند الدخول من النظام، وتعمل كزائر عند الدخول من رابط خارجي.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {['مبتدئ', 'متوسط', 'متقدم', 'محلل احترافي'].map((l) => (
+                    <Badge key={l} variant="outline" className="text-[11px]">{l}</Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              onClick={() => window.open('/build', '_blank', 'noopener,noreferrer')}
+              className="gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg hover:opacity-90 whitespace-nowrap"
+            >
+              <Sparkles className="w-4 h-4" /> فتح المنصة المستقلة
+            </Button>
+          </div>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> ذكاء اصطناعي يوجّه ويقترح أفضل الخيارات</div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> 4 مستويات بعمق مختلف من التحليل</div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> رابط مشاركة مستقل قابل للتوسع</div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> تخصيص تلقائي للأعضاء، ووضع زائر للزوار</div>
+          </div>
+        </Card>
 
         {/* Recent recommendations */}
         {!activeTrack && recommendations.length > 0 && (
