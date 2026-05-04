@@ -38,6 +38,7 @@ import BusinessFeasibility from "./pages/BusinessFeasibility";
 import Quizzes from "./pages/Quizzes";
 import Invoices from "./pages/Invoices";
 import Batshare99 from "./pages/Batshare99";
+import BuildBusiness from "./pages/BuildBusiness";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 import BatSharkGuide from "./components/BatSharkGuide";
@@ -53,6 +54,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/build" element={<BuildBusiness />} />
             <Route path="/setup" element={<SetupCEO />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />

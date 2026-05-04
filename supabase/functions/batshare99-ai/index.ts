@@ -44,7 +44,8 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { action, payload, userId } = await req.json();
+    const { action, payload, userId, guest } = await req.json();
+    const isGuest = !!guest || !userId;
 
     if (!action) throw new Error("action required");
 
@@ -96,10 +97,26 @@ serve(async (req) => {
         },
       };
 
-      const systemPrompt = `أنت محلل أعمال خبير في منظومة Batshare 99 لباتشارك إيكانومي. مهمتك تحليل إجابات المستخدم بعمق وتحليل سلوكه ونمط تفكيره ثم اقتراح 3-5 أفكار بزنس مخصصة بدقة بناءً على ميزانيته ووقته ومهاراته وموقعه واهتماماته. كل اقتراح يجب أن يحمل نسبة توافق حقيقية (60-100). أجب بالعربية الفصحى.`;
-      const userPrompt = `المسار: ${track}\nالإجابات:\n${JSON.stringify(answers, null, 2)}`;
+      const levelGuidance: Record<string, string> = {
+        beginner: "المستخدم مبتدئ تماماً. اقترح أفكاراً بسيطة منخفضة المخاطر بميزانيات صغيرة، مع شرح مبسط وخطوات تنفيذية مباشرة جداً.",
+        intermediate: "المستخدم متوسط الخبرة. قدم أفكاراً متوسطة التعقيد مع تحليل تنافسي مختصر وعوامل التميز.",
+        advanced: "المستخدم متقدم. قدم نماذج أعمال مبتكرة، تحليل عميق للسوق، استراتيجيات تسعير وتوسع، ومقارنة بين 3-5 خيارات بمؤشرات مالية دقيقة.",
+        analyst: "المستخدم محلل احترافي. قدم تحليلاً كميّاً عميقاً (TAM/SAM/SOM، CAC/LTV، Burn، Break-even)، سيناريوهات حساسية، ومخاطر سوقية وتنظيمية.",
+      };
+      const guideExtra = levelGuidance[track] || "";
+      const systemPrompt = `أنت Batshare 99 - عقل ذكاء اصطناعي متقدم لتوليد ونمذجة الأعمال. حلل إجابات المستخدم بعمق (نمط تفكير، تحمل مخاطرة، أسلوب قرار) واقترح 3-5 أفكار بزنس بنسبة توافق حقيقية (60-100). ${guideExtra} أجب بعربية فصحى احترافية.`;
+      const userPrompt = `المسار/المستوى: ${track}\nنوع المستخدم: ${isGuest ? "زائر مجهول" : "عضو مسجل"}\nالإجابات:\n${JSON.stringify(answers, null, 2)}`;
 
       const result = await callAI(systemPrompt, userPrompt, tool);
+
+      if (isGuest) {
+        return new Response(JSON.stringify({
+          guest: true,
+          behavior: result.behavior_analysis,
+          ai_summary: result.ai_summary,
+          recommendations: result.recommendations.map((r: any, i: number) => ({ ...r, id: `guest-${i}`, ai_analysis: { why_match: r.why_match, market_insight: r.market_insight } })),
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
 
       const { data: assessment, error: aErr } = await supabase
         .from("batshare_assessments")
