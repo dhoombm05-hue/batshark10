@@ -85,8 +85,50 @@ serve(async (req) => {
                     estimated_roi: { type: "number" },
                     difficulty: { type: "string" },
                     why_match: { type: "string" },
-                    action_steps: { type: "array", items: { type: "string" } },
                     market_insight: { type: "string" },
+                    action_steps: { type: "array", items: { type: "string" } },
+                    swot: {
+                      type: "object",
+                      properties: {
+                        strengths: { type: "array", items: { type: "string" } },
+                        weaknesses: { type: "array", items: { type: "string" } },
+                        opportunities: { type: "array", items: { type: "string" } },
+                        threats: { type: "array", items: { type: "string" } },
+                      },
+                    },
+                    competitors: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: { name: { type: "string" }, strength_weakness: { type: "string" } },
+                        required: ["name", "strength_weakness"],
+                      },
+                    },
+                    roadmap: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: { phase: { type: "string" }, duration: { type: "string" }, actions: { type: "string" } },
+                        required: ["phase", "duration", "actions"],
+                      },
+                    },
+                    financial_projections: {
+                      type: "object",
+                      properties: {
+                        year1_revenue: { type: "number" },
+                        year1_expenses: { type: "number" },
+                        break_even_months: { type: "number" },
+                        gross_margin: { type: "number" },
+                      },
+                    },
+                    risks: { type: "array", items: { type: "string" } },
+                    analyst_metrics: {
+                      type: "object",
+                      properties: {
+                        TAM: { type: "string" }, SAM: { type: "string" }, SOM: { type: "string" },
+                        CAC: { type: "string" }, LTV: { type: "string" }, Burn: { type: "string" },
+                      },
+                    },
                   },
                   required: ["title", "description", "business_type", "match_percentage", "required_budget", "estimated_roi", "difficulty", "why_match", "action_steps"],
                 },
