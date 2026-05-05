@@ -140,23 +140,34 @@ serve(async (req) => {
       };
 
       const levelGuidance: Record<string, string> = {
-        beginner: "المستخدم مبتدئ تماماً. اقترح أفكاراً بسيطة منخفضة المخاطر بميزانيات صغيرة، مع شرح مبسط وخطوات تنفيذية مباشرة جداً.",
-        intermediate: "المستخدم متوسط الخبرة. قدم أفكاراً متوسطة التعقيد مع تحليل تنافسي مختصر وعوامل التميز.",
-        advanced: "المستخدم متقدم. قدم نماذج أعمال مبتكرة، تحليل عميق للسوق، استراتيجيات تسعير وتوسع، ومقارنة بين 3-5 خيارات بمؤشرات مالية دقيقة.",
-        analyst: "المستخدم محلل احترافي. قدم تحليلاً كميّاً عميقاً (TAM/SAM/SOM، CAC/LTV، Burn، Break-even)، سيناريوهات حساسية، ومخاطر سوقية وتنظيمية.",
+        beginner: "المستخدم مبتدئ تماماً. اقترح 3 أفكار بسيطة منخفضة المخاطر بميزانيات صغيرة، خطوات تنفيذ مباشرة وروادمب من 3 مراحل، وSWOT مختصر.",
+        intermediate: "المستخدم متوسط الخبرة. قدّم 3-4 أفكار متوسطة التعقيد مع SWOT كامل، 2-3 منافسين، روادمب 4-5 مراحل، وتوقعات مالية لسنة كاملة.",
+        advanced: "المستخدم متقدم. قدّم 4 أفكار بنماذج أعمال مبتكرة مع SWOT تفصيلي، 3 منافسين على الأقل، روادمب 5-6 مراحل، توقعات مالية دقيقة (إيراد/مصاريف/Break-even/هامش)، ومخاطر استراتيجية.",
+        analyst: "المستخدم محلل احترافي. قدّم 4-5 أفكار بتحليل كمي عميق: حقل analyst_metrics مع TAM/SAM/SOM/CAC/LTV/Burn (نصوص رقمية)، financial_projections كاملة، 3-4 منافسين بتحليل دقيق، روادمب 6 مراحل، ومخاطر سوقية وتنظيمية.",
       };
       const guideExtra = levelGuidance[track] || "";
-      const systemPrompt = `أنت Batshare 99 - عقل ذكاء اصطناعي متقدم لتوليد ونمذجة الأعمال. حلل إجابات المستخدم بعمق (نمط تفكير، تحمل مخاطرة، أسلوب قرار) واقترح 3-5 أفكار بزنس بنسبة توافق حقيقية (60-100). ${guideExtra} أجب بعربية فصحى احترافية.`;
-      const userPrompt = `المسار/المستوى: ${track}\nنوع المستخدم: ${isGuest ? "زائر مجهول" : "عضو مسجل"}\nالإجابات:\n${JSON.stringify(answers, null, 2)}`;
+      const systemPrompt = `أنت Batshare 99 — منصة احترافية لتوليد ونمذجة الأعمال بذكاء اصطناعي. حلّل سلوك المستخدم بعمق (نمط تفكير، تحمّل مخاطر، أسلوب قرار، نقاط قوة/ضعف) ثم أنتج توصيات عميقة بنسب توافق حقيقية (60-100). كل توصية يجب أن تتضمن: SWOT كامل، 2-4 منافسين بأسماء واقعية، خارطة طريق تنفيذية مرحلية، توقعات مالية أرقام حقيقية، ومخاطر. ${guideExtra} الإجابة بعربية فصحى احترافية وأرقام منطقية لسوق الخليج/السعودية.`;
+      const userPrompt = `المسار/المستوى: ${track}\nنوع المستخدم: ${isGuest ? "زائر مجهول" : "عضو مسجل"}\nالإجابات الكاملة:\n${JSON.stringify(answers, null, 2)}`;
 
       const result = await callAI(systemPrompt, userPrompt, tool);
+
+      const enrichRec = (r: any) => ({
+        why_match: r.why_match,
+        market_insight: r.market_insight,
+        swot: r.swot,
+        competitors: r.competitors,
+        roadmap: r.roadmap,
+        financial_projections: r.financial_projections,
+        risks: r.risks,
+        analyst_metrics: r.analyst_metrics,
+      });
 
       if (isGuest) {
         return new Response(JSON.stringify({
           guest: true,
           behavior: result.behavior_analysis,
           ai_summary: result.ai_summary,
-          recommendations: result.recommendations.map((r: any, i: number) => ({ ...r, id: `guest-${i}`, ai_analysis: { why_match: r.why_match, market_insight: r.market_insight } })),
+          recommendations: result.recommendations.map((r: any, i: number) => ({ ...r, id: `guest-${i}`, ai_analysis: enrichRec(r) })),
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
@@ -188,13 +199,22 @@ serve(async (req) => {
         required_budget: r.required_budget,
         estimated_roi: r.estimated_roi,
         difficulty: r.difficulty,
-        ai_analysis: { why_match: r.why_match, market_insight: r.market_insight },
+        ai_analysis: enrichRec(r),
         action_steps: r.action_steps,
         status: "suggested",
       }));
       const { data: recs } = await supabase.from("batshare_recommendations").insert(recsToInsert).select();
+      const final = (recs || []).map((dbRec: any) => ({
+        ...dbRec,
+        swot: dbRec.ai_analysis?.swot,
+        competitors: dbRec.ai_analysis?.competitors,
+        roadmap: dbRec.ai_analysis?.roadmap,
+        financial_projections: dbRec.ai_analysis?.financial_projections,
+        risks: dbRec.ai_analysis?.risks,
+        analyst_metrics: dbRec.ai_analysis?.analyst_metrics,
+      }));
 
-      return new Response(JSON.stringify({ assessment, recommendations: recs, behavior: result.behavior_analysis }), {
+      return new Response(JSON.stringify({ assessment, recommendations: final, behavior: result.behavior_analysis, ai_summary: result.ai_summary }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
