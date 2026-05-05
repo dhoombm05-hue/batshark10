@@ -496,12 +496,10 @@ export default function Batshare99() {
                 </div>
               </div>
             </div>
-            <Button
-              size="lg"
-              onClick={() => window.open('/build', '_blank', 'noopener,noreferrer')}
-              className="gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg hover:opacity-90 whitespace-nowrap"
-            >
-              <Sparkles className="w-4 h-4" /> فتح المنصة المستقلة
+            <Button asChild size="lg" className="gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg hover:opacity-90 whitespace-nowrap">
+              <a href="/build" target="_blank" rel="noopener noreferrer">
+                <Sparkles className="w-4 h-4" /> فتح المنصة المستقلة
+              </a>
             </Button>
           </div>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-muted-foreground">
