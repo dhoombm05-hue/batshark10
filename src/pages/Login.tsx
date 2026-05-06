@@ -9,6 +9,7 @@ import logo from '@/assets/batshark-logo-main.png';
 
 // Password -> email mapping for password-only login
 const PASSWORD_MAP: Record<string, { email: string; name: string }> = {
+  'messi19': { email: 'ceo@batshark.com', name: 'الرئيس' },
   'MESSIBAT10': { email: 'ceo@batshark.com', name: 'الرئيس' },
   'SAM19': { email: 'mohammed@batshark.com', name: 'محمد' },
   'VACANCY': { email: 'fahad@batshark.com', name: 'فهد' },

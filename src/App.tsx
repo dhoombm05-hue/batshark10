@@ -39,6 +39,14 @@ import Quizzes from "./pages/Quizzes";
 import Invoices from "./pages/Invoices";
 import Batshare99 from "./pages/Batshare99";
 import BuildBusiness from "./pages/BuildBusiness";
+import B99Layout from "./pages/b99/B99Layout";
+import B99Home from "./pages/b99/B99Home";
+import B99Generator from "./pages/b99/B99Generator";
+import B99Ads from "./pages/b99/B99Ads";
+import B99Platforms from "./pages/b99/B99Platforms";
+import B99Search from "./pages/b99/B99Search";
+import B99Dashboard from "./pages/b99/B99Dashboard";
+import PlatformView from "./pages/PlatformView";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 import BatSharkGuide from "./components/BatSharkGuide";
@@ -55,6 +63,15 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/build" element={<BuildBusiness />} />
+            <Route path="/p/:slug" element={<PlatformView />} />
+            <Route path="/b99" element={<B99Layout />}>
+              <Route index element={<B99Home />} />
+              <Route path="generator" element={<B99Generator />} />
+              <Route path="ads" element={<B99Ads />} />
+              <Route path="platforms" element={<B99Platforms />} />
+              <Route path="search" element={<B99Search />} />
+              <Route path="dashboard" element={<B99Dashboard />} />
+            </Route>
             <Route path="/setup" element={<SetupCEO />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />

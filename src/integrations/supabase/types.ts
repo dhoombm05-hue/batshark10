@@ -80,6 +80,72 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_campaigns: {
+        Row: {
+          ad_copy: string | null
+          ad_type: string
+          ai_analysis: Json | null
+          audience: Json | null
+          best_times: Json | null
+          brief: string | null
+          budget: number | null
+          business_type: string | null
+          created_at: string
+          cta: string | null
+          hashtags: Json | null
+          id: string
+          name: string
+          platforms: Json
+          project_id: string | null
+          status: string
+          templates: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_copy?: string | null
+          ad_type?: string
+          ai_analysis?: Json | null
+          audience?: Json | null
+          best_times?: Json | null
+          brief?: string | null
+          budget?: number | null
+          business_type?: string | null
+          created_at?: string
+          cta?: string | null
+          hashtags?: Json | null
+          id?: string
+          name: string
+          platforms?: Json
+          project_id?: string | null
+          status?: string
+          templates?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_copy?: string | null
+          ad_type?: string
+          ai_analysis?: Json | null
+          audience?: Json | null
+          best_times?: Json | null
+          brief?: string | null
+          budget?: number | null
+          business_type?: string | null
+          created_at?: string
+          cta?: string | null
+          hashtags?: Json | null
+          id?: string
+          name?: string
+          platforms?: Json
+          project_id?: string | null
+          status?: string
+          templates?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           change_reason: string | null
@@ -1333,6 +1399,66 @@ export type Database = {
           slug?: string
           updated_at?: string
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      generated_platforms: {
+        Row: {
+          access_code: string | null
+          brand: Json | null
+          created_at: string
+          features: Json | null
+          id: string
+          is_public: boolean
+          meta: Json | null
+          name: string
+          owner_email: string | null
+          pages: Json
+          platform_type: string
+          slug: string
+          status: string
+          tagline: string | null
+          updated_at: string
+          user_id: string | null
+          views: number
+        }
+        Insert: {
+          access_code?: string | null
+          brand?: Json | null
+          created_at?: string
+          features?: Json | null
+          id?: string
+          is_public?: boolean
+          meta?: Json | null
+          name: string
+          owner_email?: string | null
+          pages?: Json
+          platform_type?: string
+          slug: string
+          status?: string
+          tagline?: string | null
+          updated_at?: string
+          user_id?: string | null
+          views?: number
+        }
+        Update: {
+          access_code?: string | null
+          brand?: Json | null
+          created_at?: string
+          features?: Json | null
+          id?: string
+          is_public?: boolean
+          meta?: Json | null
+          name?: string
+          owner_email?: string | null
+          pages?: Json
+          platform_type?: string
+          slug?: string
+          status?: string
+          tagline?: string | null
+          updated_at?: string
+          user_id?: string | null
+          views?: number
         }
         Relationships: []
       }
