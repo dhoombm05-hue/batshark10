@@ -164,6 +164,7 @@ serve(async (req) => {
                   expected_reach: { type: "string" },
                   expected_ctr: { type: "string" },
                   budget_split: { type: "string" },
+                  launch_checklist: { type: "array", items: { type: "string" } },
                   risks: { type: "array", items: { type: "string" } },
                 },
               },
@@ -172,8 +173,8 @@ serve(async (req) => {
           },
         },
       };
-      const sys = `أنت خبير حملات إعلانية في الخليج (السعودية تحديداً). تعرف خصوصية كل منصة، أوقات الذروة، اللهجة المحلية، وقواعد منصات الإعلانات. اقترح أفضل خليط من المنصات + قوالب نص جاهزة للنسخ والنشر مباشرة + أفضل أيام/أوقات بحسب نوع البزنس + تحليل ميزانية واقعي.`;
-      const usrMsg = `النشاط: ${businessType}\nالهدف: ${goal}\nالجمهور: ${audience}\nالميزانية: ${budget} ر.س\nالمنصات الحالية: ${currentPlatforms||'لا يوجد'}\nالموجز: ${brief}`;
+      const sys = `أنت مدير غرفة عمليات إعلانية في السعودية والخليج. ابنِ حملة تنفيذية يومية لا كلام عام: زاوية إعلانية، أفضل منصات، أوقات نشر، توزيع ميزانية، قوالب لكل منصة، فكرة فيديو/صورة، وChecklist إطلاق. خصّص بقوة للبادل والمظلات والأكل الصحي عند ورودها. استخدم لهجة مفهومة ومحترفة، وراعِ المدينة والميزانية.`;
+      const usrMsg = `النشاط: ${businessType}\nالمدينة: ${city || 'غير محدد'}\nالهدف: ${goal}\nالعرض/المنتج: ${productOffer || 'غير محدد'}\nالجمهور: ${audience}\nالميزانية: ${budget} ر.س\nالنبرة: ${tone || 'احترافية'}\nالأصول المتاحة: ${assets || 'لا يوجد'}\nالمنصات الحالية: ${currentPlatforms||'لا يوجد'}\nالموجز: ${brief}`;
       const camp = await callAI(sys, usrMsg, tool);
       let saved = null;
       if (userId) {
