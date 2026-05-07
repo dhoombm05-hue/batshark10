@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOutletContext, useLocation } from 'react-router-dom';
+import { useLocation, useOutletContext } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,24 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Megaphone, Sparkles, RefreshCw, Calendar, Hash, Copy, Check, TrendingUp, Target, AlertTriangle, Image as ImgIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AlertTriangle, Calendar, Check, Copy, Hash, Image as ImageIcon, Megaphone, RefreshCw, Rocket, Search, Sparkles, Target, TrendingUp, Video } from 'lucide-react';
 
 const PRESETS = [
-  { id: 'padel', name: 'ملاعب بادل', goal: 'حجوزات' },
-  { id: 'umbrella', name: 'مظلات سيارات', goal: 'استفسار وتركيب' },
-  { id: 'screen', name: 'شاشات إعلانية', goal: 'عقود إيجار' },
-  { id: 'custom', name: 'مخصص', goal: 'حسب الاختيار' },
-];
-
-const DEFAULT_PLATFORMS = [
-  { id: 'instagram', name: 'Instagram' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'snapchat', name: 'Snapchat' },
-  { id: 'twitter', name: 'X / Twitter' },
-  { id: 'google_ads', name: 'Google Ads' },
-  { id: 'youtube', name: 'YouTube' },
+  { id: 'padel', name: 'ملاعب بادل', goal: 'حجوزات', audience: 'شباب وموظفين 18-40 داخل المدينة، يهتمون بالرياضة والترفيه' },
+  { id: 'umbrella', name: 'مظلات سيارات', goal: 'عملاء محتملين', audience: 'أصحاب منازل واستراحات وشركات يحتاجون تركيب مظلات' },
+  { id: 'healthy-food', name: 'أكل صحي', goal: 'مبيعات مباشرة', audience: 'موظفين ورياضيين ومهتمين بالدايت' },
+  { id: 'custom', name: 'مخصص', goal: 'حسب الاختيار', audience: '' },
 ];
 
 export default function B99Ads() {
@@ -34,8 +25,16 @@ export default function B99Ads() {
   const prefill = (location.state as any)?.prefill;
   const [preset, setPreset] = useState('padel');
   const [form, setForm] = useState({
-    businessType: 'ملاعب بادل', goal: 'حجوزات', audience: 'شباب 18-35 محبي الرياضة',
-    budget: 1000, brief: '', currentPlatforms: '',
+    businessType: 'ملاعب بادل',
+    goal: 'حجوزات',
+    audience: 'شباب وموظفين 18-40 داخل المدينة، يهتمون بالرياضة والترفيه',
+    budget: 1000,
+    city: 'الرياض',
+    productOffer: '',
+    brief: '',
+    tone: 'لهجة سعودية احترافية',
+    assets: 'لا يوجد',
+    currentPlatforms: '',
   });
   const [loading, setLoading] = useState(false);
   const [campaign, setCampaign] = useState<any>(null);
@@ -58,12 +57,13 @@ export default function B99Ads() {
 
   const applyPreset = (p: string) => {
     setPreset(p);
-    const found = PRESETS.find(x => x.id === p);
-    if (found && p !== 'custom') setForm((f) => ({ ...f, businessType: found.name, goal: found.goal }));
+    const found = PRESETS.find((x) => x.id === p);
+    if (found && p !== 'custom') setForm((f) => ({ ...f, businessType: found.name, goal: found.goal, audience: found.audience }));
   };
 
   const generate = async () => {
-    setLoading(true); setCampaign(null);
+    setLoading(true);
+    setCampaign(null);
     try {
       const { data, error } = await supabase.functions.invoke('b99-engine', {
         body: { action: 'generate_campaign', userId: identity?.userId, payload: form },
@@ -71,10 +71,13 @@ export default function B99Ads() {
       if (error) throw error;
       if (data.error) throw new Error(data.error);
       setCampaign(data.campaign);
-      toast.success('تم بناء الحملة');
+      toast.success('تم بناء غرفة عمليات الحملة');
       loadHistory();
-    } catch (e: any) { toast.error(e.message); }
-    finally { setLoading(false); }
+    } catch (e: any) {
+      toast.error(e.message || 'تعذر توليد الحملة');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyTemplate = (text: string, i: number) => {
@@ -86,156 +89,78 @@ export default function B99Ads() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <div className="text-xs text-slate-400 uppercase tracking-widest">ركن الحملات الإعلانية</div>
-        <h1 className="text-2xl md:text-3xl font-black flex items-center gap-2"><Megaphone className="w-6 h-6 text-rose-400" /> إستوديو الإعلانات الذكي</h1>
-        <p className="text-sm text-slate-400 mt-2">معطيات خفيفة → حملة جاهزة بقوالب نشر، أفضل أوقات، توزيع منصات.</p>
+      <header className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/80 p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,hsl(10_90%_55%/0.18),transparent_35%),radial-gradient(circle_at_80%_0%,hsl(45_95%_55%/0.14),transparent_35%)]" />
+        <div className="relative">
+          <div className="text-xs text-slate-400 uppercase tracking-widest">Advertising War Room</div>
+          <h1 className="mt-1 flex items-center gap-2 text-2xl md:text-4xl font-black"><Megaphone className="w-7 h-7 text-rose-400" /> منصة الحملات الإعلانية</h1>
+          <p className="mt-2 max-w-2xl text-sm text-slate-300 leading-relaxed">أعطها معطيات خفيفة؛ ترجع لك خطة نشر، أفضل أوقات، قوالب لكل منصة، فكرة فيديو، وزوايا إعلانية جاهزة.</p>
+        </div>
       </header>
 
-      <Card className="bg-white/[0.03] border-white/10 p-5">
-        <div className="text-xs text-slate-400 mb-2">قالب سريع</div>
-        <div className="flex flex-wrap gap-2 mb-5">
-          {PRESETS.map(p => (
-            <button key={p.id} onClick={() => applyPreset(p.id)}
-              className={`px-3 py-1.5 rounded-full text-xs border transition-all ${preset === p.id ? 'bg-gradient-to-r from-rose-500 to-orange-500 border-transparent text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/30'}`}>
-              {p.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><Label className="text-xs">نوع النشاط</Label><Input value={form.businessType} onChange={(e) => setForm({...form, businessType: e.target.value})} className="bg-slate-900/60 border-white/10" /></div>
-          <div><Label className="text-xs">الهدف من الحملة</Label>
-            <Select value={form.goal} onValueChange={(v) => setForm({...form, goal: v})}>
-              <SelectTrigger className="bg-slate-900/60 border-white/10"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {['حجوزات','وعي بالعلامة','مبيعات مباشرة','عملاء محتملين','تنزيل تطبيق','زيارات موقع'].map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-              </SelectContent>
-            </Select>
+      <div className="grid grid-cols-1 lg:grid-cols-[390px_1fr] gap-5">
+        <Card className="border-white/10 bg-white/[0.035] p-5">
+          <div className="mb-4 text-xs text-slate-400">قوالب يومية سريعة</div>
+          <div className="grid grid-cols-2 gap-2 mb-5">
+            {PRESETS.map((p) => <button key={p.id} onClick={() => applyPreset(p.id)} className={`rounded-xl border px-3 py-2 text-xs transition-all ${preset === p.id ? 'border-transparent bg-rose-500 text-white' : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/30'}`}>{p.name}</button>)}
           </div>
-          <div><Label className="text-xs">الجمهور المستهدف</Label><Input value={form.audience} onChange={(e) => setForm({...form, audience: e.target.value})} className="bg-slate-900/60 border-white/10" placeholder="مثال: شباب 25-40 الرياض" /></div>
-          <div><Label className="text-xs">الميزانية (ر.س)</Label><Input type="number" value={form.budget} onChange={(e) => setForm({...form, budget: Number(e.target.value)})} className="bg-slate-900/60 border-white/10" /></div>
-          <div className="md:col-span-2"><Label className="text-xs">الموجز / ما تريد إيصاله</Label>
-            <Textarea value={form.brief} onChange={(e) => setForm({...form, brief: e.target.value})} rows={3}
-              placeholder="اكتب باختصار ما تريد إيصاله، أو ميزتك، أو عرض خاص..."
-              className="bg-slate-900/60 border-white/10" />
+          <div className="space-y-3">
+            <Field label="نوع النشاط"><Input value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })} className="border-white/10 bg-slate-950/70" /></Field>
+            <Field label="المدينة"><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="border-white/10 bg-slate-950/70" /></Field>
+            <Field label="الهدف"><Select value={form.goal} onValueChange={(v) => setForm({ ...form, goal: v })}><SelectTrigger className="border-white/10 bg-slate-950/70"><SelectValue /></SelectTrigger><SelectContent>{['حجوزات', 'وعي بالعلامة', 'مبيعات مباشرة', 'عملاء محتملين', 'زيارات موقع', 'رسائل واتساب'].map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent></Select></Field>
+            <Field label="الميزانية اليومية/الأسبوعية"><Input type="number" value={form.budget} onChange={(e) => setForm({ ...form, budget: Number(e.target.value) })} className="border-white/10 bg-slate-950/70" /></Field>
+            <Field label="العرض أو المنتج"><Input value={form.productOffer} onChange={(e) => setForm({ ...form, productOffer: e.target.value })} placeholder="خصم، باقة، حجز ساعة..." className="border-white/10 bg-slate-950/70" /></Field>
+            <Field label="الجمهور"><Textarea value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })} rows={3} className="border-white/10 bg-slate-950/70" /></Field>
+            <Field label="ملاحظات إضافية"><Textarea value={form.brief} onChange={(e) => setForm({ ...form, brief: e.target.value })} rows={3} className="border-white/10 bg-slate-950/70" placeholder="مميزاتك، منافسك، وقت الافتتاح، أي عرض خاص..." /></Field>
           </div>
-        </div>
-
-        <Button onClick={generate} disabled={loading} className="w-full mt-5 h-12 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 gap-2 text-white font-bold">
-          {loading ? <><RefreshCw className="w-4 h-4 animate-spin" /> AI يبني الحملة...</> : <><Sparkles className="w-4 h-4" /> ولّد الحملة الكاملة</>}
-        </Button>
-      </Card>
-
-      <AnimatePresence>
-        {campaign && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <Card className="bg-gradient-to-br from-rose-500/15 to-orange-500/10 border-white/10 p-6">
-              <h2 className="text-2xl font-black mb-2">{campaign.name}</h2>
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {campaign.platforms?.map((p: string) => <Badge key={p} className="bg-white/10 text-white border border-white/20 text-[10px] uppercase">{p}</Badge>)}
-              </div>
-              <div className="bg-black/30 rounded-lg p-4 border border-white/10">
-                <div className="text-[10px] text-slate-400 mb-1">نسخة الإعلان الرئيسية</div>
-                <div className="text-sm leading-relaxed whitespace-pre-line">{campaign.ad_copy}</div>
-                <div className="mt-3 inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                  CTA: {campaign.cta}
-                </div>
-              </div>
-              {campaign.hashtags?.length > 0 && (
-                <div className="mt-3 flex items-center gap-1.5 flex-wrap">
-                  <Hash className="w-3.5 h-3.5 text-slate-400" />
-                  {campaign.hashtags.map((h: string) => <span key={h} className="text-xs text-cyan-300">#{h.replace(/^#/, '')}</span>)}
-                </div>
-              )}
-            </Card>
-
-            {campaign.best_times?.length > 0 && (
-              <Card className="bg-white/[0.03] border-white/10 p-5">
-                <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Calendar className="w-4 h-4 text-amber-300" /> أفضل أوقات النشر</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  {campaign.best_times.map((t: any, i: number) => (
-                    <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-3">
-                      <div className="font-bold text-sm">{t.day}</div>
-                      <div className="text-xs text-amber-300">{t.time}</div>
-                      {t.reason && <div className="text-[11px] text-slate-400 mt-1">{t.reason}</div>}
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {campaign.templates?.length > 0 && (
-              <Card className="bg-white/[0.03] border-white/10 p-5">
-                <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-300" /> قوالب جاهزة للنشر ({campaign.templates.length})</h3>
-                <div className="space-y-3">
-                  {campaign.templates.map((t: any, i: number) => (
-                    <div key={i} className="bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline" className="border-white/20 text-slate-300 text-[10px] uppercase">{t.platform}</Badge>
-                        <button onClick={() => copyTemplate(`${t.headline}\n\n${t.body}`, i)}
-                          className="text-xs text-violet-300 hover:text-white flex items-center gap-1">
-                          {copiedIdx === i ? <><Check className="w-3 h-3" /> تم النسخ</> : <><Copy className="w-3 h-3" /> نسخ</>}
-                        </button>
-                      </div>
-                      <div className="font-bold text-sm mb-1.5">{t.headline}</div>
-                      <div className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{t.body}</div>
-                      {t.visual_idea && (
-                        <div className="mt-3 flex items-start gap-2 text-xs text-cyan-300 bg-cyan-500/5 border border-cyan-500/20 rounded p-2">
-                          <ImgIcon className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                          <div><span className="font-bold">فكرة بصرية: </span>{t.visual_idea}</div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {campaign.ai_analysis && (
-              <Card className="bg-white/[0.03] border-white/10 p-5">
-                <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Target className="w-4 h-4 text-emerald-300" /> تحليل الحملة</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  {campaign.ai_analysis.positioning && <Info label="التموضع" value={campaign.ai_analysis.positioning} />}
-                  {campaign.ai_analysis.expected_reach && <Info label="الوصول المتوقع" value={campaign.ai_analysis.expected_reach} />}
-                  {campaign.ai_analysis.expected_ctr && <Info label="CTR متوقع" value={campaign.ai_analysis.expected_ctr} />}
-                  {campaign.ai_analysis.budget_split && <Info label="توزيع الميزانية" value={campaign.ai_analysis.budget_split} />}
-                </div>
-                {campaign.ai_analysis.risks?.length > 0 && (
-                  <div className="mt-4 bg-rose-500/5 border border-rose-500/20 rounded-lg p-3">
-                    <div className="text-xs font-bold text-rose-300 mb-1.5 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> مخاطر</div>
-                    <ul className="text-xs text-slate-300 list-disc mr-4 space-y-0.5">
-                      {campaign.ai_analysis.risks.map((r: string, i: number) => <li key={i}>{r}</li>)}
-                    </ul>
-                  </div>
-                )}
-              </Card>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {history.length > 0 && (
-        <Card className="bg-white/[0.03] border-white/10 p-5">
-          <h3 className="text-sm font-bold mb-3">حملاتك السابقة</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {history.map((h: any) => (
-              <button key={h.id} onClick={() => setCampaign({ ...h, ad_copy: h.ad_copy })}
-                className="text-right p-3 bg-white/5 border border-white/10 rounded-lg hover:border-white/30">
-                <div className="font-bold text-sm">{h.name}</div>
-                <div className="text-[10px] text-slate-400">{h.business_type} • {(h.platforms||[]).slice(0,3).join(', ')}</div>
-              </button>
-            ))}
-          </div>
+          <Button onClick={generate} disabled={loading} className="mt-5 h-12 w-full bg-gradient-to-l from-rose-500 via-orange-500 to-amber-400 font-bold text-white">
+            {loading ? <><RefreshCw className="h-4 w-4 animate-spin" /> يحلل السوق والتوقيت...</> : <><Sparkles className="h-4 w-4" /> ولّد غرفة عمليات الإعلان</>}
+          </Button>
         </Card>
-      )}
+
+        <div className="space-y-4">
+          {!campaign && <EmptyOps />}
+          <AnimatePresence>
+            {campaign && (
+              <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                <Card className="border-white/10 bg-gradient-to-br from-rose-500/15 to-amber-500/10 p-6">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <Badge className="mb-2 border-emerald-500/30 bg-emerald-500/15 text-emerald-300">جاهزة للنشر</Badge>
+                      <h2 className="text-2xl md:text-3xl font-black">{campaign.name}</h2>
+                      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300">{campaign.ad_copy}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-center"><div className="text-[10px] text-slate-500">CTA</div><div className="mt-1 font-black text-amber-300">{campaign.cta}</div></div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-1.5">{campaign.platforms?.map((p: string) => <Badge key={p} className="border-white/20 bg-white/10 text-[10px] text-white">{p}</Badge>)}</div>
+                </Card>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {(campaign.best_times || []).map((t: any, i: number) => <Card key={i} className="border-white/10 bg-white/[0.035] p-4"><Calendar className="mb-2 h-4 w-4 text-amber-300" /><div className="text-sm font-bold">{t.day}</div><div className="text-xs text-amber-200">{t.time}</div><p className="mt-2 text-[11px] text-slate-400">{t.reason}</p></Card>)}
+                </div>
+
+                <Card className="border-white/10 bg-white/[0.035] p-5"><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><Video className="h-4 w-4 text-cyan-300" /> قوالب وزوايا جاهزة</h3><div className="space-y-3">{campaign.templates?.map((t: any, i: number) => <div key={i} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4"><div className="mb-2 flex items-center justify-between gap-2"><Badge variant="outline" className="border-white/20 text-slate-300 text-[10px]">{t.platform}</Badge><button onClick={() => copyTemplate(`${t.headline}\n\n${t.body}\n\n${t.visual_idea || ''}`, i)} className="flex items-center gap-1 text-xs text-cyan-300 hover:text-white">{copiedIdx === i ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />} نسخ</button></div><h4 className="font-bold">{t.headline}</h4><p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300">{t.body}</p>{t.visual_idea && <div className="mt-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-cyan-200"><ImageIcon className="inline h-3.5 w-3.5" /> {t.visual_idea}</div>}</div>)}</div></Card>
+
+                {campaign.ai_analysis && <Card className="border-white/10 bg-white/[0.035] p-5"><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><Target className="h-4 w-4 text-emerald-300" /> تحليل وتنفيذ</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><Info label="التموضع" value={campaign.ai_analysis.positioning} icon={TrendingUp} /><Info label="الوصول المتوقع" value={campaign.ai_analysis.expected_reach} icon={Search} /><Info label="CTR" value={campaign.ai_analysis.expected_ctr} icon={Target} /><Info label="توزيع الميزانية" value={campaign.ai_analysis.budget_split} icon={Megaphone} /></div>{campaign.ai_analysis.risks?.length > 0 && <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/5 p-3"><div className="mb-2 flex items-center gap-1 text-xs font-bold text-rose-300"><AlertTriangle className="h-3 w-3" /> انتبه</div><ul className="list-disc pr-4 text-xs text-slate-300">{campaign.ai_analysis.risks.map((r: string, i: number) => <li key={i}>{r}</li>)}</ul></div>}</Card>}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {history.length > 0 && <Card className="border-white/10 bg-white/[0.03] p-5"><h3 className="mb-3 text-sm font-black">حملاتك السابقة</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-2">{history.map((h: any) => <button key={h.id} onClick={() => setCampaign({ ...h, ad_copy: h.ad_copy })} className="rounded-xl border border-white/10 bg-white/5 p-3 text-right hover:border-white/30"><div className="text-sm font-bold">{h.name}</div><div className="text-[10px] text-slate-500">{h.business_type}</div></button>)}</div></Card>}
+        </div>
+      </div>
     </div>
   );
 }
 
-function Info({ label, value }: any) {
-  return <div className="bg-white/5 border border-white/10 rounded p-2.5">
-    <div className="text-[10px] text-slate-400">{label}</div>
-    <div className="text-xs text-slate-200 mt-0.5">{value}</div>
-  </div>;
+function Field({ label, children }: any) {
+  return <div><Label className="mb-2 block text-xs text-slate-300">{label}</Label>{children}</div>;
+}
+
+function Info({ label, value, icon: Icon }: any) {
+  return <div className="rounded-xl border border-white/10 bg-black/25 p-3"><Icon className="mb-1 h-4 w-4 text-cyan-300" /><div className="text-[10px] text-slate-500">{label}</div><div className="mt-1 text-xs text-slate-200">{value || '—'}</div></div>;
+}
+
+function EmptyOps() {
+  return <Card className="border-white/10 bg-slate-950/80 p-8 text-center"><Megaphone className="mx-auto mb-3 h-12 w-12 text-rose-300" /><h2 className="text-xl font-black">غرفة العمليات تنتظر المعطيات</h2><p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-400">اختر قالب يومي مثل البادل أو المظلات، أو اكتب نشاطك. سيولد النظام إعلاناً عملياً وليس كلاماً عاماً.</p></Card>;
 }

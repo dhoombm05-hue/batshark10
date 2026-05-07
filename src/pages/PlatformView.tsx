@@ -19,11 +19,15 @@ export default function PlatformView() {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase.from('generated_platforms').select('*').eq('slug', slug!).maybeSingle();
+      const { data, error } = await supabase
+        .from('generated_platforms')
+        .select('id,user_id,owner_email,slug,name,tagline,platform_type,is_public,brand,pages,features,meta,status,views,requirements,build_level,build_mode,created_at,updated_at')
+        .eq('slug', slug!)
+        .maybeSingle();
       setLoading(false);
       if (error || !data) return;
       setPlatform(data);
-      if (data.access_code && !data.is_public) setNeedsCode(true); else setAuthorized(true);
+      if (!data.is_public) setNeedsCode(true); else setAuthorized(true);
       // increment views
       supabase.from('generated_platforms').update({ views: (data.views || 0) + 1 }).eq('id', data.id);
     })();
@@ -48,7 +52,10 @@ export default function PlatformView() {
           <h1 className="text-xl font-bold text-center mb-1">{platform.name}</h1>
           <p className="text-xs text-slate-400 text-center mb-4">منصة محمية — أدخل رمز المرور</p>
           <Input type="password" value={code} onChange={(e) => setCode(e.target.value)} className="bg-slate-800 border-white/10 mb-3" />
-          <Button onClick={() => { if (code === platform.access_code) setAuthorized(true); else alert('رمز غير صحيح'); }} className="w-full">دخول</Button>
+          <Button onClick={async () => {
+            const { data } = await (supabase as any).rpc('verify_platform_access', { _slug: platform.slug, _access_code: code });
+            if (data) setAuthorized(true); else alert('رمز غير صحيح');
+          }} className="w-full">دخول</Button>
         </Card>
       </div>
     );

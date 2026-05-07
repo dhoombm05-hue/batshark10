@@ -67,6 +67,7 @@ const App = () => (
             <Route path="/b99" element={<B99Layout />}>
               <Route index element={<B99Home />} />
               <Route path="generator" element={<B99Generator />} />
+              <Route path="generator/:level" element={<B99Generator />} />
               <Route path="ads" element={<B99Ads />} />
               <Route path="platforms" element={<B99Platforms />} />
               <Route path="search" element={<B99Search />} />

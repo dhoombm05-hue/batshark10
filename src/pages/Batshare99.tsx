@@ -497,8 +497,8 @@ export default function Batshare99() {
               </div>
             </div>
             <Button asChild size="lg" className="gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg hover:opacity-90 whitespace-nowrap">
-              <a href="/build" target="_blank" rel="noopener noreferrer">
-                <Sparkles className="w-4 h-4" /> فتح المنصة المستقلة
+              <a href="/b99" target="_blank" rel="noopener noreferrer">
+                <Sparkles className="w-4 h-4" /> فتح Batshark99
               </a>
             </Button>
           </div>

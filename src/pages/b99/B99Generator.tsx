@@ -1,315 +1,348 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, Brain, Rocket, Wrench, TrendingUp, BarChart3, ArrowLeft, ArrowRight, Send, Bot, RefreshCw, Trophy, Target, Layers, DollarSign, Activity, Map, Sword, Lightbulb } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  ArrowLeft,
+  BarChart3,
+  Bot,
+  CheckCircle2,
+  ClipboardList,
+  CreditCard,
+  ExternalLink,
+  Image,
+  Layers,
+  Lock,
+  Megaphone,
+  RefreshCw,
+  Rocket,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Wrench,
+} from 'lucide-react';
 
 type Level = 'beginner' | 'intermediate' | 'advanced' | 'analyst';
 
-const LEVELS = [
-  { id: 'beginner' as Level, title: 'مبتدئ', desc: 'لا خبرة سابقة — يأخذني بخطوات بسيطة', icon: Rocket, accent: 'from-emerald-400 to-teal-500' },
-  { id: 'intermediate' as Level, title: 'متوسط', desc: 'لي خبرة أو مشروع قائم بسيط', icon: Wrench, accent: 'from-amber-400 to-orange-500' },
-  { id: 'advanced' as Level, title: 'متقدم', desc: 'إدارة أعمال فعلية ونماذج متقدمة', icon: TrendingUp, accent: 'from-blue-400 to-indigo-500' },
-  { id: 'analyst' as Level, title: 'محلل احترافي', desc: 'أريد تحليل كمي عميق ومؤشرات', icon: BarChart3, accent: 'from-fuchsia-400 to-pink-500' },
-];
+type Question = {
+  key: string;
+  label: string;
+  hint: string;
+  type: 'text' | 'textarea' | 'number' | 'select';
+  options?: string[];
+  placeholder?: string;
+  required?: boolean;
+};
+
+const LEVEL_CONFIG: Record<Level, { title: string; short: string; route: string; icon: any; accent: string; promise: string; questions: Question[] }> = {
+  beginner: {
+    title: 'المستوى 1 — مبتدئ',
+    short: 'يبني لك الفكرة من الصفر',
+    route: '/b99/generator/beginner',
+    icon: Rocket,
+    accent: 'from-emerald-400 via-teal-400 to-cyan-500',
+    promise: 'أسئلة سهلة، قرار واضح، ومنصة جاهزة بدون تعقيد.',
+    questions: [
+      { key: 'business_request', label: 'وش تبي تبني بالضبط؟', hint: 'مثال: منصة بيع أكل صحي، حجز ملاعب بادل، مظلات سيارات.', type: 'textarea', required: true, placeholder: 'اكتب طلبك مثل ما هو في بالك...' },
+      { key: 'city', label: 'المدينة والسوق', hint: 'نحدد اللغة والعروض والتوقيت حسب المكان.', type: 'text', placeholder: 'الرياض، جدة، الدمام...' },
+      { key: 'budget', label: 'ميزانيتك التقريبية', hint: 'حتى نقترح نسخة واقعية قابلة للتنفيذ.', type: 'number', placeholder: '5000' },
+      { key: 'main_image', label: 'الصورة المطلوبة في الشاشة الرئيسية', hint: 'إذا عندك وصف لصورة الشركة أو المنتج اكتبه هنا.', type: 'text', placeholder: 'صورة وجبات صحية، ملعب بادل، واجهة متجر...' },
+      { key: 'payment', label: 'طريقة الدفع', hint: 'مثال طلبك: الدفع كاش فقط.', type: 'select', options: ['كاش فقط', 'تحويل بنكي', 'دفع عند الاستلام', 'بطاقة/Apple Pay لاحقاً'] },
+    ],
+  },
+  intermediate: {
+    title: 'المستوى 2 — متوسط',
+    short: 'يطور بزنس قائم',
+    route: '/b99/generator/intermediate',
+    icon: Wrench,
+    accent: 'from-amber-300 via-orange-400 to-rose-500',
+    promise: 'تشخيص، تحسين تجربة العميل، وصفحات بيع أقوى.',
+    questions: [
+      { key: 'business_request', label: 'ما هو البزنس الحالي؟', hint: 'اكتب النشاط والوضع الحالي.', type: 'textarea', required: true },
+      { key: 'current_problem', label: 'أكبر مشكلة الآن', hint: 'مبيعات، حجوزات، ثقة، إعلان، تشغيل؟', type: 'textarea', required: true },
+      { key: 'monthly_revenue', label: 'الإيراد الشهري الحالي', hint: 'يساعد في اقتراح خطة نمو واقعية.', type: 'number' },
+      { key: 'customer_path', label: 'كيف يطلب منك العميل حالياً؟', hint: 'واتساب، اتصال، موقع، إنستقرام...', type: 'text' },
+      { key: 'upgrade_goal', label: 'هدف التطوير', hint: 'اختر النتيجة الأهم.', type: 'select', options: ['زيادة الحجوزات', 'زيادة المبيعات', 'تحسين الثقة', 'تقليل الأسئلة المتكررة', 'تنظيم الطلبات'] },
+    ],
+  },
+  advanced: {
+    title: 'المستوى 3 — متقدم',
+    short: 'يصمم منصة تشغيل ونمو',
+    route: '/b99/generator/advanced',
+    icon: TrendingUp,
+    accent: 'from-sky-400 via-blue-500 to-indigo-500',
+    promise: 'هيكل منصة، صفحات تشغيل، عروض، حملات، وربط نمو.',
+    questions: [
+      { key: 'business_request', label: 'نوع المنصة المطلوبة', hint: 'منصة بيع، حجوزات، خدمات، مجتمع، SaaS...', type: 'textarea', required: true },
+      { key: 'segments', label: 'شرائح العملاء', hint: 'اكتب كل شريحة وفائدتها.', type: 'textarea' },
+      { key: 'offers', label: 'العروض أو الباقات', hint: 'مثال: اشتراك شهري، باقة VIP، طلب فردي.', type: 'textarea' },
+      { key: 'operations', label: 'ماذا يحدث بعد الطلب؟', hint: 'تأكيد، توصيل، موعد، فريق، متابعة...', type: 'textarea' },
+      { key: 'growth_channel', label: 'قناة النمو الأساسية', hint: 'القناة التي تريد أن يبنى عليها التسويق.', type: 'select', options: ['Instagram/Snapchat', 'TikTok', 'Google Search', 'WhatsApp Sales', 'شراكات ومؤثرين'] },
+    ],
+  },
+  analyst: {
+    title: 'المستوى 4 — محلل احترافي',
+    short: 'يبني بقرارات رقمية',
+    route: '/b99/generator/analyst',
+    icon: BarChart3,
+    accent: 'from-fuchsia-400 via-violet-500 to-indigo-500',
+    promise: 'فرضيات، CAC/LTV، صفحات اختبار، ومؤشرات إطلاق.',
+    questions: [
+      { key: 'business_request', label: 'الفرضية الأساسية للمنصة', hint: 'ما المشكلة، لمن، ولماذا الآن؟', type: 'textarea', required: true },
+      { key: 'tam_sam_som', label: 'حجم السوق أو تصورك له', hint: 'اكتب أرقامك أو توقعك لو غير متأكد.', type: 'textarea' },
+      { key: 'unit_economics', label: 'اقتصاد الوحدة', hint: 'سعر البيع، التكلفة، الهامش، تكرار الشراء.', type: 'textarea' },
+      { key: 'risk', label: 'أكبر مخاطرة', hint: 'قانونية، طلب، تشغيل، منافسة، تمويل.', type: 'textarea' },
+      { key: 'experiment', label: 'نوع الاختبار الأول', hint: 'كيف نثبت الطلب بأقل تكلفة؟', type: 'select', options: ['صفحة هبوط + إعلان', 'انتظار مسبق', 'حملة واتساب', 'مقابلات عملاء', 'MVP مدفوع'] },
+    ],
+  },
+};
+
+const LEVELS = Object.keys(LEVEL_CONFIG) as Level[];
 
 export default function B99Generator() {
+  const { level: routeLevel } = useParams();
+  const navigate = useNavigate();
   const { identity }: any = useOutletContext();
-  const nav = useNavigate();
-  const [level, setLevel] = useState<Level | null>(null);
-  const [convo, setConvo] = useState<{ q: string; a: any; observation?: string }[]>([]);
-  const [currentQ, setCurrentQ] = useState<any>(null);
-  const [answer, setAnswer] = useState<any>('');
+  const level = LEVELS.includes(routeLevel as Level) ? (routeLevel as Level) : null;
+  const config = level ? LEVEL_CONFIG[level] : null;
+  const [answers, setAnswers] = useState<Record<string, any>>({ payment: 'كاش فقط' });
   const [loading, setLoading] = useState(false);
-  const [phase, setPhase] = useState<'pick'|'chat'|'generating'|'result'>('pick');
   const [result, setResult] = useState<any>(null);
-  const [progress, setProgress] = useState(0);
-  const [generatingMsg, setGeneratingMsg] = useState('');
+  const [platform, setPlatform] = useState<any>(null);
+  const [buildLoading, setBuildLoading] = useState(false);
 
-  const startLevel = async (l: Level) => {
-    setLevel(l); setConvo([]); setPhase('chat'); setProgress(10);
-    await fetchNextQuestion(l, []);
-  };
+  const progress = useMemo(() => {
+    if (!config) return 0;
+    const total = config.questions.length;
+    const filled = config.questions.filter((q) => String(answers[q.key] ?? '').trim()).length;
+    return Math.round((filled / total) * 100);
+  }, [answers, config]);
 
-  const fetchNextQuestion = async (l: Level, current: any[]) => {
+  const attackNavigate = (to: string) => window.dispatchEvent(new CustomEvent('batshark:attack', { detail: { to } }));
+
+  const update = (key: string, value: any) => setAnswers((a) => ({ ...a, [key]: value }));
+
+  const generate = async () => {
+    if (!config || !level) return;
+    const missing = config.questions.find((q) => q.required && !String(answers[q.key] ?? '').trim());
+    if (missing) return toast.error(`أكمل: ${missing.label}`);
     setLoading(true);
+    setResult(null);
+    setPlatform(null);
     try {
-      const answers = current.reduce((acc: any, x: any) => ({ ...acc, [x.q]: x.a }), {});
       const { data, error } = await supabase.functions.invoke('b99-engine', {
-        body: { action: 'generator_step', payload: { level: l, answers, mode: 'next_question' } },
+        body: { action: 'generator_step', payload: { level, answers, mode: 'final', build_intent: true } },
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
-      if (data.done) { await generateFinal(l, current); return; }
-      setCurrentQ(data); setAnswer(data.input_type === 'choice' ? '' : (data.input_type === 'number' ? 0 : ''));
-      setProgress(Math.min(85, data.progress_hint || (current.length * 15 + 15)));
-    } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
+      setResult(data);
+      toast.success('تم توليد مخطط المنصة حسب المستوى');
+    } catch (e: any) {
+      toast.error(e.message || 'تعذر التوليد');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const submitAnswer = async () => {
-    if (!currentQ || answer === '' || answer === null) return;
-    const newConvo = [...convo, { q: currentQ.question, a: answer, observation: currentQ.ai_observation }];
-    setConvo(newConvo);
-    setCurrentQ(null);
-    if (level) await fetchNextQuestion(level, newConvo);
-  };
-
-  const generateFinal = async (l: Level, current: any[]) => {
-    setPhase('generating'); setProgress(90);
-    const msgs = ['تحليل إجاباتك بعمق...', 'بناء النموذج المالي...', 'مسح المنافسين...', 'صياغة خطة الإطلاق...', 'توليد الفكرة المخصصة...'];
-    let i = 0; setGeneratingMsg(msgs[0]);
-    const itv = setInterval(() => { i = (i + 1) % msgs.length; setGeneratingMsg(msgs[i]); }, 1500);
+  const buildPlatform = async () => {
+    if (!config || !level || !result) return;
+    setBuildLoading(true);
     try {
-      const answers = current.reduce((acc: any, x: any) => ({ ...acc, [x.q]: x.a }), {});
+      const brief = result.generated_platform_brief || {};
+      const name = brief.name || result.idea_name || answers.business_request?.slice(0, 40) || 'منصة جديدة';
       const { data, error } = await supabase.functions.invoke('b99-engine', {
-        body: { action: 'generator_step', payload: { level: l, answers, mode: 'final' } },
+        body: {
+          action: 'generate_platform',
+          userId: identity?.userId,
+          payload: {
+            name,
+            purpose: brief.purpose || result.description || answers.business_request,
+            platformType: brief.platform_type || inferPlatformType(String(answers.business_request || '')),
+            accessCode: answers.access_code || '',
+            ownerEmail: identity?.email || '',
+            buildLevel: level,
+            buildMode: 'step-by-step',
+            requirements: { level, answers, ai_result: result, requested_payment: answers.payment || 'كاش فقط' },
+          },
+        },
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
-      setResult(data); setPhase('result'); setProgress(100);
-      toast.success('تم توليد الفكرة الاحترافية');
-    } catch (e: any) { toast.error(e.message); setPhase('chat'); }
-    finally { clearInterval(itv); setGeneratingMsg(''); }
+      setPlatform(data.platform);
+      toast.success('تم إنشاء منصة كاملة ورابط مستقل');
+    } catch (e: any) {
+      toast.error(e.message || 'تعذر بناء المنصة');
+    } finally {
+      setBuildLoading(false);
+    }
   };
 
-  const buildPlatformFromIdea = () => {
-    if (!result?.generated_platform_brief) { toast.info('لا يوجد موجز منصة جاهز'); return; }
-    const b = result.generated_platform_brief;
-    nav('/b99/platforms', { state: { prefill: b } });
-  };
+  if (!config) {
+    return (
+      <div className="space-y-8">
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 md:p-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,hsl(190_90%_50%/0.16),transparent_32%),radial-gradient(circle_at_80%_30%,hsl(330_90%_55%/0.16),transparent_34%)]" />
+          <div className="relative max-w-3xl">
+            <Badge className="mb-4 border-white/15 bg-white/10 text-white">اختر صفحة المستوى</Badge>
+            <h1 className="text-3xl md:text-5xl font-black leading-tight">كل مستوى له صفحة، أسئلة، وذكاء بناء مختلف</h1>
+            <p className="mt-3 text-sm md:text-base text-slate-300 leading-relaxed">اختر مستواك، أجب على متطلباتك، ثم حوّل الطلب إلى منصة مستقلة فعلية قابلة للزيارة ومربوطة ببيانات Batshark99.</p>
+          </div>
+        </section>
 
-  const buildCampaignFromIdea = () => {
-    if (!result) return;
-    nav('/b99/ads', { state: { prefill: { businessType: result.idea_name, brief: result.description } } });
-  };
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {LEVELS.map((id, i) => {
+            const item = LEVEL_CONFIG[id];
+            const Icon = item.icon;
+            return (
+              <motion.button
+                key={id}
+                onClick={() => attackNavigate(item.route)}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-right hover:border-white/30"
+              >
+                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-l ${item.accent}`} />
+                <div className={`mb-4 inline-flex rounded-2xl bg-gradient-to-br ${item.accent} p-3 shadow-2xl`}><Icon className="h-7 w-7 text-white" /></div>
+                <h3 className="text-xl font-black text-white">{item.title}</h3>
+                <p className="mt-1 text-sm text-cyan-200">{item.short}</p>
+                <p className="mt-3 text-sm text-slate-400 leading-relaxed">{item.promise}</p>
+                <div className="mt-4 flex items-center gap-2 text-xs text-slate-300"><Bot className="h-3.5 w-3.5" /> {item.questions.length} متطلبات مخصصة</div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
-  const reset = () => { setLevel(null); setConvo([]); setCurrentQ(null); setResult(null); setPhase('pick'); setProgress(0); };
+  const Icon = config.icon;
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="text-xs text-slate-400 uppercase tracking-widest">المولّد التفاعلي</div>
-          <h1 className="text-2xl md:text-3xl font-black flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-violet-400" /> مولّد الأفكار السيادي
-          </h1>
+          <Button variant="ghost" onClick={() => attackNavigate('/b99/generator')} className="mb-2 gap-2 text-slate-400"><ArrowLeft className="h-4 w-4" /> كل المستويات</Button>
+          <div className="text-xs uppercase tracking-widest text-slate-500">صفحة مستقلة للمستوى</div>
+          <h1 className="mt-1 flex items-center gap-2 text-2xl md:text-4xl font-black"><Icon className="h-7 w-7 text-cyan-300" /> {config.title}</h1>
+          <p className="mt-2 text-sm text-slate-400">{config.promise}</p>
         </div>
-        {level && <Badge className={`bg-gradient-to-l ${LEVELS.find(l=>l.id===level)?.accent} text-white border-0`}>{LEVELS.find(l=>l.id===level)?.title}</Badge>}
+        <Badge className={`w-fit border-0 bg-gradient-to-l ${config.accent} px-4 py-1.5 text-white`}>تقدّم المتطلبات {progress}%</Badge>
       </header>
 
-      {phase !== 'pick' && (
-        <div>
-          <Progress value={progress} className="h-1.5 bg-white/10" />
-          <div className="text-[10px] text-slate-500 mt-1">{progress}%</div>
-        </div>
-      )}
+      <Progress value={progress} className="h-2 bg-white/10" />
 
-      <AnimatePresence mode="wait">
-        {phase === 'pick' && (
-          <motion.div key="pick" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {LEVELS.map((l, i) => (
-              <motion.button key={l.id} onClick={() => startLevel(l.id)}
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
-                className="text-right rounded-2xl p-6 bg-white/[0.03] border border-white/10 hover:border-white/30 transition-all">
-                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${l.accent} shadow-lg mb-3`}><l.icon className="w-6 h-6 text-white" /></div>
-                <h3 className="text-xl font-black">{l.title}</h3>
-                <p className="text-sm text-slate-400 mt-2">{l.desc}</p>
-              </motion.button>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
+        <Card className="border-white/10 bg-white/[0.035] p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {config.questions.map((q) => (
+              <div key={q.key} className={q.type === 'textarea' ? 'md:col-span-2' : ''}>
+                <Label className="text-xs text-slate-300">{q.label}{q.required && ' *'}</Label>
+                <p className="mb-2 mt-1 text-[11px] text-slate-500">{q.hint}</p>
+                {q.type === 'textarea' ? (
+                  <Textarea value={answers[q.key] || ''} onChange={(e) => update(q.key, e.target.value)} rows={4} placeholder={q.placeholder} className="border-white/10 bg-slate-950/70" />
+                ) : q.type === 'select' ? (
+                  <Select value={answers[q.key] || q.options?.[0]} onValueChange={(v) => update(q.key, v)}>
+                    <SelectTrigger className="border-white/10 bg-slate-950/70"><SelectValue /></SelectTrigger>
+                    <SelectContent>{q.options?.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                  </Select>
+                ) : (
+                  <Input type={q.type} value={answers[q.key] || ''} onChange={(e) => update(q.key, q.type === 'number' ? Number(e.target.value) : e.target.value)} placeholder={q.placeholder} className="border-white/10 bg-slate-950/70" />
+                )}
+              </div>
             ))}
-          </motion.div>
-        )}
+            <div className="md:col-span-2">
+              <Label className="flex items-center gap-1 text-xs text-slate-300"><Lock className="h-3 w-3" /> رمز مرور للمنصة الناتجة (اختياري)</Label>
+              <Input value={answers.access_code || ''} onChange={(e) => update('access_code', e.target.value)} placeholder="اتركه فارغ للزيارة العامة" className="mt-2 border-white/10 bg-slate-950/70" />
+            </div>
+          </div>
+          <Button onClick={generate} disabled={loading} className={`mt-5 h-12 w-full bg-gradient-to-l ${config.accent} font-bold text-white`}>
+            {loading ? <><RefreshCw className="h-4 w-4 animate-spin" /> يبني المخطط...</> : <><Sparkles className="h-4 w-4" /> حلّل المتطلبات وابنِ المخطط</>}
+          </Button>
+        </Card>
 
-        {phase === 'chat' && (
-          <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-            {/* Conversation history */}
-            <div className="space-y-3">
-              {convo.map((c, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-1.5">
-                  <div className="flex justify-end"><div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 text-sm">
-                    <div className="text-[10px] text-violet-300 mb-1 flex items-center gap-1"><Bot className="w-3 h-3" /> BatShark</div>{c.q}
-                  </div></div>
-                  <div className="flex justify-start"><div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-tr-sm bg-violet-500/15 border border-violet-500/30 text-sm">
-                    <div className="text-[10px] text-emerald-300 mb-1">أنت</div>
-                    {typeof c.a === 'object' ? JSON.stringify(c.a) : String(c.a)}
-                  </div></div>
-                  {c.observation && <div className="text-xs text-amber-300/70 italic px-3">💡 {c.observation}</div>}
-                </motion.div>
+        <aside className="space-y-3">
+          <Card className="border-white/10 bg-slate-950/80 p-5">
+            <ClipboardList className="mb-3 h-6 w-6 text-cyan-300" />
+            <h3 className="font-black">آلية هذا المستوى</h3>
+            <div className="mt-3 space-y-2 text-xs text-slate-400">
+              <Step n="1" text="يجمع متطلبات خاصة بالمستوى" />
+              <Step n="2" text="يحلل الطلب بذكاء مختلف" />
+              <Step n="3" text="ينتج مخطط منصة قابل للتنفيذ" />
+              <Step n="4" text="يبني رابط منصة مستقل للزوار" />
+            </div>
+          </Card>
+          <Card className="border-white/10 bg-white/[0.03] p-5">
+            <Megaphone className="mb-3 h-6 w-6 text-rose-300" />
+            <h3 className="font-black">بعد البناء</h3>
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">تقدر تنقلها مباشرة لركن الإعلانات لبناء حملات جاهزة للنشر حسب نوع المنصة والجمهور.</p>
+          </Card>
+        </aside>
+      </div>
+
+      <AnimatePresence>
+        {result && (
+          <motion.section initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <Card className="overflow-hidden border-white/10 bg-gradient-to-br from-cyan-500/12 via-violet-500/10 to-rose-500/10 p-6">
+              <Badge className="mb-3 border-emerald-500/30 bg-emerald-500/15 text-emerald-300">توافق {result.match_score || 91}%</Badge>
+              <h2 className="text-2xl md:text-4xl font-black">{result.idea_name}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">{result.description}</p>
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                <MiniStat icon={Target} label="التموضع" value={result.positioning || 'واضح'} />
+                <MiniStat icon={CreditCard} label="الدفع" value={answers.payment || 'كاش فقط'} />
+                <MiniStat icon={Image} label="الهيرو" value={answers.main_image || 'حسب النشاط'} />
+                <MiniStat icon={Layers} label="نوع المنصة" value={result.generated_platform_brief?.platform_type || inferPlatformType(String(answers.business_request || ''))} />
+              </div>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {(result.roadmap || []).slice(0, 6).map((r: any, i: number) => (
+                <Card key={i} className="border-white/10 bg-white/[0.035] p-4">
+                  <div className="mb-2 flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-xs font-black">{i + 1}</span><b className="text-sm">{r.phase}</b></div>
+                  <p className="text-[11px] text-cyan-200">{r.duration}</p>
+                  <ul className="mt-2 list-disc space-y-1 pr-4 text-xs text-slate-400">{r.actions?.slice(0, 3).map((a: string, j: number) => <li key={j}>{a}</li>)}</ul>
+                </Card>
               ))}
             </div>
 
-            {/* Current question */}
-            {loading && !currentQ && (
-              <div className="flex items-center gap-2 text-sm text-slate-400 px-3">
-                <span className="inline-block w-2 h-2 rounded-full bg-violet-400 animate-bounce" /> BatShark يصيغ السؤال التالي...
-              </div>
-            )}
-            {currentQ && (
-              <Card className="bg-gradient-to-br from-violet-500/10 to-cyan-500/5 border-white/10 p-5">
-                {currentQ.ai_observation && <div className="text-xs text-amber-300 mb-2 italic">💡 {currentQ.ai_observation}</div>}
-                <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">السؤال {convo.length + 1}</div>
-                <h3 className="text-lg font-bold mb-1">{currentQ.question}</h3>
-                {currentQ.why_asking && <p className="text-xs text-slate-400 mb-4">{currentQ.why_asking}</p>}
-                <div className="mt-4">
-                  {currentQ.input_type === 'choice' && currentQ.choices ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {currentQ.choices.map((c: string) => (
-                        <button key={c} onClick={() => setAnswer(c)}
-                          className={`text-right px-4 py-3 rounded-xl border text-sm transition-all ${answer === c ? 'bg-gradient-to-br from-violet-500 to-cyan-500 border-transparent text-white' : 'bg-slate-900/40 border-white/10 hover:border-white/30'}`}>
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  ) : currentQ.input_type === 'number' ? (
-                    <Input type="number" value={answer || 0} onChange={(e) => setAnswer(Number(e.target.value))}
-                      className="bg-slate-900/60 border-white/10 h-12 text-lg" autoFocus />
-                  ) : (
-                    <Textarea value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder={currentQ.placeholder}
-                      rows={3} className="bg-slate-900/60 border-white/10" autoFocus />
-                  )}
-                </div>
-                <div className="flex justify-between mt-5">
-                  <Button variant="ghost" onClick={reset} className="text-slate-400 text-xs">إلغاء</Button>
-                  <Button onClick={submitAnswer} disabled={loading || answer === '' || answer === null}
-                    className="bg-gradient-to-r from-violet-500 to-cyan-500 gap-2">
-                    {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4" /> إرسال</>}
-                  </Button>
-                </div>
-              </Card>
-            )}
-          </motion.div>
-        )}
-
-        {phase === 'generating' && (
-          <motion.div key="gen" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-20">
-            <motion.div animate={{ rotate: 360, scale: [1, 1.1, 1] }} transition={{ rotate: { duration: 3, repeat: Infinity, ease: 'linear' }, scale: { duration: 1.5, repeat: Infinity } }}
-              className="inline-block p-6 rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-500 mb-6">
-              <Brain className="w-16 h-16 text-white" />
-            </motion.div>
-            <h2 className="text-2xl font-black mb-2">جاري بناء فكرتك السيادية...</h2>
-            <p className="text-violet-300 text-sm animate-pulse">{generatingMsg}</p>
-          </motion.div>
-        )}
-
-        {phase === 'result' && result && (
-          <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-            <div className="flex items-center justify-between">
-              <Button variant="ghost" onClick={reset} className="text-slate-400 gap-2 text-sm"><RefreshCw className="w-4 h-4" /> فكرة جديدة</Button>
-            </div>
-
-            <Card className="bg-gradient-to-br from-violet-500/15 via-fuchsia-500/10 to-cyan-500/15 border-white/10 p-7 overflow-hidden relative">
-              <motion.div animate={{ x: [0, 50, 0] }} transition={{ duration: 8, repeat: Infinity }}
-                className="absolute -top-20 -left-20 w-60 h-60 rounded-full bg-violet-500/20 blur-3xl" />
-              <div className="relative">
-                <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-3">توافق {result.match_score}%</Badge>
-                <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-l from-white to-violet-200 bg-clip-text text-transparent mb-2">{result.idea_name}</h2>
-                {result.positioning && <div className="text-sm text-cyan-300 mb-3">{result.positioning}</div>}
-                <p className="text-slate-300 leading-relaxed">{result.description}</p>
-              </div>
-            </Card>
-
-            {result.financial && (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                <KPI icon={DollarSign} label="رأس المال" value={`${(result.financial.capital||0).toLocaleString()} ر.س`} />
-                <KPI icon={TrendingUp} label="إيراد شهري" value={`${(result.financial.monthly_revenue||0).toLocaleString()} ر.س`} />
-                <KPI icon={Activity} label="نقطة التعادل" value={`${result.financial.break_even_months||0} شهر`} />
-                <KPI icon={Trophy} label="ربح سنة 1" value={`${(result.financial.year1_profit||0).toLocaleString()} ر.س`} accent="text-emerald-300" />
-                <KPI icon={Target} label="ROI" value={`${result.financial.roi_year1||0}%`} accent="text-amber-300" />
-              </div>
-            )}
-
-            {result.swot && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <SwotBox color="emerald" title="نقاط قوة" items={result.swot.strengths} />
-                <SwotBox color="rose" title="نقاط ضعف" items={result.swot.weaknesses} />
-                <SwotBox color="cyan" title="فرص" items={result.swot.opportunities} />
-                <SwotBox color="amber" title="تهديدات" items={result.swot.threats} />
-              </div>
-            )}
-
-            {result.competitors?.length > 0 && (
-              <Card className="bg-white/[0.03] border-white/10 p-5">
-                <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Sword className="w-4 h-4 text-rose-300" /> المنافسون</h3>
-                <div className="space-y-2">
-                  {result.competitors.map((c: any, i: number) => (
-                    <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-3 text-sm">
-                      <div className="font-bold">{c.name}</div>
-                      <div className="text-xs text-slate-400 mt-1">{c.note}</div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {result.roadmap?.length > 0 && (
-              <Card className="bg-white/[0.03] border-white/10 p-5">
-                <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Map className="w-4 h-4 text-amber-300" /> خارطة الطريق</h3>
-                <div className="space-y-2">
-                  {result.roadmap.map((p: any, i: number) => (
-                    <div key={i} className="flex gap-3 p-3 bg-white/5 border border-white/10 rounded-lg">
-                      <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center font-bold">{i+1}</div>
-                      <div className="flex-1 text-xs">
-                        <div className="font-bold text-sm">{p.phase} <span className="text-slate-500 font-normal">• {p.duration}</span></div>
-                        <ul className="list-disc mr-4 mt-1 text-slate-400 space-y-0.5">
-                          {p.actions?.map((a: string, j: number) => <li key={j}>{a}</li>)}
-                        </ul>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {result.first_30_days?.length > 0 && (
-              <Card className="bg-emerald-500/5 border-emerald-500/20 p-5">
-                <h3 className="text-sm font-bold mb-3 flex items-center gap-2 text-emerald-300"><Lightbulb className="w-4 h-4" /> أول 30 يوم</h3>
-                <ul className="text-xs text-slate-300 space-y-1.5 list-decimal mr-5">
-                  {result.first_30_days.map((s: string, i: number) => <li key={i}>{s}</li>)}
-                </ul>
-              </Card>
-            )}
-
-            {/* Action: build platform / campaign */}
-            <Card className="bg-gradient-to-br from-violet-500/15 to-cyan-500/15 border-white/10 p-6">
-              <h3 className="font-bold mb-3 flex items-center gap-2"><Rocket className="w-4 h-4 text-violet-300" /> الخطوات التالية</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Button onClick={buildPlatformFromIdea} className="bg-gradient-to-r from-cyan-500 to-blue-500 gap-2 h-12">
-                  <Layers className="w-4 h-4" /> ولّد منصة فعلية لهذه الفكرة
+            <Card className="border-white/10 bg-slate-950/80 p-5">
+              <h3 className="mb-3 flex items-center gap-2 font-black"><Rocket className="h-4 w-4 text-cyan-300" /> تنفيذ الطلب النهائي</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Button onClick={buildPlatform} disabled={buildLoading} className="h-12 bg-cyan-500 text-white hover:bg-cyan-400">
+                  {buildLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Layers className="h-4 w-4" />} إنشاء المنصة الكاملة
                 </Button>
-                <Button onClick={buildCampaignFromIdea} className="bg-gradient-to-r from-rose-500 to-orange-500 gap-2 h-12">
-                  <Sparkles className="w-4 h-4" /> أنشئ حملة إعلانية مخصّصة
-                </Button>
+                <Button onClick={() => navigate('/b99/ads', { state: { prefill: { businessType: result.idea_name, brief: result.description } } })} className="h-12 bg-rose-500 text-white hover:bg-rose-400"><Megaphone className="h-4 w-4" /> حملة إعلانية لها</Button>
+                {platform && <Button onClick={() => window.open(`/p/${platform.slug}`, '_blank')} className="h-12 bg-white text-slate-950 hover:bg-slate-200"><ExternalLink className="h-4 w-4" /> فتح المنصة</Button>}
               </div>
+              {platform && <p className="mt-3 text-xs text-emerald-300"><CheckCircle2 className="inline h-3.5 w-3.5" /> تم حفظها: /p/{platform.slug}</p>}
             </Card>
-          </motion.div>
+          </motion.section>
         )}
       </AnimatePresence>
     </div>
   );
 }
 
-function KPI({ icon: I, label, value, accent }: any) {
-  return <div className="bg-white/[0.04] border border-white/10 rounded-xl p-3">
-    <I className={`w-4 h-4 mb-1.5 ${accent || 'text-violet-300'}`} />
-    <div className="text-[10px] text-slate-400">{label}</div>
-    <div className={`text-sm font-bold ${accent || ''}`}>{value}</div>
-  </div>;
+function Step({ n, text }: { n: string; text: string }) {
+  return <div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[10px] font-black text-white">{n}</span>{text}</div>;
 }
 
-function SwotBox({ color, title, items }: any) {
-  const cm: any = { emerald: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300', rose: 'bg-rose-500/10 border-rose-500/30 text-rose-300', cyan: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300', amber: 'bg-amber-500/10 border-amber-500/30 text-amber-300' };
-  return <div className={`rounded-lg border p-3 ${cm[color]}`}>
-    <div className="text-xs font-bold mb-2">{title}</div>
-    <ul className="text-[11px] text-slate-200 space-y-1 list-disc mr-4">
-      {items?.map((s: string, i: number) => <li key={i}>{s}</li>)}
-    </ul>
-  </div>;
+function MiniStat({ icon: Icon, label, value }: any) {
+  return <div className="rounded-xl border border-white/10 bg-black/25 p-3"><Icon className="mb-1 h-4 w-4 text-cyan-300" /><div className="text-[10px] text-slate-500">{label}</div><div className="truncate text-xs font-bold text-white">{value}</div></div>;
+}
+
+function inferPlatformType(text: string) {
+  if (/بيع|متجر|اكل|أكل|منتج|طلب/.test(text)) return 'ecommerce';
+  if (/حجز|موعد|ملعب|padel|بادل/.test(text)) return 'booking';
+  if (/خدمة|استشارة|تركيب/.test(text)) return 'service';
+  return 'landing';
 }

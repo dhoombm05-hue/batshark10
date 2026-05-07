@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Megaphone, Layers, Search, BarChart3, Brain, Rocket, Shield, ArrowLeft, Zap, Globe2, Target } from 'lucide-react';
+import { Sparkles, Megaphone, Layers, Search, BarChart3, Brain, Rocket, Shield, ArrowLeft, Zap, Globe2, Target, Wrench, TrendingUp } from 'lucide-react';
 
 const HERO_FEATURES = [
   { icon: Sparkles, title: 'مولد أفكار تفاعلي', desc: 'حوار ذكي بـ4 مستويات يولّد فكرة بزنس مع تحليل مالي وتنافسي كامل', to: '/b99/generator', color: 'from-violet-500 to-fuchsia-500' },
@@ -19,8 +19,16 @@ const PILLARS = [
   { icon: Globe2, t: 'منصة سيادية', d: 'مستقلة برابط ودومين خاص لكل بزنس' },
 ];
 
+const LEVEL_ENTRY = [
+  { to: '/b99/generator/beginner', icon: Rocket, title: 'Level 1 مبتدئ', desc: 'طلب بسيط → منصة جاهزة خطوة بخطوة', color: 'from-emerald-400 to-cyan-500' },
+  { to: '/b99/generator/intermediate', icon: Wrench, title: 'Level 2 متوسط', desc: 'تشخيص بزنس قائم وتحويله لمنصة أقوى', color: 'from-amber-300 to-rose-500' },
+  { to: '/b99/generator/advanced', icon: TrendingUp, title: 'Level 3 متقدم', desc: 'منصة تشغيل ونمو بعروض ومسارات عمل', color: 'from-sky-400 to-indigo-500' },
+  { to: '/b99/generator/analyst', icon: BarChart3, title: 'Level 4 محلل احترافي', desc: 'فرضيات وأرقام وتجارب إطلاق قابلة للقياس', color: 'from-fuchsia-400 to-violet-600' },
+];
+
 export default function B99Home() {
   const nav = useNavigate();
+  const attackNavigate = (to: string) => window.dispatchEvent(new CustomEvent('batshark:attack', { detail: { to } }));
   return (
     <div className="space-y-12">
       <section className="text-center pt-6">
@@ -62,6 +70,28 @@ export default function B99Home() {
         ))}
       </section>
 
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <div className="text-xs text-slate-400 uppercase tracking-widest">صفحات المستويات المنفصلة</div>
+            <h2 className="text-2xl md:text-3xl font-black mt-1">اختر مستواك — كل مستوى منصة عمل مختلفة</h2>
+          </div>
+          <Button onClick={() => attackNavigate('/b99/generator')} variant="ghost" className="hidden md:inline-flex text-cyan-300">عرض الكل</Button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {LEVEL_ENTRY.map((level, i) => (
+            <motion.button key={level.to} onClick={() => attackNavigate(level.to)} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/70 p-4 text-right hover:border-white/30">
+              <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-l ${level.color}`} />
+              <level.icon className="w-6 h-6 text-cyan-300 mb-3" />
+              <h3 className="font-black text-sm text-white">{level.title}</h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-400">{level.desc}</p>
+              <ArrowLeft className="mt-4 w-4 h-4 text-slate-500 group-hover:text-white group-hover:-translate-x-1 transition-all" />
+            </motion.button>
+          ))}
+        </div>
+      </section>
+
       <section>
         <div className="text-center mb-6 text-xs text-slate-400 uppercase tracking-widest">لماذا Batshark 99</div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -80,7 +110,7 @@ export default function B99Home() {
         <Target className="w-10 h-10 mx-auto text-violet-300 mb-3" />
         <h3 className="text-2xl font-black mb-2">جاهز لبناء بزنسك التالي؟</h3>
         <p className="text-sm text-slate-400 mb-5 max-w-xl mx-auto">ابدأ من المولّد التفاعلي وسيرشدك BatShark خطوة بخطوة حتى توليد منصة فعلية لفكرتك.</p>
-        <Button onClick={() => nav('/b99/generator')} size="lg" className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 text-white shadow-xl gap-2">
+        <Button onClick={() => attackNavigate('/b99/generator')} size="lg" className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 text-white shadow-xl gap-2">
           <Rocket className="w-4 h-4" /> ابدأ الآن
         </Button>
       </Card>

@@ -78,6 +78,10 @@ serve(async (req) => {
     // ============ SEARCH (semantic across own data + general) ============
     if (action === "search") {
       const { query } = payload;
+      const [platformRows, campaignRows] = await Promise.all([
+        supabase.from("generated_platforms").select("name, slug, tagline, platform_type, features, meta, build_level").eq("status", "live").limit(20),
+        userId ? supabase.from("ad_campaigns").select("name, business_type, platforms, brief, status").eq("user_id", userId).limit(12) : Promise.resolve({ data: [] }),
+      ]);
       const tool = {
         type: "function",
         function: {
@@ -106,14 +110,14 @@ serve(async (req) => {
           },
         },
       };
-      const sys = `أنت محرك بحث ذكي تابع لـ Batshark99 لقطاعات الأعمال والاستثمار في الخليج. أعطِ إجابة مباشرة احترافية + 5-8 نتائج عملية، ولكل نتيجة action_route من: /b99/generator, /b99/ads, /b99/platforms.`;
-      const result = await callAI(sys, `بحث: ${query}`, tool);
+      const sys = `أنت محرك بحث داخلي تابع لـ Batshark99. ابحث داخل أقسام المنصة وداخل المنصات والحملات المحفوظة المرسلة لك. أعطِ إجابة مباشرة + نتائج عملية. إذا كانت النتيجة منصة محفوظة اجعل action_route=/p/slug، وإلا استخدم: /b99/generator, /b99/ads, /b99/platforms.`;
+      const result = await callAI(sys, `بحث: ${query}\n\nمنصات محفوظة:\n${JSON.stringify(platformRows.data || [])}\n\nحملات محفوظة:\n${JSON.stringify((campaignRows as any).data || [])}`, tool);
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ============ AD CAMPAIGN GENERATION ============
     if (action === "generate_campaign") {
-      const { brief, businessType, goal, audience, budget, currentPlatforms } = payload;
+      const { brief, businessType, goal, audience, budget, currentPlatforms, city, productOffer, tone, assets } = payload;
       const tool = {
         type: "function",
         function: {
@@ -160,6 +164,7 @@ serve(async (req) => {
                   expected_reach: { type: "string" },
                   expected_ctr: { type: "string" },
                   budget_split: { type: "string" },
+                  launch_checklist: { type: "array", items: { type: "string" } },
                   risks: { type: "array", items: { type: "string" } },
                 },
               },
@@ -168,8 +173,8 @@ serve(async (req) => {
           },
         },
       };
-      const sys = `أنت خبير حملات إعلانية في الخليج (السعودية تحديداً). تعرف خصوصية كل منصة، أوقات الذروة، اللهجة المحلية، وقواعد منصات الإعلانات. اقترح أفضل خليط من المنصات + قوالب نص جاهزة للنسخ والنشر مباشرة + أفضل أيام/أوقات بحسب نوع البزنس + تحليل ميزانية واقعي.`;
-      const usrMsg = `النشاط: ${businessType}\nالهدف: ${goal}\nالجمهور: ${audience}\nالميزانية: ${budget} ر.س\nالمنصات الحالية: ${currentPlatforms||'لا يوجد'}\nالموجز: ${brief}`;
+      const sys = `أنت مدير غرفة عمليات إعلانية في السعودية والخليج. ابنِ حملة تنفيذية يومية لا كلام عام: زاوية إعلانية، أفضل منصات، أوقات نشر، توزيع ميزانية، قوالب لكل منصة، فكرة فيديو/صورة، وChecklist إطلاق. خصّص بقوة للبادل والمظلات والأكل الصحي عند ورودها. استخدم لهجة مفهومة ومحترفة، وراعِ المدينة والميزانية.`;
+      const usrMsg = `النشاط: ${businessType}\nالمدينة: ${city || 'غير محدد'}\nالهدف: ${goal}\nالعرض/المنتج: ${productOffer || 'غير محدد'}\nالجمهور: ${audience}\nالميزانية: ${budget} ر.س\nالنبرة: ${tone || 'احترافية'}\nالأصول المتاحة: ${assets || 'لا يوجد'}\nالمنصات الحالية: ${currentPlatforms||'لا يوجد'}\nالموجز: ${brief}`;
       const camp = await callAI(sys, usrMsg, tool);
       let saved = null;
       if (userId) {
@@ -188,7 +193,7 @@ serve(async (req) => {
 
     // ============ PLATFORM GENERATION (build full mini-site) ============
     if (action === "generate_platform") {
-      const { name, purpose, platformType, ownerEmail, accessCode, brand } = payload;
+      const { name, purpose, platformType, ownerEmail, accessCode, brand, requirements, buildLevel, buildMode } = payload;
       const tool = {
         type: "function",
         function: {
@@ -243,8 +248,8 @@ serve(async (req) => {
           },
         },
       };
-      const sys = `أنت مولّد منصات احترافية كاملة (Mini-Sites). لا تكتفِ بالكلام: ولّد منصة فعلية متكاملة بصفحات وأقسام جاهزة للعرض الفوري بمحتوى عربي احترافي مدروس. كل صفحة لها أقسام متنوعة (hero, features, pricing, gallery, testimonials, faq, contact, cta) وكل قسم له محتوى حقيقي وأرقام منطقية. صمّم الهوية البصرية (ألوان، إيموجي شعار) مناسبة لطبيعة المنصة.`;
-      const result = await callAI(sys, `اسم: ${name}\nهدف: ${purpose}\nنوع: ${platformType}\nهوية مفضّلة: ${JSON.stringify(brand||{})}`, tool);
+      const sys = `أنت مولّد منصات احترافية كاملة (Mini-Sites) وليس كاتب نصوص. ابنِ موقعاً فعلياً قابلاً للعرض للزوار: صفحات متعددة، Hero واضح، أقسام منتجات/خدمات، أسعار، FAQ، تواصل، CTA، وعملية طلب. احترم متطلبات العميل حرفياً مثل: صورة الشاشة الرئيسية، طريقة الدفع كاش فقط، وآلية الطلب. إذا نوع المنصة ecommerce أو بيع أكل صحي فأنشئ أقسام منتجات وباقات وطلب كاش. صمّم هوية مناسبة بدون عمومية.`;
+      const result = await callAI(sys, `اسم: ${name}\nهدف: ${purpose}\nنوع: ${platformType}\nمستوى البناء: ${buildLevel || 'custom'}\nوضع البناء: ${buildMode || 'standalone'}\nمتطلبات العميل التفصيلية: ${JSON.stringify(requirements || {})}\nهوية مفضّلة: ${JSON.stringify(brand||{})}`, tool);
       const slug = slugify(name);
       const { data: saved, error } = await supabase.from("generated_platforms").insert({
         user_id: userId || null, owner_email: ownerEmail || null, slug, name,
@@ -252,6 +257,7 @@ serve(async (req) => {
         access_code: accessCode || null, is_public: !accessCode,
         brand: result.brand || {}, pages: result.pages || [],
         features: result.features || [], meta: result.meta || {}, status: "live",
+        requirements: requirements || {}, build_level: buildLevel || "custom", build_mode: buildMode || "standalone",
       }).select().single();
       if (error) throw error;
       return new Response(JSON.stringify({ platform: saved, url: `/p/${slug}` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -307,12 +313,12 @@ serve(async (req) => {
           },
         };
         const levelGuide: Record<string, string> = {
-          beginner: "ركّز على البساطة، رأس مال صغير، دخل سريع، خطوات سهلة، روادمب 3 مراحل.",
-          intermediate: "نموذج تنافسي، SWOT كامل، 4-5 مراحل روادمب، توقعات سنوية واقعية.",
-          advanced: "نموذج عمل مبتكر، تسعير ذكي، استراتيجية نمو، روادمب 5-6، توقعات دقيقة.",
-          analyst: "أرقام كمية دقيقة (CAC/LTV/Burn/Break-even)، حساسية، 3-4 منافسين معروفين، روادمب 6 مراحل.",
+          beginner: "تعامل معه كمبتدئ: بسّط الخيارات، حوّل طلبه إلى منصة واضحة، اجعل الدفع والطلب سهلين، وخارطة طريق 3-4 مراحل.",
+          intermediate: "تعامل معه كبزنس قائم: شخّص نقاط الضعف، ابنِ نسخة منصة تطور المبيعات والتشغيل، SWOT كامل، خارطة 4-5 مراحل.",
+          advanced: "تعامل معه كمدير نمو: نموذج أعمال، شرائح، عروض، تشغيل، تسويق، منصة متعددة الصفحات وخارطة 5-6 مراحل.",
+          analyst: "تعامل معه كمحلل: CAC/LTV، فرضيات، تجربة أولى، مؤشرات قياس، مخاطر، حساسية، وخارطة إطلاق كمية.",
         };
-        const sys = `أنت Batshare 99 — مولّد أفكار سيادي. ${levelGuide[level] || ""} ولّد فكرة واحدة عميقة جداً ومخصّصة بناءً على الحوار التفاعلي. أرقام منطقية للسعودية. الإجابة بالعربية.`;
+        const sys = `أنت Batshark99 — مولّد منصات أعمال سيادي. ${levelGuide[level] || ""} لا تولّد فكرة كلامية فقط؛ جهّز مخطط منصة قابلة للبناء. إذا طلب المستخدم منصة بيع أكل صحي فاجعل الناتج منصة متجر أكل صحي مع شاشة رئيسية، صورة مقترحة، منتجات/باقات، وطريقة دفع كاش إذا طلبها. أرقام منطقية للسعودية. الإجابة بالعربية.`;
         const result = await callAI(sys, `المستوى: ${level}\nالحوار:\n${JSON.stringify(answers, null, 2)}`, tool);
         return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       } else {
