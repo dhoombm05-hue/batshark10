@@ -193,7 +193,7 @@ serve(async (req) => {
 
     // ============ PLATFORM GENERATION (build full mini-site) ============
     if (action === "generate_platform") {
-      const { name, purpose, platformType, ownerEmail, accessCode, brand } = payload;
+      const { name, purpose, platformType, ownerEmail, accessCode, brand, requirements, buildLevel, buildMode } = payload;
       const tool = {
         type: "function",
         function: {
@@ -248,8 +248,8 @@ serve(async (req) => {
           },
         },
       };
-      const sys = `أنت مولّد منصات احترافية كاملة (Mini-Sites). لا تكتفِ بالكلام: ولّد منصة فعلية متكاملة بصفحات وأقسام جاهزة للعرض الفوري بمحتوى عربي احترافي مدروس. كل صفحة لها أقسام متنوعة (hero, features, pricing, gallery, testimonials, faq, contact, cta) وكل قسم له محتوى حقيقي وأرقام منطقية. صمّم الهوية البصرية (ألوان، إيموجي شعار) مناسبة لطبيعة المنصة.`;
-      const result = await callAI(sys, `اسم: ${name}\nهدف: ${purpose}\nنوع: ${platformType}\nهوية مفضّلة: ${JSON.stringify(brand||{})}`, tool);
+      const sys = `أنت مولّد منصات احترافية كاملة (Mini-Sites) وليس كاتب نصوص. ابنِ موقعاً فعلياً قابلاً للعرض للزوار: صفحات متعددة، Hero واضح، أقسام منتجات/خدمات، أسعار، FAQ، تواصل، CTA، وعملية طلب. احترم متطلبات العميل حرفياً مثل: صورة الشاشة الرئيسية، طريقة الدفع كاش فقط، وآلية الطلب. إذا نوع المنصة ecommerce أو بيع أكل صحي فأنشئ أقسام منتجات وباقات وطلب كاش. صمّم هوية مناسبة بدون عمومية.`;
+      const result = await callAI(sys, `اسم: ${name}\nهدف: ${purpose}\nنوع: ${platformType}\nمستوى البناء: ${buildLevel || 'custom'}\nوضع البناء: ${buildMode || 'standalone'}\nمتطلبات العميل التفصيلية: ${JSON.stringify(requirements || {})}\nهوية مفضّلة: ${JSON.stringify(brand||{})}`, tool);
       const slug = slugify(name);
       const { data: saved, error } = await supabase.from("generated_platforms").insert({
         user_id: userId || null, owner_email: ownerEmail || null, slug, name,
@@ -257,6 +257,7 @@ serve(async (req) => {
         access_code: accessCode || null, is_public: !accessCode,
         brand: result.brand || {}, pages: result.pages || [],
         features: result.features || [], meta: result.meta || {}, status: "live",
+        requirements: requirements || {}, build_level: buildLevel || "custom", build_mode: buildMode || "standalone",
       }).select().single();
       if (error) throw error;
       return new Response(JSON.stringify({ platform: saved, url: `/p/${slug}` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
