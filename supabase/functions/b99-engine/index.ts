@@ -78,6 +78,10 @@ serve(async (req) => {
     // ============ SEARCH (semantic across own data + general) ============
     if (action === "search") {
       const { query } = payload;
+      const [platformRows, campaignRows] = await Promise.all([
+        supabase.from("generated_platforms").select("name, slug, tagline, platform_type, features, meta, build_level").eq("status", "live").limit(20),
+        userId ? supabase.from("ad_campaigns").select("name, business_type, platforms, brief, status").eq("user_id", userId).limit(12) : Promise.resolve({ data: [] }),
+      ]);
       const tool = {
         type: "function",
         function: {
@@ -106,14 +110,14 @@ serve(async (req) => {
           },
         },
       };
-      const sys = `أنت محرك بحث ذكي تابع لـ Batshark99 لقطاعات الأعمال والاستثمار في الخليج. أعطِ إجابة مباشرة احترافية + 5-8 نتائج عملية، ولكل نتيجة action_route من: /b99/generator, /b99/ads, /b99/platforms.`;
-      const result = await callAI(sys, `بحث: ${query}`, tool);
+      const sys = `أنت محرك بحث داخلي تابع لـ Batshark99. ابحث داخل أقسام المنصة وداخل المنصات والحملات المحفوظة المرسلة لك. أعطِ إجابة مباشرة + نتائج عملية. إذا كانت النتيجة منصة محفوظة اجعل action_route=/p/slug، وإلا استخدم: /b99/generator, /b99/ads, /b99/platforms.`;
+      const result = await callAI(sys, `بحث: ${query}\n\nمنصات محفوظة:\n${JSON.stringify(platformRows.data || [])}\n\nحملات محفوظة:\n${JSON.stringify((campaignRows as any).data || [])}`, tool);
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ============ AD CAMPAIGN GENERATION ============
     if (action === "generate_campaign") {
-      const { brief, businessType, goal, audience, budget, currentPlatforms } = payload;
+      const { brief, businessType, goal, audience, budget, currentPlatforms, city, productOffer, tone, assets } = payload;
       const tool = {
         type: "function",
         function: {
