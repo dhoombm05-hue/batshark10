@@ -100,7 +100,7 @@ export type Database = {
           status: string
           templates: Json | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           ad_copy?: string | null
@@ -121,7 +121,7 @@ export type Database = {
           status?: string
           templates?: Json | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           ad_copy?: string | null
@@ -142,7 +142,7 @@ export type Database = {
           status?: string
           templates?: Json | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1406,6 +1406,8 @@ export type Database = {
         Row: {
           access_code: string | null
           brand: Json | null
+          build_level: string
+          build_mode: string
           created_at: string
           features: Json | null
           id: string
@@ -1415,6 +1417,7 @@ export type Database = {
           owner_email: string | null
           pages: Json
           platform_type: string
+          requirements: Json
           slug: string
           status: string
           tagline: string | null
@@ -1425,6 +1428,8 @@ export type Database = {
         Insert: {
           access_code?: string | null
           brand?: Json | null
+          build_level?: string
+          build_mode?: string
           created_at?: string
           features?: Json | null
           id?: string
@@ -1434,6 +1439,7 @@ export type Database = {
           owner_email?: string | null
           pages?: Json
           platform_type?: string
+          requirements?: Json
           slug: string
           status?: string
           tagline?: string | null
@@ -1444,6 +1450,8 @@ export type Database = {
         Update: {
           access_code?: string | null
           brand?: Json | null
+          build_level?: string
+          build_mode?: string
           created_at?: string
           features?: Json | null
           id?: string
@@ -1453,6 +1461,7 @@ export type Database = {
           owner_email?: string | null
           pages?: Json
           platform_type?: string
+          requirements?: Json
           slug?: string
           status?: string
           tagline?: string | null
@@ -2860,6 +2869,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      verify_platform_access: {
+        Args: { _access_code: string; _slug: string }
         Returns: boolean
       }
     }
