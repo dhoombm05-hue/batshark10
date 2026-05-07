@@ -35,6 +35,13 @@ export default function B99Layout() {
   useEffect(() => {
     document.documentElement.style.scrollBehavior = 'smooth';
     document.title = 'Batshark 99 — منصة الأعمال السيادية';
+    const attack = (event: Event) => {
+      const to = (event as CustomEvent<{ to?: string }>).detail?.to;
+      setBatFlying(true);
+      setTimeout(() => { if (to) nav(to); }, 520);
+      setTimeout(() => setBatFlying(false), 1400);
+    };
+    window.addEventListener('batshark:attack', attack as EventListener);
     (async () => {
       const { data } = await supabase.auth.getSession();
       const u = data.session?.user;
@@ -43,6 +50,7 @@ export default function B99Layout() {
         setIdentity({ userId: u.id, email: u.email, name: prof?.display_name || u.email?.split('@')[0] });
       }
     })();
+    return () => window.removeEventListener('batshark:attack', attack as EventListener);
   }, []);
 
   // bat flight on route change
@@ -165,14 +173,15 @@ export default function B99Layout() {
       <AnimatePresence>
         {batFlying && (
           <motion.div
-            initial={{ x: '110vw', y: '20vh', rotate: -15, opacity: 0, scale: 0.5 }}
-            animate={{ x: '-30vw', y: ['20vh', '5vh', '60vh', '30vh'], rotate: [-15, 10, -10, 5], opacity: [0, 1, 1, 0.8, 0], scale: [0.5, 1.4, 1.6, 1.2, 0.8] }}
+            initial={{ x: '115vw', y: '12vh', rotate: -20, opacity: 0, scale: 0.45 }}
+            animate={{ x: ['115vw', '54vw', '46vw', '-25vw'], y: ['12vh', '18vh', '42vh', '28vh'], rotate: [-20, 8, -8, 4], opacity: [0, 1, 1, 1, 0], scale: [0.45, 1.2, 3.2, 1.1, 0.7] }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.1, ease: 'easeInOut' }}
-            className="fixed inset-0 z-50 pointer-events-none flex items-center"
+            transition={{ duration: 1.35, ease: 'easeInOut' }}
+            className="fixed inset-0 z-50 pointer-events-none flex items-center bg-black/15"
           >
-            <motion.img src={logo} alt="" className="w-32 h-32 drop-shadow-[0_0_40px_rgba(139,92,246,0.9)]"
-              animate={{ scaleX: [1, -1, 1, -1, 1] }} transition={{ duration: 0.3, repeat: 3 }} />
+            <motion.img src={logo} alt="" className="w-36 h-36 drop-shadow-[0_0_60px_rgba(34,211,238,0.95)]"
+              animate={{ scaleX: [1, -1, 1, -1, 1], filter: ['brightness(1)', 'brightness(1.7)', 'brightness(1)'] }} transition={{ duration: 0.22, repeat: 5 }} />
+            <motion.div className="absolute inset-0 bg-white/20" initial={{ opacity: 0 }} animate={{ opacity: [0, 0, 0.55, 0] }} transition={{ duration: 1.35 }} />
           </motion.div>
         )}
       </AnimatePresence>
