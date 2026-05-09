@@ -281,3 +281,31 @@ function SectionTitle({ icon: Icon, en, ar, count, small }: any) {
     </div>
   );
 }
+
+function VideoCard({ video }: { video: any }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white hover:border-amber-300 hover:shadow-md transition">
+      <div className="relative aspect-video bg-black">
+        {open && video.embed ? (
+          <iframe src={`${video.embed}?autoplay=1`} title={video.title} className="absolute inset-0 w-full h-full" allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" />
+        ) : (
+          <button onClick={() => setOpen(true)} className="absolute inset-0 group">
+            {video.thumbnail && <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />}
+            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition flex items-center justify-center">
+              <PlayCircle className="w-14 h-14 text-white drop-shadow-lg" />
+            </div>
+          </button>
+        )}
+      </div>
+      <div className="p-3">
+        <div className="text-xs font-bold text-slate-900 line-clamp-2">{video.title}</div>
+        {video.channel && <div className="text-[10px] text-slate-500 mt-1">{video.channel}</div>}
+        <a href={video.url} target="_blank" rel="noreferrer" className="text-[10px] text-amber-700 hover:text-amber-900 inline-flex items-center gap-1 mt-1">
+          فتح في يوتيوب <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
+    </div>
+  );
+}
