@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
-import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward, ExternalLink, Loader2, RefreshCw, Lightbulb, PlayCircle, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -14,12 +14,16 @@ export type SmartQuestion = {
   title: string;
   hint?: string;
   type: 'cards' | 'text' | 'textarea' | 'number' | 'multi' | 'inspiration';
-  options?: { value: string; label: string; emoji?: string; desc?: string }[];
+  options?: { value: string; label: string; emoji?: string; desc?: string; preview?: string }[];
   placeholder?: string;
   optional?: boolean;
-  // for inspiration: builds the topic string from prior answers
   topicFrom?: (answers: Record<string, any>) => string;
-  focus?: string; // e.g. "الصفحة الرئيسية" / "صفحة الدخول"
+  focus?: string;
+  // NEW: deep context per question
+  whyThis?: string; // "لماذا نسأل هذا" — يشرح بعمق لماذا هذا السؤال مهم
+  examples?: { image: string; label: string; url?: string; tag?: string }[]; // أمثلة بصرية حقيقية
+  videoEmbed?: string; // YouTube embed URL لشرح المفهوم
+  liveExamplesFor?: string; // عند تغيّر الإجابة، اجلب أمثلة ديناميكية لهذه القيمة من البحث
 };
 
 interface Props {
