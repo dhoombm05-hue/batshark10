@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
-import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward, ExternalLink, Loader2, RefreshCw, Lightbulb, PlayCircle, Eye } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward, ExternalLink, Loader2, RefreshCw, Lightbulb, PlayCircle, Eye, Volume2, VolumeX, BookOpen, Target, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useArabicTTS } from '@/hooks/useB99Audio';
 
 export type SmartQuestion = {
   key: string;
