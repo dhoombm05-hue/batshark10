@@ -243,12 +243,41 @@ export default function B99Level1() {
     } finally { setLoading(false); }
   };
 
+  const handleReserve = async (answers: Record<string, any>) => {
+    // Normalize handle to a safe slug
+    const rawHandle = String(answers.handle || answers.business_name || 'mybrand').trim();
+    const safeHandle = rawHandle.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'mybrand';
+    const enriched = {
+      ...answers,
+      handle: safeHandle,
+      desired_slug: safeHandle,
+      brand_vibe: answers.brand_vibe || 'modern',
+      audience: answers.audience || 'b2c_young',
+      pages: ['home', 'contact'],
+      database_choice: 'none_yet',
+      payment: 'cash',
+      unique_value: answers.idea || answers.business_name || '',
+    };
+    setLoading(true); setMode('building');
+    try {
+      const { data, error } = await supabase.functions.invoke('b99-engine', {
+        body: { action: 'generate_platform', payload: { level: 1, mode: 'reserve', answers: enriched } },
+      });
+      if (error) throw error;
+      setResult(data);
+      setMode('done');
+      toast.success(`تم حجز اسمك: ${safeHandle} 🎉`);
+    } catch (e: any) {
+      toast.error(e.message || 'تعذّر حجز الاسم'); setMode('reserve');
+    } finally { setLoading(false); }
+  };
+
   if (mode === 'choose') {
     return (
       <div className="max-w-5xl mx-auto space-y-8">
         <Header level={1} title="ابني من الصفر" subtitle="اختر مسارك المناسب — كل مسار يأخذك مباشرة لما تحتاجه." />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <ChoiceCard
             onClick={() => setMode('scratch')}
             icon={Sparkles}
@@ -257,6 +286,15 @@ export default function B99Level1() {
             title="ما عندي شي"
             desc="نبني لك منصة كاملة من الصفر مع باكند وقاعدة بيانات وصفحات مالك."
             bullets={['تصميم احترافي جاهز', 'باكند مدمج', 'لوحة مالك للتحكم', 'رابط مستقل + QR']}
+          />
+          <ChoiceCard
+            onClick={() => setMode('reserve')}
+            icon={Bookmark}
+            accent="from-emerald-500 via-teal-500 to-cyan-500"
+            badge="احجز اسمك على الإنترنت"
+            title="ما عندي موقع ولا منصة"
+            desc="سجّل اسم نشاطك في بات شارك حتى يطلع للناس لما يبحثون عنك."
+            bullets={['اسم/رابط خاص بك', 'صفحة عرض جاهزة', 'يظهر في محركات البحث', 'تقدر تطوّره لاحقاً']}
           />
           <ChoiceCard
             onClick={() => setMode('connect')}
@@ -277,6 +315,15 @@ export default function B99Level1() {
       <div className="max-w-3xl mx-auto space-y-6">
         <Header level={1} title="من الصفر" subtitle="6 أسئلة سريعة، ثم نبني منصتك مباشرة." onBack={() => setMode('choose')} />
         <SmartQuestionEngine questions={SCRATCH_QUESTIONS} onComplete={handleScratch} loading={loading} accent="from-violet-500 to-pink-500" ctaLabel="ابني منصتي الآن" />
+      </div>
+    );
+  }
+
+  if (mode === 'reserve') {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Header level={1} title="احجز اسمك" subtitle="خطوات سريعة لحجز اسم نشاطك على الإنترنت — حتى لو ما عندك موقع." onBack={() => setMode('choose')} />
+        <SmartQuestionEngine questions={RESERVE_QUESTIONS} onComplete={handleReserve} loading={loading} accent="from-emerald-500 to-cyan-500" ctaLabel="احجز اسمي الآن" />
       </div>
     );
   }
