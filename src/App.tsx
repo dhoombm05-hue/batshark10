@@ -51,6 +51,7 @@ import B99Level1 from "./pages/b99/B99Level1";
 import B99Level2 from "./pages/b99/B99Level2";
 import B99Level3 from "./pages/b99/B99Level3";
 import PlatformView from "./pages/PlatformView";
+import PlatformEditor from "./pages/PlatformEditor";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 import BatSharkGuide from "./components/BatSharkGuide";
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/build" element={<BuildBusiness />} />
             <Route path="/p/:slug" element={<PlatformView />} />
+            <Route path="/p/:slug/edit" element={<PlatformEditor />} />
             <Route path="/b99" element={<B99Layout />}>
               <Route index element={<B99Home />} />
               <Route path="generator" element={<B99Generator />} />
