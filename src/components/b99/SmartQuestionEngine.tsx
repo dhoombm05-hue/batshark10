@@ -176,6 +176,15 @@ export default function SmartQuestionEngine({
             />
           )}
 
+          {q.type === 'inspiration' && (
+            <InspirationPicker
+              topic={q.topicFrom ? q.topicFrom(answers) : (answers.idea || answers.business_kind || '')}
+              focus={q.focus || 'overall'}
+              value={value}
+              onChange={setVal}
+            />
+          )}
+
           {q.type === 'textarea' && (
             <Textarea
               autoFocus
