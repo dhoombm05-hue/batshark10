@@ -46,6 +46,9 @@ import B99Ads from "./pages/b99/B99Ads";
 import B99Platforms from "./pages/b99/B99Platforms";
 import B99Search from "./pages/b99/B99Search";
 import B99Dashboard from "./pages/b99/B99Dashboard";
+import B99Level1 from "./pages/b99/B99Level1";
+import B99Level2 from "./pages/b99/B99Level2";
+import B99Level3 from "./pages/b99/B99Level3";
 import PlatformView from "./pages/PlatformView";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
@@ -68,6 +71,9 @@ const App = () => (
               <Route index element={<B99Home />} />
               <Route path="generator" element={<B99Generator />} />
               <Route path="generator/:level" element={<B99Generator />} />
+              <Route path="level/1" element={<B99Level1 />} />
+              <Route path="level/2" element={<B99Level2 />} />
+              <Route path="level/3" element={<B99Level3 />} />
               <Route path="ads" element={<B99Ads />} />
               <Route path="platforms" element={<B99Platforms />} />
               <Route path="search" element={<B99Search />} />
