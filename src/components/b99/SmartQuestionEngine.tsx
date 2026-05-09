@@ -1,21 +1,25 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
-import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 export type SmartQuestion = {
   key: string;
   title: string;
   hint?: string;
-  type: 'cards' | 'text' | 'textarea' | 'number' | 'multi';
+  type: 'cards' | 'text' | 'textarea' | 'number' | 'multi' | 'inspiration';
   options?: { value: string; label: string; emoji?: string; desc?: string }[];
   placeholder?: string;
   optional?: boolean;
+  // for inspiration: builds the topic string from prior answers
+  topicFrom?: (answers: Record<string, any>) => string;
+  focus?: string; // e.g. "الصفحة الرئيسية" / "صفحة الدخول"
 };
 
 interface Props {
