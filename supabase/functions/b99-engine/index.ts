@@ -258,6 +258,20 @@ Deno.serve(async (req) => {
       return ok(ins);
     }
 
+    if (action === 'visual_examples') {
+      const ex = await fetchVisualExamples(payload.topic || '', payload.limit || 6);
+      return ok(ex);
+    }
+
+    if (action === 'media_search') {
+      const topic = payload.topic || payload.query || '';
+      const [images, videos] = await Promise.all([
+        fetchImages(topic, payload.image_limit || 9),
+        fetchVideos(topic, payload.video_limit || 6),
+      ]);
+      return ok({ topic, images, videos });
+    }
+
     if (action === 'assistant') {
       const reply = await callAI([
         { role: 'system', content: 'أنت "بات شارك"، مساعد منصة بات شارك 99. ردودك قصيرة ومباشرة بالعربية. روابط ممكنة: /b99/level/1 /b99/level/2 /b99/level/3 /b99/ads /b99/platforms /b99/search.' },
