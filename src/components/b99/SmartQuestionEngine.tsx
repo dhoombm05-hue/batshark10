@@ -58,18 +58,30 @@ export default function SmartQuestionEngine({
   if (!q) return null;
 
   return (
-    <Card className="bg-white/90 backdrop-blur-xl border-slate-200 shadow-2xl shadow-violet-500/10 p-6 md:p-8 rounded-3xl">
-      {/* progress */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <Sparkles className="w-3.5 h-3.5 text-violet-500" />
-          سؤال {step + 1} من {questions.length}
+    <Card className="relative overflow-hidden bg-gradient-to-br from-white via-amber-50/20 to-violet-50/30 border border-amber-200/50 shadow-[0_30px_80px_-20px_rgba(212,175,55,0.25)] p-6 md:p-10 rounded-[2rem]">
+      {/* gold corner accents */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-300/15 to-transparent rounded-bl-[6rem] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-violet-300/15 to-transparent rounded-tr-[6rem] pointer-events-none" />
+
+      {/* progress header */}
+      <div className="relative flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] tracking-[0.3em] text-amber-700 font-black uppercase">Step</span>
+          <span className="text-sm font-black text-slate-900">{String(step + 1).padStart(2, '0')}</span>
+          <span className="text-xs text-slate-400">/ {String(questions.length).padStart(2, '0')}</span>
         </div>
-        <button onClick={() => onComplete(answers)} className="text-xs text-slate-400 hover:text-violet-600 flex items-center gap-1">
+        <button onClick={() => onComplete(answers)} className="text-[11px] text-slate-400 hover:text-amber-700 flex items-center gap-1 transition">
           <SkipForward className="w-3 h-3" /> اقفز للنتائج
         </button>
       </div>
-      <Progress value={progress} className="h-1.5 mb-8" />
+      <div className="relative h-1 mb-8 bg-slate-200/60 rounded-full overflow-hidden">
+        <motion.div
+          className="absolute inset-y-0 left-0 bg-gradient-to-l from-amber-500 via-amber-400 to-amber-300 rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        />
+      </div>
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -79,8 +91,8 @@ export default function SmartQuestionEngine({
           exit={{ opacity: 0, x: -30 }}
           transition={{ duration: 0.25 }}
         >
-          <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2">{q.title}</h2>
-          {q.hint && <p className="text-sm text-slate-500 mb-6">{q.hint}</p>}
+          <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2 leading-tight">{q.title}</h2>
+          {q.hint && <p className="text-sm text-slate-500 mb-6 leading-relaxed">{q.hint}</p>}
 
           {q.type === 'cards' && q.options && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
