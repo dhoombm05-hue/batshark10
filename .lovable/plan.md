@@ -1,42 +1,198 @@
+## خطة التنفيذ الجذرية لـ Batshark99
 
+سأحوّل Batshark99 من واجهات بسيطة إلى منصة احترافية متكاملة، مع الحفاظ على الرابط الحالي `/b99` والمنصات الناتجة `/p/:slug`.
 
-## Plan: Add "Save & Freeze" Button with Snapshot-Based Loading
+## 1) الواجهة الرئيسية الجديدة لـ Batshark99
 
-### Problem Analysis
-The current system reads table data from normalized tables (`custom_table_columns`, `custom_table_rows`, `custom_table_cells`) on every page load. The "save" button creates a version snapshot but never uses it for loading. If the normalized data gets corrupted or reset, the saved snapshots are ignored.
+- إعادة تصميم صفحة `/b99` بالكامل كواجهة تشغيل قوية وليست بطاقات عادية.
+- استخدام شعار BatShark المرفوع كعنصر بصري رئيسي ثابت وواضح.
+- إضافة دخولين واضحين:
+  - دخول داخلي من داخل BatShark Economy للأعضاء.
+  - دخول خارجي مستقل للعميل/المستثمر من Batshark99.
+- تحويل الأقسام الرئيسية إلى بوابات واضحة:
+  - بناء بزنس.
+  - بناء منصة مستقلة.
+  - الحملات الإعلانية والفيديوهات.
+  - البحث العلمي الذكي.
+  - إدارة المنصات المولدة.
+- تحسين الموبايل بالكامل بحيث تكون الأزرار والخيارات واضحة وليست مظلمة أو مخفية.
 
-### Solution
-Make the snapshot the **primary source of truth** for loading. When the user presses "Save & Freeze", a full JSON snapshot is stored. On next load, if a snapshot exists, it is used to rebuild the normalized tables, ensuring data integrity.
+## 2) حركة هجوم الخفاش الاحترافية
 
-### Implementation Steps
+- استبدال الحركة الحالية بحركة سينمائية:
+  - الخفاش يظهر من عمق الشاشة.
+  - يقترب بسرعة حتى يملأ الشاشة بالكامل.
+  - يعمل Flash/Impact لحظة الانتقال.
+  - ينتقل للسلايد أو الصفحة المطلوبة.
+  - يرجع للخلف بشكل ناعم بعد الدخول.
+- تطبيق الحركة على:
+  - التنقل بين صفحات Batshark99.
+  - اختيار Level.
+  - فتح مولد المنصات.
+  - فتح الحملات الإعلانية.
+  - فتح منصة مولدة.
 
-**1. Add "Save & Freeze" button (`CustomTables.tsx`)**
-- Replace the current save button with a prominent "💾 حفظ وتثبيت الجدول" button
-- On click: collect all columns, rows, cells from DB into a snapshot, save to `custom_table_versions`, then show success with timestamp
-- Add a visible timestamp indicator: "🟢 تم الحفظ آخر مرة: [time]" using the latest version's `saved_at`
+## 3) كل Level بصفحة وتجربة خاصة فعلاً
 
-**2. Snapshot-aware loading (`useCustomTables.ts`)**
-- In `useCustomTableRows`, after fetching rows/cells, if zero rows AND zero columns exist but a saved version exists in `custom_table_versions`, auto-restore from the latest snapshot
-- This prevents the "empty table on reload" scenario without changing the normal flow when data exists
+- إعادة بناء `/b99/generator/:level` بحيث كل مستوى ليس نفس النموذج بألوان مختلفة، بل تجربة مختلفة:
 
-**3. Add "last saved" display**
-- Show the latest version timestamp from `useTableVersions` in the header next to the save status indicator
-- Format: "🟢 آخر حفظ: 3:42 م" or "🟡 لم يتم الحفظ بعد"
+### Level 1 — مبتدئ
+- أسئلة سهلة جداً على شكل بطاقات اختيار وصور/أمثلة.
+- مناسب لشخص يقول: “أبي موقع عطور / أكل صحي / بادل”.
+- الناتج: منصة جاهزة + خطة إطلاق بسيطة.
 
-**4. Keep auto-save (5s debounce) and beforeunload warning**
-- These already exist and work correctly, no changes needed
+### Level 2 — متوسط
+- أسئلة عن بزنس قائم، المشكلة، الجمهور، طريقة البيع، نقاط الضعف.
+- الناتج: تطوير منصة قائمة + تحسين تجربة العميل + خطة إعلانات.
 
-**5. Ensure version restore works properly**
-- The existing `handleRestoreVersion` deletes and re-inserts normalized data from a snapshot, which is correct
-- Add `queryClient.invalidateQueries` instead of `window.location.reload()` for smoother UX
+### Level 3 — متقدم
+- أسئلة تشغيلية عن الأقسام، الطلبات، المنتجات، طرق الدفع، الصلاحيات، رحلة العميل.
+- الناتج: منصة تشغيل ونمو مع صفحات وعمليات أوضح.
 
-### Files to Modify
-- `src/pages/CustomTables.tsx` -- UI changes (button, indicator, restore logic)
-- `src/hooks/useCustomTables.ts` -- Add fallback-to-snapshot logic in row loading
-- `src/hooks/useTableVersions.ts` -- No changes needed (already works)
+### Level 4 — احترافي/محلل
+- أسئلة عن السوق، CAC/LTV، المخاطر، التجربة الأولى، الفرضيات، النمو.
+- الناتج: تحليل احترافي + منصة اختبار + خطة قياس.
 
-### Technical Notes
-- No database migration needed; `custom_table_versions` table already exists
-- The snapshot contains `{ columns, rows, cells }` as JSON -- this is the "frozen" state
-- On restore from snapshot, the normalized tables are rebuilt, so all existing queries continue to work
+- سأجعل طريقة الأسئلة أقل مللاً:
+  - Wizard متقدم خطوة بخطوة.
+  - اختيارات سريعة.
+  - معاينة مباشرة لما سيتم بناؤه.
+  - ملخص قبل التوليد.
+  - زر “ابنِ المنصة الآن”.
 
+## 4) مولد المنصات المستقلة يصبح Platform Builder حقيقي
+
+- تطوير `/b99/platforms` ونتيجة `/p/:slug` حتى لا تكون مجرد نصوص.
+- كل منصة يتم إنشاؤها سيكون لها:
+  - رابط مستقل.
+  - QR Code.
+  - رمز دخول اختياري.
+  - صفحة دخول خاصة للمنصة نفسها.
+  - بيانات مالك.
+  - وضع عام أو محمي.
+  - إعدادات “بيع/تسليم المنصة للمالك”.
+  - صلاحيات مالك للتحكم الكامل لاحقاً.
+
+- إضافة أسئلة بناء مهمة قبل التوليد:
+  - هل المنصة صفحة طولية أم سلايدات؟
+  - هل تحتاج متجر/حجوزات/طلبات/دفع كاش/واتساب؟
+  - أين يربط الباكند؟ داخل Batshark99 أو خارجي لاحقاً؟
+  - ما الصفحات المطلوبة؟
+  - هل تريد فيديوهات/صور منتجات/أقسام عروض؟
+  - هل تريد صفحة دخول للزوار؟
+  - هل سيتم بيع المنصة وتسليمها لمالك؟
+
+## 5) المنصات الناتجة تصبح احترافية وقابلة للتحكم
+
+- إعادة تصميم `PlatformView` بالكامل:
+  - Hero قوي حسب نوع النشاط.
+  - دعم نمط موقع طولي أو نمط Slides.
+  - أقسام منتجات/خدمات/أسعار/فيديو/معرض/طلب/تواصل.
+  - حركة وانتقالات ناعمة.
+  - تصميم فاتح أو داكن حسب اختيار المستخدم وليس داكن فقط.
+  - أزرار واضحة ومقروءة.
+
+- إضافة “لوحة تحكم مالك المنصة” مبدئياً:
+  - تعديل العنوان والوصف.
+  - تعديل الأقسام والنصوص.
+  - تعديل الألوان.
+  - تعديل طريقة الدفع.
+  - نسخ الرابط.
+  - إظهار QR Code.
+  - فتح المنصة كزائر.
+
+## 6) منصة الحملات الإعلانية تصبح Video Ads Studio
+
+- إعادة بناء `/b99/ads` لتكون منصة إعلانات يومية قوية، وليس مجرد نص إعلان.
+- قبل التوليد يتم طرح استبيان احترافي:
+  - النشاط: بادل، مظلات، عطور، أكل صحي، مخصص.
+  - الهدف: حجوزات، مبيعات، واتساب، زيارات، وعي.
+  - المنصات: TikTok, Snapchat, Instagram, Google, YouTube.
+  - مدة الإعلان: 6 ثواني، 15 ثانية، 30 ثانية.
+  - اللهجة والنبرة.
+  - الجمهور والمدينة والميزانية.
+  - هل يوجد صور/فيديوهات جاهزة؟
+
+- الناتج سيكون:
+  - فكرة فيديو كاملة.
+  - سكربت مشهد بمشهد.
+  - Hook أول 3 ثواني.
+  - النص الصوتي.
+  - نص الشاشة.
+  - وصف اللقطات.
+  - Prompt جاهز لتوليد فيديو بالذكاء الاصطناعي.
+  - قوالب نشر لكل منصة.
+  - أفضل أوقات نشر.
+  - توزيع ميزانية.
+  - Checklist إطلاق.
+
+- إذا لم يتوفر مولد فيديو مباشر داخل التطبيق، سأبني “معاينة فيديو إعلاني متحركة” داخل الواجهة مبنية من السكربت والمشاهد، بحيث يرى المستخدم إعلاناً بصرياً منظماً وليس نص فقط، مع تجهيز Prompt احترافي لأي مولد فيديو.
+
+## 7) البحث العلمي الذكي مثل Google داخل Batshark99
+
+- إعادة بناء `/b99/search` كواجهة بحث قوية:
+  - مربع بحث مركزي كبير.
+  - نتائج مصنفة.
+  - إجابة مباشرة.
+  - أسئلة متابعة.
+  - بحث داخل المنصات المولدة.
+  - بحث داخل الحملات.
+  - اقتراح أفضل إجراء: ابني منصة، سو حملة، افتح نتيجة.
+- تحسين محرك البحث في backend function ليعطي نتائج أكثر دقة واحترافية.
+
+## 8) تطوير محرك الذكاء الاصطناعي
+
+- تحديث `b99-engine` ليولد مخرجات أعمق:
+  - `platform_blueprint`
+  - `owner_controls`
+  - `qr_payload`
+  - `access_policy`
+  - `layout_mode`
+  - `editable_sections`
+  - `ad_video_script`
+  - `video_scenes`
+  - `scientific_search_answer`
+- جعل الأسئلة والناتج تختلف فعلاً حسب Level.
+- حفظ المخرجات بشكل منظم حتى تظهر في التاريخ ولوحة التحكم.
+
+## 9) قاعدة البيانات والتخزين
+
+سأضيف/أحدّث الجداول والحقول اللازمة عبر Lovable Cloud عند التنفيذ:
+
+- توسيع جدول المنصات المولدة لدعم:
+  - QR Code data.
+  - owner access.
+  - layout mode.
+  - editable schema.
+  - transfer/sale status.
+  - backend connection preference.
+- توسيع الحملات لدعم:
+  - video scenes.
+  - voiceover script.
+  - video prompt.
+  - animated preview settings.
+- إضافة سياسات حماية مناسبة حتى لا يستطيع أي شخص تعديل منصة ليست له.
+
+## 10) الأمان
+
+- إزالة أو تعطيل منطق تغيير كلمة مرور الرئيس من endpoint عام بعد التأكد أن كلمة المرور المطلوبة تم ضبطها سابقاً، لأن تركه مفتوح خطر.
+- دخول المنصات الخاصة سيكون عبر تحقق آمن من رمز المنصة.
+- صلاحيات تعديل/نقل ملكية المنصة تكون للمالك أو CEO فقط.
+
+## 11) الملفات المتوقعة تعديلها
+
+- `src/pages/b99/B99Home.tsx`
+- `src/pages/b99/B99Layout.tsx`
+- `src/pages/b99/B99Generator.tsx`
+- `src/pages/b99/B99Ads.tsx`
+- `src/pages/b99/B99Platforms.tsx`
+- `src/pages/b99/B99Search.tsx`
+- `src/pages/PlatformView.tsx`
+- `src/App.tsx` عند الحاجة لإضافة مسارات إدارة المنصة.
+- `supabase/functions/b99-engine/index.ts`
+- migrations خاصة بـ Lovable Cloud.
+- نسخ شعار BatShark المرفوع إلى assets واستخدامه في الواجهة والحركة.
+
+## النتيجة النهائية
+
+بعد التنفيذ سيكون Batshark99 منصة احترافية فيها: دخول خارجي/داخلي، مستويات منفصلة فعلاً، مولد بزنس ذكي، مولد منصات قابلة للتحكم والبيع، QR Code لكل منصة، منصة إعلانات بفكرة فيديو احترافية، وبحث ذكي قوي داخل النظام.
