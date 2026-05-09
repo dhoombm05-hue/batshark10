@@ -208,13 +208,13 @@ export default function B99Showcase() {
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 bg-gradient-to-br ${p.color} shadow-lg`}>
                 <p.icon className="w-7 h-7 text-white" />
               </div>
-              <div className="text-[10px] tracking-[0.3em] text-amber-300/70 mb-1">المستوى {p.id}</div>
-              <h3 className="text-xl font-black text-white mb-1">{p.name}</h3>
-              <p className="text-sm text-white/50 mb-5">{p.tagline}</p>
+              <div className="text-xs text-amber-300 font-bold mb-1">المستوى {p.id}</div>
+              <h3 className="text-2xl font-black text-white mb-1">{p.name}</h3>
+              <p className="text-sm text-white/75 mb-5 font-medium">{p.tagline}</p>
               <div className="flex items-baseline gap-2 mb-6 pb-6 border-b border-white/10">
                 <span className="text-4xl font-black bg-gradient-to-b from-amber-200 to-amber-400 bg-clip-text text-transparent">{p.price}</span>
-                <span className="text-sm text-white/40">ر.س</span>
-                <span className="text-xs text-white/40 mr-auto">{p.period}</span>
+                <span className="text-sm text-white/70 font-bold">ر.س</span>
+                <span className="text-xs text-white/60 mr-auto font-medium">{p.period}</span>
               </div>
               <ul className="space-y-3 mb-7">
                 {p.features.map((f, j) => (
