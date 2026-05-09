@@ -22,6 +22,9 @@ export type SmartQuestion = {
   focus?: string;
   // NEW: deep context per question
   whyThis?: string; // "لماذا نسأل هذا" — يشرح بعمق لماذا هذا السؤال مهم
+  tips?: string[]; // نصائح ذهبية احترافية لمساعدة المستخدم على الاختيار
+  pitfalls?: string[]; // أخطاء شائعة لتجنبها
+  goal?: string; // ما الذي ستحققه هذه الإجابة في منصتك النهائية
   examples?: { image: string; label: string; url?: string; tag?: string }[]; // أمثلة بصرية حقيقية
   videoEmbed?: string; // YouTube embed URL لشرح المفهوم
   liveExamplesFor?: string; // عند تغيّر الإجابة، اجلب أمثلة ديناميكية لهذه القيمة من البحث
