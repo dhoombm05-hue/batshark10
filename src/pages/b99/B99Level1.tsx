@@ -168,6 +168,45 @@ const CONNECT_QUESTIONS: SmartQuestion[] = [
   },
 ];
 
+const RESERVE_QUESTIONS: SmartQuestion[] = [
+  {
+    key: 'business_name', title: 'وش الاسم الي تبيه يطلع في البحث؟', type: 'text',
+    placeholder: 'مثلاً: مطعم نسمة، أوميغا للعطور، PadelHub...',
+    whyThis: 'هذا الاسم يصبح هويتك على الإنترنت. سيظهر في نتائج البحث، في الرابط، وفي كل مكان يذكرك العملاء فيه. اختر بعناية لأنه أول ما يراه الناس عنك.',
+    tips: ['اختر اسماً قصيراً يسهل تذكره', 'تجنب الأرقام والرموز المعقدة', 'يفضل اسم لا يستخدمه أحد آخر'],
+  },
+  {
+    key: 'handle', title: 'وش الاسم المختصر للرابط؟', type: 'text',
+    placeholder: 'مثلاً: nasma-cafe',
+    whyThis: 'هذا "اسم النطاق" المختصر الي يظهر في الرابط (/p/اسمك). لازم يكون بالإنجليزي صغير، بدون مسافات. هذا الرابط هو الي تشاركه مع العملاء وتضعه في حساباتك.',
+    tips: ['أحرف إنجليزية صغيرة فقط', 'يمكن استخدام الشرطة - بين الكلمات', 'اجعله مطابقاً لاسمك التجاري قدر الإمكان'],
+    pitfalls: ['لا تستخدم مسافات', 'لا تستخدم أحرف عربية أو رموز', 'تجنب الأسماء العامة جداً مثل shop أو store'],
+  },
+  {
+    key: 'business_kind', title: 'وش نوع نشاطك؟', type: 'cards',
+    whyThis: 'يحدد شكل الصفحة الافتتاحية والأقسام التي تظهر للزائر.',
+    options: [
+      { value: 'food', label: 'مطعم/مقهى', emoji: '🍽️' },
+      { value: 'shop', label: 'متجر', emoji: '🛍️' },
+      { value: 'service', label: 'خدمات', emoji: '🛠️' },
+      { value: 'sport', label: 'رياضة/ملاعب', emoji: '🎾' },
+      { value: 'edu', label: 'تعليم', emoji: '📚' },
+      { value: 'other', label: 'غير ذلك', emoji: '✨' },
+    ],
+  },
+  { key: 'idea', title: 'وصف مختصر لنشاطك', type: 'textarea',
+    placeholder: 'سطر أو سطرين عن نشاطك...',
+    whyThis: 'هذا الوصف يكون "Meta Description" — الجملة التي تطلع تحت اسمك في نتائج جوجل. اكتبها بإقناع وبكلمات يبحث عنها عملاؤك فعلاً.',
+  },
+  { key: 'city', title: 'مدينتك / منطقتك؟', type: 'text', placeholder: 'الرياض، جدة، الدمام...',
+    whyThis: 'يساعد جوجل يعرض صفحتك للناس القريبين منك جغرافياً.',
+  },
+  { key: 'owner_email', title: 'إيميلك (للوصول لاحقاً)', type: 'text', placeholder: 'you@example.com' },
+  { key: 'owner_password', title: 'كلمة سر تتحكم فيها بصفحتك', type: 'text', placeholder: 'كلمة قوية 8 أحرف فأكثر',
+    whyThis: 'بهذه الكلمة فقط تقدر تعدل اسمك أو معلوماتك أو تحذف الصفحة لاحقاً. احفظها في مكان آمن.',
+  },
+];
+
 export default function B99Level1() {
   const nav = useNavigate();
   const [mode, setMode] = useState<Mode>('choose');
