@@ -50,74 +50,103 @@ export default function B99Home() {
   const attack = (to: string) => window.dispatchEvent(new CustomEvent('batshark:attack', { detail: { to } }));
 
   return (
-    <div className="space-y-20">
-      {/* HERO */}
-      <section className="relative pt-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-10 items-center">
-          <div>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-100 border border-violet-200 text-xs text-violet-700 font-bold mb-6">
-              <Sparkles className="w-3.5 h-3.5" /> الإصدار 99 — منصة سيادية لبناء الأعمال
-            </motion.div>
+    <div className="space-y-24">
+      {/* ============ LUXURY HERO ============ */}
+      <section className="relative -mx-4 md:-mx-6 lg:-mx-8 -mt-6 px-4 md:px-8 pt-10 pb-20 overflow-hidden rounded-b-[3rem]">
+        {/* Deep luxury backdrop: midnight + gold */}
+        <div className="absolute inset-0 bg-[#0a0a12]" />
+        <div className="absolute inset-0 opacity-90"
+          style={{ backgroundImage: 'radial-gradient(circle at 20% 10%, rgba(212,175,55,0.18), transparent 45%), radial-gradient(circle at 85% 80%, rgba(139,92,246,0.22), transparent 50%), radial-gradient(circle at 50% 50%, rgba(34,211,238,0.08), transparent 60%)' }} />
+        <div className="absolute inset-0 opacity-[0.06]"
+          style={{ backgroundImage: 'linear-gradient(rgba(212,175,55,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.4) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        {/* gold sparkle dots */}
+        {[...Array(18)].map((_, i) => (
+          <motion.span
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-amber-300/70"
+            style={{ top: `${(i * 53) % 95 + 2}%`, left: `${(i * 37) % 95 + 2}%` }}
+            animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.6, 1] }}
+            transition={{ duration: 3 + (i % 4), repeat: Infinity, delay: i * 0.2 }}
+          />
+        ))}
 
-            <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-              className="text-4xl md:text-6xl font-black mb-5 leading-[1.05] text-slate-900">
-              <span className="bg-gradient-to-l from-violet-700 via-fuchsia-600 to-cyan-600 bg-clip-text text-transparent">بات شارك 99</span><br/>
-              <span className="text-slate-800">منصة بناء وتعزيز</span><br/>
-              <span className="text-slate-800">و</span>
-              <span className="bg-gradient-to-l from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent"> توظيف ذكاء</span>
-              <span className="text-slate-800"> لأي بزنس</span>
-            </motion.h1>
+        <div className="relative max-w-6xl mx-auto">
+          {/* Tiny English tagline at top */}
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center gap-3 mb-8">
+            <span className="h-px w-12 bg-gradient-to-l from-transparent to-amber-400/60" />
+            <span className="text-[10px] tracking-[0.5em] text-amber-300/90 font-light uppercase">
+              Batshark · The Greatest
+            </span>
+            <span className="h-px w-12 bg-gradient-to-r from-transparent to-amber-400/60" />
+          </motion.div>
 
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-              className="text-slate-600 max-w-xl text-base md:text-lg leading-relaxed mb-7">
-              ثلاث مسارات احترافية: ابدأ من الصفر، اربط موقعك القائم بباكند وذكاء اصطناعي، أو وظّف بات شارك كموظف ذكي يدير لك التقارير والمتابعات.
-            </motion.p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mb-4">
-              <Button onClick={() => attack('/b99/level/1')} size="lg"
-                className="h-14 bg-gradient-to-l from-violet-600 via-fuchsia-600 to-cyan-600 text-white font-bold gap-2 shadow-[0_8px_30px_rgba(139,92,246,0.35)]">
-                <Sparkles className="w-4 h-4" /> ابدأ من المستوى 1
-              </Button>
-              <Button onClick={() => nav('/login')} size="lg" variant="outline"
-                className="h-14 bg-white border-slate-300 text-slate-700 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300 font-bold gap-2">
-                <LogIn className="w-4 h-4" /> دخول داخلي للأعضاء
-              </Button>
-            </div>
-            <p className="text-[12px] text-slate-500 leading-relaxed flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              الدخول الخارجي للزوار والمستثمرين بدون حساب • الدخول الداخلي لأعضاء بات شارك Economy
-            </p>
-          </div>
-
-          {/* Hero — official BATSHARK logo as centerpiece */}
-          <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}
-            className="relative aspect-square max-w-md mx-auto">
-            {/* layered glow rings */}
-            <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-violet-100 via-white to-cyan-100 border border-white shadow-2xl shadow-violet-200/50" />
+          {/* Centered logo emblem */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
+            className="relative w-44 h-44 md:w-56 md:h-56 mx-auto mb-8"
+          >
+            {/* gold halo rings */}
             <motion.div
-              className="absolute inset-6 rounded-[2.5rem] border border-violet-200/70"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+              className="absolute inset-0 rounded-full border border-amber-400/30"
+              animate={{ rotate: 360 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}
             />
             <motion.div
-              className="absolute inset-12 rounded-[2rem] border border-cyan-200/70 border-dashed"
-              animate={{ rotate: -360 }}
-              transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+              className="absolute -inset-4 rounded-full border border-dashed border-amber-300/20"
+              animate={{ rotate: -360 }} transition={{ duration: 70, repeat: Infinity, ease: 'linear' }}
             />
-            {/* official logo */}
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center p-16"
-              animate={{ y: [0, -10, 0] }}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500/10 via-transparent to-violet-500/10 blur-2xl" />
+            <motion.img
+              src={logo}
+              alt="BATSHARK"
+              className="relative w-full h-full object-contain drop-shadow-[0_20px_60px_rgba(212,175,55,0.45)] invert brightness-200"
+              animate={{ y: [0, -8, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <img src={logo} alt="بات شارك 99" className="w-full h-full object-contain drop-shadow-[0_15px_40px_rgba(15,23,42,0.25)]" />
-            </motion.div>
-            {/* corner badge */}
-            <div className="absolute -bottom-3 -left-3 z-20 px-4 py-2 rounded-2xl bg-white shadow-xl border border-slate-100 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span className="text-xs font-bold text-slate-700">Official Identity</span>
-            </div>
+            />
+          </motion.div>
+
+          {/* Main wordmark */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="text-center mb-6">
+            <h1 className="font-black tracking-tight leading-[0.95]">
+              <span className="block text-5xl md:text-7xl bg-gradient-to-b from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_4px_30px_rgba(212,175,55,0.3)]">
+                بات شارك
+              </span>
+              <span className="block text-7xl md:text-[8rem] mt-2 font-black bg-gradient-to-b from-white via-amber-100 to-amber-400 bg-clip-text text-transparent leading-none">
+                99
+              </span>
+            </h1>
+          </motion.div>
+
+          {/* Subtitle */}
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}
+            className="text-center max-w-2xl mx-auto text-base md:text-lg text-slate-300/90 leading-relaxed mb-10 font-light">
+            منصة سيادية لبناء وتعزيز وتوظيف الذكاء لأي بزنس —
+            <span className="text-amber-200/90 font-normal"> ثلاث مسارات احترافية</span>،
+            ربط باكند فوري، وموظف رقمي يعمل ٢٤/٧.
+          </motion.p>
+
+          {/* CTA bar */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+            className="flex flex-wrap items-center justify-center gap-3 mb-6">
+            <Button onClick={() => attack('/b99/level/1')} size="lg"
+              className="h-14 px-8 bg-gradient-to-l from-amber-400 via-amber-300 to-amber-500 hover:opacity-95 text-slate-950 font-black gap-2 rounded-full shadow-[0_15px_50px_rgba(212,175,55,0.4)] border border-amber-200">
+              <Sparkles className="w-4 h-4" /> ابدأ المسار الأول
+            </Button>
+            <Button onClick={() => nav('/login')} size="lg" variant="outline"
+              className="h-14 px-7 bg-white/5 backdrop-blur-md border-amber-300/30 text-amber-100 hover:bg-amber-400/10 hover:text-white hover:border-amber-200 font-bold gap-2 rounded-full">
+              <LogIn className="w-4 h-4" /> دخول الأعضاء
+            </Button>
+          </motion.div>
+
+          {/* Trust line */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-slate-400">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> دخول داخلي + وضع زائر</span>
+            <span className="flex items-center gap-1.5"><Globe2 className="w-3.5 h-3.5 text-cyan-400" /> رابط مشاركة مستقل</span>
+            <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-amber-400" /> ذكاء اصطناعي مدمج</span>
           </motion.div>
         </div>
       </section>
