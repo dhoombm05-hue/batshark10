@@ -176,8 +176,8 @@ export default function B99Showcase() {
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center mb-4">
                   <f.icon className="w-5 h-5 text-amber-300" />
                 </div>
-                <h3 className="font-bold text-white mb-2">{f.title}</h3>
-                <p className="text-sm text-white/50 leading-relaxed">{f.desc}</p>
+                <h3 className="font-black text-lg text-white mb-2">{f.title}</h3>
+                <p className="text-sm text-white/80 leading-relaxed font-medium">{f.desc}</p>
               </div>
             </motion.div>
           ))}
