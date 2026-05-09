@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowLeft, Sparkles, Plug, Bot, Check, Star, ShieldCheck, Globe2, Zap, Megaphone, Search, LayoutDashboard, LogIn, Play, BarChart3, Bell, MessageSquare, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import logo from '@/assets/batshark-logo-official.png';
 
 const PACKAGES = [
