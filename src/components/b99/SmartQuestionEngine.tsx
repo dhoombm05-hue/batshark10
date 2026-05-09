@@ -5,10 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
-import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward, ExternalLink, Loader2, RefreshCw, Lightbulb, PlayCircle, Eye, Volume2, VolumeX, BookOpen, Target, AlertTriangle } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward, ExternalLink, Loader2, RefreshCw, Lightbulb, PlayCircle, Eye, BookOpen, Target, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useArabicTTS } from '@/hooks/useB99Audio';
 
 export type SmartQuestion = {
   key: string;
@@ -246,7 +245,6 @@ function QuestionContext({ q, answer }: { q: SmartQuestion; answer: any }) {
   const [liveItems, setLiveItems] = useState<any[]>([]);
   const [liveLoading, setLiveLoading] = useState(false);
   const [openVideo, setOpenVideo] = useState(false);
-  const { speak, stop, speaking } = useArabicTTS();
 
   const liveTopic = q.liveExamplesFor && answer
     ? `${q.liveExamplesFor} ${typeof answer === 'string' ? answer : Array.isArray(answer) ? answer.join(' ') : ''}`.trim()
@@ -264,17 +262,7 @@ function QuestionContext({ q, answer }: { q: SmartQuestion; answer: any }) {
     return () => { alive = false; };
   }, [liveTopic]);
 
-  // Auto-stop narration when question changes
-  useEffect(() => () => stop(), [q.key, stop]);
-
   if (!q.whyThis && !q.examples?.length && !q.videoEmbed && !liveTopic && !q.tips?.length && !q.goal && !q.pitfalls?.length) return null;
-
-  const narrationText = [
-    q.whyThis,
-    q.goal && `الهدف: ${q.goal}`,
-    q.tips?.length && `نصائح ذهبية: ${q.tips.join('. ')}`,
-    q.pitfalls?.length && `تجنّب: ${q.pitfalls.join('. ')}`,
-  ].filter(Boolean).join('. ');
 
   return (
     <div className="mb-7 space-y-4">
@@ -295,19 +283,6 @@ function QuestionContext({ q, answer }: { q: SmartQuestion; answer: any }) {
                 <div className="text-base font-black text-slate-900">قبل أن تختار، اقرأ هذا</div>
               </div>
             </div>
-            {narrationText && (
-              <button
-                onClick={() => speaking ? stop() : speak(narrationText)}
-                className={cn(
-                  'shrink-0 flex items-center gap-1.5 px-3 h-9 rounded-full text-xs font-bold transition shadow',
-                  speaking
-                    ? 'bg-rose-500 text-white hover:bg-rose-600'
-                    : 'bg-gradient-to-l from-amber-500 to-amber-600 text-white hover:from-amber-400 hover:to-amber-500'
-                )}>
-                {speaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                {speaking ? 'إيقاف' : 'استمع'}
-              </button>
-            )}
           </div>
           {q.whyThis && (
             <p className="relative text-[15px] md:text-base text-slate-800 leading-[1.9] mb-3">

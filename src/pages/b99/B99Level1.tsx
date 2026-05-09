@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Wrench, ArrowRight, Globe, Database, Bot, CheckCircle2, ExternalLink, Copy, KeyRound, Pencil, Lock } from 'lucide-react';
+import { Sparkles, Wrench, ArrowRight, Globe, Database, Bot, CheckCircle2, ExternalLink, Copy, KeyRound, Pencil, Lock, Bookmark } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SmartQuestionEngine, { SmartQuestion } from '@/components/b99/SmartQuestionEngine';
 
-type Mode = 'choose' | 'scratch' | 'connect' | 'building' | 'done';
+type Mode = 'choose' | 'scratch' | 'connect' | 'reserve' | 'building' | 'done';
 
 const SCRATCH_QUESTIONS: SmartQuestion[] = [
   {
@@ -168,6 +168,45 @@ const CONNECT_QUESTIONS: SmartQuestion[] = [
   },
 ];
 
+const RESERVE_QUESTIONS: SmartQuestion[] = [
+  {
+    key: 'business_name', title: 'وش الاسم الي تبيه يطلع في البحث؟', type: 'text',
+    placeholder: 'مثلاً: مطعم نسمة، أوميغا للعطور، PadelHub...',
+    whyThis: 'هذا الاسم يصبح هويتك على الإنترنت. سيظهر في نتائج البحث، في الرابط، وفي كل مكان يذكرك العملاء فيه. اختر بعناية لأنه أول ما يراه الناس عنك.',
+    tips: ['اختر اسماً قصيراً يسهل تذكره', 'تجنب الأرقام والرموز المعقدة', 'يفضل اسم لا يستخدمه أحد آخر'],
+  },
+  {
+    key: 'handle', title: 'وش الاسم المختصر للرابط؟', type: 'text',
+    placeholder: 'مثلاً: nasma-cafe',
+    whyThis: 'هذا "اسم النطاق" المختصر الي يظهر في الرابط (/p/اسمك). لازم يكون بالإنجليزي صغير، بدون مسافات. هذا الرابط هو الي تشاركه مع العملاء وتضعه في حساباتك.',
+    tips: ['أحرف إنجليزية صغيرة فقط', 'يمكن استخدام الشرطة - بين الكلمات', 'اجعله مطابقاً لاسمك التجاري قدر الإمكان'],
+    pitfalls: ['لا تستخدم مسافات', 'لا تستخدم أحرف عربية أو رموز', 'تجنب الأسماء العامة جداً مثل shop أو store'],
+  },
+  {
+    key: 'business_kind', title: 'وش نوع نشاطك؟', type: 'cards',
+    whyThis: 'يحدد شكل الصفحة الافتتاحية والأقسام التي تظهر للزائر.',
+    options: [
+      { value: 'food', label: 'مطعم/مقهى', emoji: '🍽️' },
+      { value: 'shop', label: 'متجر', emoji: '🛍️' },
+      { value: 'service', label: 'خدمات', emoji: '🛠️' },
+      { value: 'sport', label: 'رياضة/ملاعب', emoji: '🎾' },
+      { value: 'edu', label: 'تعليم', emoji: '📚' },
+      { value: 'other', label: 'غير ذلك', emoji: '✨' },
+    ],
+  },
+  { key: 'idea', title: 'وصف مختصر لنشاطك', type: 'textarea',
+    placeholder: 'سطر أو سطرين عن نشاطك...',
+    whyThis: 'هذا الوصف يكون "Meta Description" — الجملة التي تطلع تحت اسمك في نتائج جوجل. اكتبها بإقناع وبكلمات يبحث عنها عملاؤك فعلاً.',
+  },
+  { key: 'city', title: 'مدينتك / منطقتك؟', type: 'text', placeholder: 'الرياض، جدة، الدمام...',
+    whyThis: 'يساعد جوجل يعرض صفحتك للناس القريبين منك جغرافياً.',
+  },
+  { key: 'owner_email', title: 'إيميلك (للوصول لاحقاً)', type: 'text', placeholder: 'you@example.com' },
+  { key: 'owner_password', title: 'كلمة سر تتحكم فيها بصفحتك', type: 'text', placeholder: 'كلمة قوية 8 أحرف فأكثر',
+    whyThis: 'بهذه الكلمة فقط تقدر تعدل اسمك أو معلوماتك أو تحذف الصفحة لاحقاً. احفظها في مكان آمن.',
+  },
+];
+
 export default function B99Level1() {
   const nav = useNavigate();
   const [mode, setMode] = useState<Mode>('choose');
@@ -204,12 +243,41 @@ export default function B99Level1() {
     } finally { setLoading(false); }
   };
 
+  const handleReserve = async (answers: Record<string, any>) => {
+    // Normalize handle to a safe slug
+    const rawHandle = String(answers.handle || answers.business_name || 'mybrand').trim();
+    const safeHandle = rawHandle.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'mybrand';
+    const enriched = {
+      ...answers,
+      handle: safeHandle,
+      desired_slug: safeHandle,
+      brand_vibe: answers.brand_vibe || 'modern',
+      audience: answers.audience || 'b2c_young',
+      pages: ['home', 'contact'],
+      database_choice: 'none_yet',
+      payment: 'cash',
+      unique_value: answers.idea || answers.business_name || '',
+    };
+    setLoading(true); setMode('building');
+    try {
+      const { data, error } = await supabase.functions.invoke('b99-engine', {
+        body: { action: 'generate_platform', payload: { level: 1, mode: 'reserve', answers: enriched } },
+      });
+      if (error) throw error;
+      setResult(data);
+      setMode('done');
+      toast.success(`تم حجز اسمك: ${safeHandle} 🎉`);
+    } catch (e: any) {
+      toast.error(e.message || 'تعذّر حجز الاسم'); setMode('reserve');
+    } finally { setLoading(false); }
+  };
+
   if (mode === 'choose') {
     return (
       <div className="max-w-5xl mx-auto space-y-8">
         <Header level={1} title="ابني من الصفر" subtitle="اختر مسارك المناسب — كل مسار يأخذك مباشرة لما تحتاجه." />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <ChoiceCard
             onClick={() => setMode('scratch')}
             icon={Sparkles}
@@ -218,6 +286,15 @@ export default function B99Level1() {
             title="ما عندي شي"
             desc="نبني لك منصة كاملة من الصفر مع باكند وقاعدة بيانات وصفحات مالك."
             bullets={['تصميم احترافي جاهز', 'باكند مدمج', 'لوحة مالك للتحكم', 'رابط مستقل + QR']}
+          />
+          <ChoiceCard
+            onClick={() => setMode('reserve')}
+            icon={Bookmark}
+            accent="from-emerald-500 via-teal-500 to-cyan-500"
+            badge="احجز اسمك على الإنترنت"
+            title="ما عندي موقع ولا منصة"
+            desc="سجّل اسم نشاطك في بات شارك حتى يطلع للناس لما يبحثون عنك."
+            bullets={['اسم/رابط خاص بك', 'صفحة عرض جاهزة', 'يظهر في محركات البحث', 'تقدر تطوّره لاحقاً']}
           />
           <ChoiceCard
             onClick={() => setMode('connect')}
@@ -238,6 +315,15 @@ export default function B99Level1() {
       <div className="max-w-3xl mx-auto space-y-6">
         <Header level={1} title="من الصفر" subtitle="6 أسئلة سريعة، ثم نبني منصتك مباشرة." onBack={() => setMode('choose')} />
         <SmartQuestionEngine questions={SCRATCH_QUESTIONS} onComplete={handleScratch} loading={loading} accent="from-violet-500 to-pink-500" ctaLabel="ابني منصتي الآن" />
+      </div>
+    );
+  }
+
+  if (mode === 'reserve') {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Header level={1} title="احجز اسمك" subtitle="خطوات سريعة لحجز اسم نشاطك على الإنترنت — حتى لو ما عندك موقع." onBack={() => setMode('choose')} />
+        <SmartQuestionEngine questions={RESERVE_QUESTIONS} onComplete={handleReserve} loading={loading} accent="from-emerald-500 to-cyan-500" ctaLabel="احجز اسمي الآن" />
       </div>
     );
   }
