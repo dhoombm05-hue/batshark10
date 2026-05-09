@@ -227,9 +227,13 @@ export default function B99Level1() {
   }
 
   // done
+  const ownerPwd = result?.platform?.owner_password || result?.owner_password;
+  const slug = result?.platform?.slug;
+  const copy = (t: string, l: string) => { navigator.clipboard.writeText(t); toast.success(`${l} نُسخت`); };
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Header level={1} title="جاهز! 🎉" subtitle="منصتك أصبحت حية." />
+      <Header level={1} title="جاهز! 🎉" subtitle="منصتك أصبحت حية ولديك تحكّم كامل." />
       <Card className="bg-white border-slate-200 p-6 rounded-3xl shadow-xl">
         <div className="flex items-center gap-3 mb-5">
           <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center">
@@ -241,16 +245,36 @@ export default function B99Level1() {
           </div>
         </div>
 
-        {result?.platform?.slug && (
-          <div className="space-y-3">
-            <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-between">
-              <div>
-                <div className="text-xs text-violet-600 font-bold mb-1">رابط منصتك المستقل</div>
-                <div className="text-sm font-mono text-slate-900">/p/{result.platform.slug}</div>
-              </div>
-              <Button onClick={() => nav(`/p/${result.platform.slug}`)} className="bg-violet-600 hover:bg-violet-700 gap-2">
-                <ExternalLink className="w-4 h-4" /> افتح
-              </Button>
+        {slug && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button onClick={() => nav(`/p/${slug}`)}
+              className="text-right p-4 rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white hover:border-violet-400 transition-all">
+              <Globe className="w-6 h-6 text-violet-600 mb-2" />
+              <div className="font-black text-slate-900 mb-1">رابط الموقع</div>
+              <div className="text-[11px] font-mono text-slate-600 truncate">/p/{slug}</div>
+              <div className="text-[10px] text-violet-600 mt-2 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> فتح</div>
+            </button>
+
+            <button onClick={() => nav(`/p/${slug}/edit`)}
+              className="text-right p-4 rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-white hover:border-amber-500 transition-all">
+              <Pencil className="w-6 h-6 text-amber-600 mb-2" />
+              <div className="font-black text-slate-900 mb-1">عدّل التصميم</div>
+              <div className="text-[11px] text-slate-600">غيّر الألوان، النصوص، الأقسام</div>
+              <div className="text-[10px] text-amber-700 mt-2">محرر مرن لحظي</div>
+            </button>
+
+            <div className="text-right p-4 rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+              <KeyRound className="w-6 h-6 text-slate-700 mb-2" />
+              <div className="font-black text-slate-900 mb-1">دخول المالك</div>
+              {ownerPwd ? (
+                <div className="flex items-center gap-1">
+                  <code className="text-[11px] font-mono bg-slate-100 px-2 py-1 rounded truncate flex-1">{ownerPwd}</code>
+                  <button onClick={() => copy(ownerPwd, 'كلمة السر')} className="p-1 hover:bg-slate-100 rounded"><Copy className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="text-[11px] text-slate-500">احتفظها سراً</div>
+              )}
+              <div className="text-[10px] text-slate-500 mt-2">احفظها — لن تظهر لاحقاً</div>
             </div>
           </div>
         )}
