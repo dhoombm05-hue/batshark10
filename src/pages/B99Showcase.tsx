@@ -164,8 +164,8 @@ export default function B99Showcase() {
       {/* Features */}
       <section className="relative max-w-7xl mx-auto px-5 py-16">
         <div className="text-center mb-14">
-          <div className="text-[10px] tracking-[0.4em] text-amber-400/70 mb-2">CORE CAPABILITIES</div>
-          <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-b from-white to-amber-200/70 bg-clip-text text-transparent">قدرات احترافية تحت تصرفك</h2>
+          <div className="text-xs tracking-[0.4em] text-amber-400 font-bold mb-3">CORE CAPABILITIES</div>
+          <h2 className="text-3xl md:text-4xl font-black text-white">قدرات احترافية تحت تصرفك</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-5">
           {FEATURES.map((f, i) => (
