@@ -256,18 +256,47 @@ Deno.serve(async (req) => {
       return ok(result);
     }
 
-    // ===== search =====
+    // ===== SMART SEARCH (web grounded + similar platforms inspirations) =====
     if (action === 'search') {
-      const q = payload.query || '';
+      const q = (payload.query || '').trim();
+      if (!q) return ok({ answer: '', sources: [], internal: { platforms: [], ads: [] }, inspirations: [] });
+
+      // 1) Real web search (Gemini Google grounding)
+      const web = await webSearch(q);
+
+      // 2) Internal results from this account
       const [{ data: platforms }, { data: ads }] = await Promise.all([
-        supabase.from('generated_platforms').select('id,name,tagline,slug,level').ilike('name', `%${q}%`).limit(8),
-        supabase.from('ad_campaigns').select('id,name,business_type,ad_copy').ilike('name', `%${q}%`).limit(8),
+        supabase.from('generated_platforms').select('id,name,tagline,slug,level').ilike('name', `%${q}%`).limit(6),
+        supabase.from('ad_campaigns').select('id,name,business_type').ilike('name', `%${q}%`).limit(6),
       ]);
-      const answer = await callAI([
-        { role: 'system', content: 'أنت محرك بحث ذكي بالعربية. أجب بإجابة مباشرة قصيرة ومفيدة.' },
-        { role: 'user', content: q },
-      ]);
-      return ok({ answer, platforms: platforms || [], ads: ads || [] });
+
+      // 3) Detect "build / similar / مشابه / منصة / موقع" intent → fetch inspirations
+      const wantsInspirations = /(منصة|موقع|متجر|أمثلة|مشابه|شبيه|مرجع|reference|inspirat|similar|build|أفكار|تصميم)/i.test(q);
+      let inspirations: any = { items: [], content_ideas: [], layout_ideas: [] };
+      if (wantsInspirations) {
+        try {
+          inspirations = await callAI([
+            { role: 'system', content: 'أنت مرشد تصميم منصات. اقترح منصات مشابهة عالمية وعربية مع روابط إن أمكن، أفكار محتوى، وأفكار تنسيق صفحات. اختصر.' },
+            { role: 'user', content: `أعطني مرجعيات لمنصة بهذه الفكرة: "${q}". 4-6 منصات مشابهة (اسم + رابط أو وصف + ما يميزها)، 5 أفكار محتوى، و4 أفكار ترتيب صفحات.` },
+          ], {
+            type: 'object',
+            properties: {
+              items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, url: { type: 'string' }, region: { type: 'string' }, why: { type: 'string' } }, required: ['name', 'why'] } },
+              content_ideas: { type: 'array', items: { type: 'string' } },
+              layout_ideas: { type: 'array', items: { type: 'string' } },
+            },
+            required: ['items', 'content_ideas', 'layout_ideas'],
+          });
+        } catch (e) { console.error('inspirations failed', e); }
+      }
+
+      return ok({
+        query: q,
+        answer: web.answer,
+        sources: web.sources,
+        internal: { platforms: platforms || [], ads: ads || [] },
+        inspirations,
+      });
     }
 
     return ok({ error: 'unknown action' }, 400);
