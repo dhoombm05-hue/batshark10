@@ -39,6 +39,7 @@ import Quizzes from "./pages/Quizzes";
 import Invoices from "./pages/Invoices";
 import Batshare99 from "./pages/Batshare99";
 import BuildBusiness from "./pages/BuildBusiness";
+import B99Showcase from "./pages/B99Showcase";
 import B99Layout from "./pages/b99/B99Layout";
 import B99Home from "./pages/b99/B99Home";
 import B99Generator from "./pages/b99/B99Generator";
