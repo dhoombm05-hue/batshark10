@@ -20,11 +20,60 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
       { value: 'shop', label: 'متجر منتجات', emoji: '🛍️', desc: 'عطور، ملابس، إكسسوار' },
       { value: 'service', label: 'خدمات', emoji: '🛠️', desc: 'مظلات، تنظيف، صيانة' },
       { value: 'edu', label: 'تعليم/كورسات', emoji: '📚', desc: 'دورات ومحتوى تعليمي' },
+      { value: 'saas', label: 'منصة برمجية SaaS', emoji: '💻', desc: 'أدوات ولوحات تحكم' },
+      { value: 'realestate', label: 'عقار', emoji: '🏢', desc: 'وحدات، إيجارات، عروض' },
       { value: 'other', label: 'فكرة أخرى', emoji: '✨', desc: 'سنفهمها من وصفك' },
     ],
   },
-  { key: 'idea', title: 'بكلماتك، وش الفكرة بالضبط؟', hint: 'اكتب جملة أو سطرين فقط.', type: 'textarea', placeholder: 'مثلاً: متجر يبيع أكلات صحية بالرياض مع توصيل يومي...' },
-  { key: 'city', title: 'وين سوقك الأساسي؟', type: 'text', placeholder: 'الرياض، جدة، الدمام...' },
+  { key: 'idea', title: 'بكلماتك، وش الفكرة بالضبط؟', hint: 'جملة أو سطرين، خلّها واضحة.', type: 'textarea', placeholder: 'مثلاً: متجر يبيع أكلات صحية بالرياض مع توصيل يومي...' },
+  { key: 'business_name', title: 'اسم البزنس / المنصة؟', type: 'text', placeholder: 'مثلاً: Greenly، PadelHub، أوميغا...' },
+  { key: 'unique_value', title: 'ما الذي يميّزك عن المنافسين؟', hint: 'الميزة الواحدة التي تتفوق فيها.', type: 'textarea', placeholder: 'توصيل خلال 30 دقيقة، أرخص 20%، تجربة مستخدم استثنائية...' },
+  { key: 'city', title: 'وين سوقك الأساسي؟', type: 'text', placeholder: 'الرياض، جدة، الدمام، الخليج، عالمي...' },
+  {
+    key: 'audience', title: 'لمن تبني؟ (الجمهور المستهدف)', type: 'cards',
+    options: [
+      { value: 'b2c_young', label: 'مستهلكين شباب 18-30', emoji: '🧑‍🎓' },
+      { value: 'b2c_family', label: 'عائلات', emoji: '👨‍👩‍👧' },
+      { value: 'b2c_premium', label: 'فئة فاخرة', emoji: '💎' },
+      { value: 'b2b', label: 'شركات وأعمال', emoji: '🏢' },
+    ],
+  },
+  {
+    key: 'brand_vibe', title: 'الإحساس البصري للعلامة؟', hint: 'يحدد لك الألوان والخطوط تلقائياً.', type: 'cards',
+    options: [
+      { value: 'luxury', label: 'فخامة وذهبي', emoji: '✨', desc: 'أسود/ذهبي/كريمي' },
+      { value: 'modern', label: 'عصري ونظيف', emoji: '◻️', desc: 'أزرق/أبيض/رمادي' },
+      { value: 'vibrant', label: 'حيوي وجريء', emoji: '🌈', desc: 'بنفسجي/زهري/سماوي' },
+      { value: 'natural', label: 'طبيعي ومريح', emoji: '🌿', desc: 'أخضر/بيج/خشبي' },
+      { value: 'tech', label: 'تقني داكن', emoji: '🌌', desc: 'كحلي/سيان/نيون' },
+      { value: 'minimal', label: 'مينيمال أبيض', emoji: '⚪', desc: 'أبيض/أسود فقط' },
+    ],
+  },
+  {
+    key: 'pages', title: 'وش الصفحات المطلوبة؟', hint: 'اختر اللي تحتاجه (أكثر من واحد).', type: 'multi',
+    options: [
+      { value: 'home', label: 'رئيسية', emoji: '🏠' },
+      { value: 'products', label: 'منتجات/قائمة', emoji: '📋' },
+      { value: 'booking', label: 'حجوزات', emoji: '📅' },
+      { value: 'pricing', label: 'الأسعار والباقات', emoji: '💰' },
+      { value: 'about', label: 'من نحن', emoji: 'ℹ️' },
+      { value: 'contact', label: 'تواصل', emoji: '📞' },
+      { value: 'gallery', label: 'معرض صور', emoji: '🖼️' },
+      { value: 'blog', label: 'مدونة/مقالات', emoji: '✍️' },
+      { value: 'dashboard', label: 'لوحة تحكم العميل', emoji: '📊' },
+    ],
+  },
+  {
+    key: 'features', title: 'مزايا تقنية إضافية؟', type: 'multi', optional: true,
+    options: [
+      { value: 'auth', label: 'تسجيل دخول للعملاء', emoji: '🔐' },
+      { value: 'payments', label: 'دفع إلكتروني', emoji: '💳' },
+      { value: 'reviews', label: 'تقييمات ومراجعات', emoji: '⭐' },
+      { value: 'multilang', label: 'متعدد اللغات', emoji: '🌍' },
+      { value: 'newsletter', label: 'نشرة بريدية', emoji: '✉️' },
+      { value: 'live_chat', label: 'دردشة مباشرة', emoji: '💬' },
+    ],
+  },
   {
     key: 'payment', title: 'كيف تستقبل المدفوعات؟', type: 'cards',
     options: [
@@ -35,14 +84,11 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
     ],
   },
   {
-    key: 'pages', title: 'وش الصفحات المطلوبة؟', hint: 'اختر اللي تحتاجه (أكثر من واحد).', type: 'multi',
+    key: 'database_choice', title: 'أين تريد تخزين بياناتك؟', hint: 'تستطيع تغييرها لاحقاً من لوحة المالك.', type: 'cards',
     options: [
-      { value: 'home', label: 'رئيسية', emoji: '🏠' },
-      { value: 'products', label: 'منتجات/قائمة', emoji: '📋' },
-      { value: 'booking', label: 'حجوزات', emoji: '📅' },
-      { value: 'about', label: 'من نحن', emoji: 'ℹ️' },
-      { value: 'contact', label: 'تواصل', emoji: '📞' },
-      { value: 'gallery', label: 'معرض صور', emoji: '🖼️' },
+      { value: 'bs99_hosted', label: 'استضافة بات شارك (الأسرع)', emoji: '⚡', desc: 'قاعدة بيانات جاهزة مدارة بالكامل' },
+      { value: 'external', label: 'قاعدة بياناتي الخاصة', emoji: '🔌', desc: 'سأربط Supabase/Firebase خاصتي لاحقاً' },
+      { value: 'none_yet', label: 'بدون قاعدة بيانات الآن', emoji: '📝', desc: 'موقع عرض فقط، أُضيف لاحقاً' },
     ],
   },
   {
@@ -58,6 +104,8 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
     optional: true,
   },
   { key: 'hero_image', title: 'وصف صورة الواجهة (اختياري)', hint: 'اوصف ما تريد عرضه في صدر الموقع.', type: 'text', placeholder: 'صورة وجبات صحية، واجهة محل، ملعب بادل...', optional: true },
+  { key: 'owner_email', title: 'إيميلك كمالك للمنصة', hint: 'يُستخدم لاسترجاع الوصول والتنبيهات.', type: 'text', placeholder: 'you@example.com' },
+  { key: 'owner_password', title: 'اختر كلمة سر للدخول كمالك', hint: 'بهذه الكلمة فقط تستطيع تعديل تصميم الموقع لاحقاً.', type: 'text', placeholder: 'كلمة سرّية قوية (8 أحرف فأكثر)' },
 ];
 
 const CONNECT_QUESTIONS: SmartQuestion[] = [
