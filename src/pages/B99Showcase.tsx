@@ -335,6 +335,7 @@ function Sparkline({ data, color = '#fbbf24' }: { data: number[]; color?: string
 }
 
 function ReelDashboard() {
+  const loopKey = useLoopKey(10000);
   const revenue = useTickingNumber(128450, 2500);
   const customers = useTickingNumber(2341, 2200);
   const orders = useTickingNumber(847, 1800);
@@ -349,7 +350,7 @@ function ReelDashboard() {
   ];
 
   return (
-    <ReelFrame title="لوحة قيادة تنفيذية حيّة" subtitle="مؤشرات مالية وتشغيلية تتحدّث لحظياً من قيود محاسبية مزدوجة" badge="DASHBOARD" color="text-cyan-300">
+    <ReelFrame loopKey={loopKey} title="لوحة قيادة تنفيذية حيّة" subtitle="مؤشرات مالية وتشغيلية تتحدّث لحظياً من قيود محاسبية مزدوجة" badge="DASHBOARD" color="text-cyan-300">
       <div className="absolute inset-0 p-4 flex flex-col gap-3">
         <div className="grid grid-cols-4 gap-2">
           {kpis.map((k, i) => (
@@ -425,6 +426,7 @@ function ReelDashboard() {
 }
 
 function ReelChat() {
+  const loopKey = useLoopKey(8000);
   const messages = [
     { from: 'user', text: 'حلل أداء بادل هذا الأسبوع', delay: 0.3 },
     { from: 'ai', text: 'أحلل البيانات الآن', delay: 1.2, thinking: true },
@@ -434,7 +436,7 @@ function ReelChat() {
   ];
 
   return (
-    <ReelFrame title="موظف بات شارك الذكي" subtitle="يفهم بياناتك، يحلل، ويقترح خطوات تنفيذية فورية" badge="AI EMPLOYEE" color="text-violet-300">
+    <ReelFrame loopKey={loopKey} title="موظف بات شارك الذكي" subtitle="يفهم بياناتك، يحلل، ويقترح خطوات تنفيذية فورية" badge="AI EMPLOYEE" color="text-violet-300">
       <div className="absolute inset-0 p-4 flex flex-col">
         <div className="flex items-center gap-2.5 pb-3 border-b border-white/10">
           <motion.div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg"
@@ -511,6 +513,7 @@ function ReelChat() {
 }
 
 function ReelAlerts() {
+  const loopKey = useLoopKey(7000);
   const alerts = [
     { icon: Bell, palette: { bg: 'bg-rose-500/15', border: 'border-rose-400/30', icon: 'text-rose-300', iconBg: 'bg-rose-500/20', actionT: 'text-rose-300', actionBg: 'bg-rose-500/10' }, title: 'تنبيه تكاليف', desc: 'ارتفاع الكهرباء 15% — مراجعة فورية', spark: [3, 4, 3, 5, 6, 7, 9, 8, 11, 14], delay: 0.3, sparkColor: '#fb7185', action: 'تحقق' },
     { icon: TrendingUp, palette: { bg: 'bg-emerald-500/15', border: 'border-emerald-400/30', icon: 'text-emerald-300', iconBg: 'bg-emerald-500/20', actionT: 'text-emerald-300', actionBg: 'bg-emerald-500/10' }, title: 'فرصة نمو', desc: 'العملاء الجدد +42% — استثمر بالإعلانات', spark: [5, 6, 8, 7, 10, 12, 14, 16, 19, 22], delay: 1.1, sparkColor: '#34d399', action: 'إطلاق' },
@@ -519,7 +522,7 @@ function ReelAlerts() {
   ];
 
   return (
-    <ReelFrame title="تنبيهات وتوصيات لحظية" subtitle="الذكاء الاصطناعي يراقب 24/7 ويرسل لك ما يهم فقط" badge="ALERTS" color="text-amber-300">
+    <ReelFrame loopKey={loopKey} title="تنبيهات وتوصيات لحظية" subtitle="الذكاء الاصطناعي يراقب 24/7 ويرسل لك ما يهم فقط" badge="ALERTS" color="text-amber-300">
       <div className="absolute inset-0 p-4 flex flex-col gap-2">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
@@ -556,6 +559,7 @@ function ReelAlerts() {
 }
 
 function ReelAdsStudio() {
+  const loopKey = useLoopKey(9000);
   const reach = useTickingNumber(284000, 2500);
   const conv = useTickingNumber(7.4, 2000, 1);
 
@@ -574,7 +578,7 @@ function ReelAdsStudio() {
   ];
 
   return (
-    <ReelFrame title="استوديو الإعلانات السينمائي" subtitle="سكربت + ستوريبورد + برومبت فيديو جاهز للإنتاج" badge="ADS" color="text-rose-300">
+    <ReelFrame loopKey={loopKey} title="استوديو الإعلانات السينمائي" subtitle="سكربت + ستوريبورد + برومبت فيديو جاهز للإنتاج" badge="ADS" color="text-rose-300">
       <div className="absolute inset-0 p-4 flex flex-col gap-3">
         <div className="rounded-xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 p-3">
           <div className="flex items-center justify-between mb-2">
