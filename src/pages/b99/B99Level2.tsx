@@ -125,9 +125,24 @@ export default function B99Level2() {
     );
   }
 
+  const v = result?.verification;
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Header level={2} title="جاهز للربط 🎉" subtitle="انسخ الأكواد التالية إلى موقعك." />
+      <Header level={2} title="جاهز للربط" subtitle="انسخ الأكواد التالية إلى موقعك." />
+
+      {v && (
+        <Card className={`p-5 rounded-3xl border-2 ${v.ok ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-300'}`}>
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className={`w-6 h-6 shrink-0 ${v.ok ? 'text-emerald-600' : 'text-amber-600'}`} />
+            <div className="flex-1">
+              <div className="font-black text-slate-900">{v.ok ? `تم التحقق من ${v.title || 'موقعك'}` : 'تعذّر الوصول للموقع'}</div>
+              <div className="text-xs text-slate-600 mt-1">HTTP {v.status || '—'} • {v.response_time_ms || '—'}ms • {v.bytes ? `${Math.round(v.bytes/1024)}KB` : ''}</div>
+              {v.error && <div className="text-xs text-amber-800 mt-1">{v.error}</div>}
+            </div>
+          </div>
+        </Card>
+      )}
+
       <Card className="bg-white border-slate-200 p-6 rounded-3xl shadow-xl">
         <div className="flex items-center gap-3 mb-4">
           <CheckCircle2 className="w-7 h-7 text-emerald-600" />

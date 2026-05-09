@@ -45,7 +45,19 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
       { value: 'gallery', label: 'معرض صور', emoji: '🖼️' },
     ],
   },
-  { key: 'hero_image', title: 'صورة الواجهة الرئيسية؟', hint: 'اوصف ما تريد عرضه في صدر الموقع.', type: 'text', placeholder: 'صورة وجبات صحية، واجهة محل، ملعب بادل...', optional: true },
+  {
+    key: 'inspiration_home', title: 'شكل الصفحة الرئيسية المرجعي؟', hint: 'اختر منصة عالمية تعجبك بصرياً، أو دع بات شارك يبدع.',
+    type: 'inspiration', focus: 'الصفحة الرئيسية / الهيرو',
+    topicFrom: (a) => `${a.idea || a.business_kind || ''} — صفحة رئيسية`,
+    optional: true,
+  },
+  {
+    key: 'inspiration_auth', title: 'شكل صفحة الدخول/التسجيل؟', hint: 'مثال: شكل دخول أمازون، شوبيفاي، أو مخصص.',
+    type: 'inspiration', focus: 'صفحة الدخول والتسجيل',
+    topicFrom: (a) => `${a.idea || a.business_kind || ''} — صفحة تسجيل الدخول`,
+    optional: true,
+  },
+  { key: 'hero_image', title: 'وصف صورة الواجهة (اختياري)', hint: 'اوصف ما تريد عرضه في صدر الموقع.', type: 'text', placeholder: 'صورة وجبات صحية، واجهة محل، ملعب بادل...', optional: true },
 ];
 
 const CONNECT_QUESTIONS: SmartQuestion[] = [

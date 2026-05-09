@@ -1,21 +1,25 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
-import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Sparkles, SkipForward, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 export type SmartQuestion = {
   key: string;
   title: string;
   hint?: string;
-  type: 'cards' | 'text' | 'textarea' | 'number' | 'multi';
+  type: 'cards' | 'text' | 'textarea' | 'number' | 'multi' | 'inspiration';
   options?: { value: string; label: string; emoji?: string; desc?: string }[];
   placeholder?: string;
   optional?: boolean;
+  // for inspiration: builds the topic string from prior answers
+  topicFrom?: (answers: Record<string, any>) => string;
+  focus?: string; // e.g. "الصفحة الرئيسية" / "صفحة الدخول"
 };
 
 interface Props {
@@ -172,6 +176,15 @@ export default function SmartQuestionEngine({
             />
           )}
 
+          {q.type === 'inspiration' && (
+            <InspirationPicker
+              topic={q.topicFrom ? q.topicFrom(answers) : (answers.idea || answers.business_kind || '')}
+              focus={q.focus || 'overall'}
+              value={value}
+              onChange={setVal}
+            />
+          )}
+
           {q.type === 'textarea' && (
             <Textarea
               autoFocus
@@ -213,5 +226,104 @@ export default function SmartQuestionEngine({
         </motion.div>
       )}
     </Card>
+  );
+}
+
+// =================== Inspiration Picker ===================
+function InspirationPicker({ topic, focus, value, onChange }: { topic: string; focus: string; value: any; onChange: (v: any) => void }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const selectedUrl: string | undefined = value?.url;
+
+  const load = async () => {
+    if (!topic) return;
+    setLoading(true); setError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('b99-engine', {
+        body: { action: 'inspirations', payload: { topic, focus } },
+      });
+      if (error) throw error;
+      setItems(data?.items || []);
+    } catch (e: any) {
+      setError(e.message || 'تعذّر جلب المراجع');
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [topic, focus]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-slate-500">اختر منصة كمرجع بصري — أو تخطّى وامضِ بالتصميم الافتراضي.</p>
+        <button onClick={load} disabled={loading} className="text-xs text-amber-700 hover:text-amber-900 flex items-center gap-1">
+          <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} /> تحديث
+        </button>
+      </div>
+
+      {loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="h-44 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 border border-slate-200 animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {error && <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
+
+      {!loading && !error && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {items.map((it) => {
+            const sel = selectedUrl === it.url;
+            return (
+              <button
+                key={it.url}
+                onClick={() => onChange(sel ? null : { name: it.name, url: it.url, why: it.why })}
+                className={cn(
+                  'group text-right rounded-2xl overflow-hidden border-2 transition-all bg-white',
+                  sel ? 'border-amber-500 shadow-[0_20px_60px_-15px_rgba(212,175,55,0.45)] scale-[1.01]' : 'border-slate-200 hover:border-amber-300'
+                )}
+              >
+                <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
+                  {it.screenshot && (
+                    <img src={it.screenshot} alt={it.name} loading="lazy"
+                      onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0'; }}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  )}
+                  {sel && (
+                    <div className="absolute inset-0 bg-amber-500/15 flex items-end p-2">
+                      <div className="px-2 py-1 rounded-md bg-amber-500 text-white text-[11px] font-black flex items-center gap-1">
+                        <Check className="w-3 h-3" /> مرجعي
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    {it.favicon && <img src={it.favicon} alt="" className="w-4 h-4 rounded" />}
+                    <div className="font-bold text-sm text-slate-900 truncate">{it.name}</div>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-snug line-clamp-2">{it.why}</p>
+                  <a href={it.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
+                    className="mt-1.5 text-[10px] text-amber-700 hover:text-amber-900 inline-flex items-center gap-1">
+                    زيارة <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </button>
+            );
+          })}
+          <button
+            onClick={() => onChange({ name: 'بدون مرجع', url: '', why: 'تصميم أصلي' })}
+            className={cn(
+              'rounded-2xl border-2 border-dashed p-4 text-right transition-all',
+              value?.url === '' ? 'border-amber-500 bg-amber-50' : 'border-slate-300 bg-slate-50 hover:bg-white'
+            )}
+          >
+            <div className="text-sm font-bold text-slate-900 mb-1">لا، صمّم لي شيء أصلي</div>
+            <p className="text-[11px] text-slate-600">سيبدع بات شارك تصميماً مخصصاً بدون مرجعية بصرية.</p>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
