@@ -149,9 +149,9 @@ export default function B99Showcase() {
       {/* REELS — animated demo videos (Framer Motion mockups) */}
       <section id="reels" className="relative max-w-7xl mx-auto px-5 py-16">
         <div className="text-center mb-12">
-          <div className="text-[10px] tracking-[0.4em] text-amber-400/70 mb-2">LIVE REELS</div>
-          <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-b from-white to-amber-200/70 bg-clip-text text-transparent">شاهد بات شارك في حركة</h2>
-          <p className="text-white/50 text-sm mt-2">مقاطع حية مصممة لتشرح ما يحدث داخل المنصة فعلياً</p>
+          <div className="text-xs tracking-[0.4em] text-amber-400 font-bold mb-3">LIVE REELS</div>
+          <h2 className="text-3xl md:text-4xl font-black text-white">شاهد بات شارك في حركة</h2>
+          <p className="text-white/80 text-base mt-3 font-medium">مقاطع حية مصممة لتشرح ما يحدث داخل المنصة فعلياً</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-5">
