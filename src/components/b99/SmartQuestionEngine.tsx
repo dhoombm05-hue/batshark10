@@ -237,6 +237,121 @@ export default function SmartQuestionEngine({
   );
 }
 
+// =================== Question Context (Why + Examples + Video) ===================
+function QuestionContext({ q, answer }: { q: SmartQuestion; answer: any }) {
+  const [liveItems, setLiveItems] = useState<any[]>([]);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [openVideo, setOpenVideo] = useState(false);
+
+  // Build a "live examples" topic from selected answer (e.g. brand_vibe=luxury → "luxury website examples")
+  const liveTopic = q.liveExamplesFor && answer
+    ? `${q.liveExamplesFor} ${typeof answer === 'string' ? answer : Array.isArray(answer) ? answer.join(' ') : ''}`.trim()
+    : null;
+
+  useEffect(() => {
+    if (!liveTopic) { setLiveItems([]); return; }
+    let alive = true;
+    setLiveLoading(true);
+    supabase.functions.invoke('b99-engine', {
+      body: { action: 'visual_examples', payload: { topic: liveTopic, limit: 6 } },
+    }).then(({ data }) => {
+      if (alive) setLiveItems(data?.items || []);
+    }).finally(() => { if (alive) setLiveLoading(false); });
+    return () => { alive = false; };
+  }, [liveTopic]);
+
+  if (!q.whyThis && !q.examples?.length && !q.videoEmbed && !liveTopic) return null;
+
+  return (
+    <div className="mb-6 space-y-3">
+      {q.whyThis && (
+        <div className="p-4 rounded-2xl bg-gradient-to-l from-amber-50 to-white border border-amber-200/60">
+          <div className="flex items-start gap-2">
+            <Lightbulb className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <div className="text-[10px] tracking-[0.3em] text-amber-700 font-black uppercase mb-1">لماذا نسأل هذا</div>
+              <p className="text-sm text-slate-700 leading-relaxed">{q.whyThis}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {q.examples && q.examples.length > 0 && (
+        <div>
+          <div className="text-[10px] tracking-[0.3em] text-slate-500 font-bold uppercase mb-2 flex items-center gap-1">
+            <Eye className="w-3 h-3" /> أمثلة حقيقية
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {q.examples.map((ex, i) => (
+              <a key={i} href={ex.url} target="_blank" rel="noreferrer"
+                className="group block rounded-xl overflow-hidden border border-slate-200 hover:border-amber-400 transition bg-white">
+                <div className="aspect-video bg-slate-100 overflow-hidden">
+                  <img src={ex.image} alt={ex.label} loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                </div>
+                <div className="px-2 py-1.5 flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-800 truncate">{ex.label}</span>
+                  {ex.tag && <span className="text-[9px] text-amber-700">{ex.tag}</span>}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {liveTopic && (
+        <div>
+          <div className="text-[10px] tracking-[0.3em] text-emerald-700 font-bold uppercase mb-2 flex items-center gap-1">
+            <Sparkles className="w-3 h-3" /> أمثلة حيّة لاختيارك
+          </div>
+          {liveLoading && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[1,2,3].map(i => <div key={i} className="aspect-video rounded-xl bg-slate-100 animate-pulse" />)}
+            </div>
+          )}
+          {!liveLoading && liveItems.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {liveItems.map((it, i) => (
+                <a key={i} href={it.url} target="_blank" rel="noreferrer"
+                  className="block rounded-xl overflow-hidden border border-emerald-200 hover:border-emerald-400 transition bg-white">
+                  <div className="aspect-video bg-slate-100">
+                    <img src={it.image} alt={it.label} loading="lazy"
+                      onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
+                      className="w-full h-full object-cover" />
+                  </div>
+                  <div className="px-2 py-1 text-[11px] font-bold text-slate-800 truncate">{it.label}</div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {q.videoEmbed && (
+        <div>
+          {!openVideo ? (
+            <button onClick={() => setOpenVideo(true)}
+              className="w-full p-3 rounded-2xl bg-gradient-to-l from-rose-50 to-white border border-rose-200 hover:border-rose-400 transition flex items-center gap-3 text-right">
+              <PlayCircle className="w-8 h-8 text-rose-500 shrink-0" />
+              <div>
+                <div className="text-[10px] tracking-widest text-rose-600 font-black uppercase">فيديو توضيحي</div>
+                <div className="text-sm font-bold text-slate-800">شاهد شرحاً سريعاً لهذه الفكرة</div>
+              </div>
+            </button>
+          ) : (
+            <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-black">
+              <iframe src={q.videoEmbed} title="explanation"
+                className="absolute inset-0 w-full h-full" allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // =================== Inspiration Picker ===================
 function InspirationPicker({ topic, focus, value, onChange }: { topic: string; focus: string; value: any; onChange: (v: any) => void }) {
   const [items, setItems] = useState<any[]>([]);
