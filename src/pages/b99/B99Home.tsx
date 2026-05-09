@@ -154,9 +154,13 @@ export default function B99Home() {
       {/* THREE LEVELS */}
       <section>
         <div className="text-center mb-10">
-          <Badge className="bg-violet-100 text-violet-700 border-violet-200 mb-3">3 مستويات احترافية</Badge>
-          <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">اختر مستواك ومسارك</h2>
-          <p className="text-slate-600 max-w-2xl mx-auto">كل مستوى تجربة كاملة مختلفة — ليست نفس النموذج بألوان مختلفة.</p>
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <span className="h-px w-10 bg-gradient-to-l from-transparent to-amber-500/60" />
+            <span className="text-[10px] tracking-[0.4em] text-amber-700 font-bold uppercase">Three Tiers</span>
+            <span className="h-px w-10 bg-gradient-to-r from-transparent to-amber-500/60" />
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-3">اختر <span className="bg-gradient-to-l from-amber-600 via-amber-500 to-amber-700 bg-clip-text text-transparent">مسارك الاحترافي</span></h2>
+          <p className="text-slate-600 max-w-2xl mx-auto">كل مستوى تجربة مختلفة كلياً — ليست نفس النموذج بألوان مختلفة.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
