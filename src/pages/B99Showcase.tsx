@@ -1,10 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowLeft, Sparkles, Plug, Bot, Check, Star, ShieldCheck, Globe2, Zap, Megaphone, Search, LayoutDashboard, LogIn, Volume2, VolumeX, Music, Play, BarChart3, Bell, MessageSquare, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Sparkles, Plug, Bot, Check, Star, ShieldCheck, Globe2, Zap, Megaphone, Search, LayoutDashboard, LogIn, Play, BarChart3, Bell, MessageSquare, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import logo from '@/assets/batshark-logo-official.png';
-import { useArabicTTS, useAmbientMusic } from '@/hooks/useB99Audio';
 
 const PACKAGES = [
   {
@@ -51,14 +50,8 @@ const FEATURES = [
   { icon: Zap, title: 'سرعة الإنجاز', desc: 'من الفكرة إلى الإطلاق في أيام، مع أتمتة تختصر شهور العمل' },
 ];
 
-const WELCOME_NARRATION =
-  'أهلاً بك في بات شارك تسعة وتسعين. منصتك الرقمية تبدأ هنا. اختر باقتك، ودعنا نبني مستقبل عملك بأعلى معايير الاحترافية.';
-
 export default function B99Showcase() {
   const nav = useNavigate();
-  const { speak, stop, speaking } = useArabicTTS();
-  const { playing: musicOn, toggle: toggleMusic } = useAmbientMusic();
-  const [hasInteracted, setHasInteracted] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 150]);
@@ -72,16 +65,8 @@ export default function B99Showcase() {
     if (!meta.parentNode) document.head.appendChild(meta);
   }, []);
 
-  // First user interaction: prompt to enable music + welcome
-  const enableExperience = () => {
-    if (hasInteracted) return;
-    setHasInteracted(true);
-    toggleMusic();
-    setTimeout(() => speak(WELCOME_NARRATION), 800);
-  };
-
   return (
-    <div dir="rtl" className="min-h-screen bg-[#070710] text-white relative overflow-x-hidden" onClick={enableExperience}>
+    <div dir="rtl" className="min-h-screen bg-[#070710] text-white relative overflow-x-hidden">
       {/* Luxury animated background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(212,175,55,0.22),transparent_60%)]" />
@@ -111,22 +96,10 @@ export default function B99Showcase() {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleMusic(); }}
-              title={musicOn ? 'إيقاف الموسيقى' : 'تشغيل موسيقى الجلسة'}
-              className={`h-9 w-9 rounded-full flex items-center justify-center border transition ${musicOn ? 'bg-amber-500/20 border-amber-400 text-amber-200' : 'bg-white/5 border-white/10 text-white/60 hover:text-amber-200'}`}>
-              <Music className={`w-4 h-4 ${musicOn ? 'animate-pulse' : ''}`} />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); speaking ? stop() : speak(WELCOME_NARRATION); }}
-              title="استمع للترحيب"
-              className={`h-9 w-9 rounded-full flex items-center justify-center border transition ${speaking ? 'bg-rose-500/20 border-rose-400 text-rose-200' : 'bg-white/5 border-white/10 text-white/60 hover:text-amber-200'}`}>
-              {speaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </button>
-            <Button onClick={(e) => { e.stopPropagation(); nav('/b99'); }} variant="ghost" size="sm" className="text-amber-200 hover:text-amber-100 hover:bg-amber-500/10 text-xs">
+            <Button onClick={() => nav('/b99')} variant="ghost" size="sm" className="text-amber-200 hover:text-amber-100 hover:bg-amber-500/10 text-xs">
               جولة المنصة
             </Button>
-            <Button onClick={(e) => { e.stopPropagation(); nav('/login'); }} size="sm" className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 hover:from-amber-400 hover:to-amber-500 font-bold text-xs gap-1">
+            <Button onClick={() => nav('/login')} size="sm" className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 hover:from-amber-400 hover:to-amber-500 font-bold text-xs gap-1">
               <LogIn className="w-3.5 h-3.5" /> دخول العملاء
             </Button>
           </div>
