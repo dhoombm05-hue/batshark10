@@ -197,6 +197,113 @@ export type Database = {
         }
         Relationships: []
       }
+      b99_ai_employees: {
+        Row: {
+          business_name: string | null
+          channels: Json
+          config: Json
+          created_at: string
+          data_sources: Json
+          id: string
+          owner_email: string | null
+          owner_name: string | null
+          schedule: string
+          status: string
+          tasks: Json
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          channels?: Json
+          config?: Json
+          created_at?: string
+          data_sources?: Json
+          id?: string
+          owner_email?: string | null
+          owner_name?: string | null
+          schedule?: string
+          status?: string
+          tasks?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          channels?: Json
+          config?: Json
+          created_at?: string
+          data_sources?: Json
+          id?: string
+          owner_email?: string | null
+          owner_name?: string | null
+          schedule?: string
+          status?: string
+          tasks?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      b99_integrations: {
+        Row: {
+          ai_proxy_endpoint: string
+          client_api_key: string
+          created_at: string
+          embed_snippet: string
+          external_backend_type: string | null
+          external_site_url: string | null
+          features: Json
+          id: string
+          level: number
+          platform_id: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          webhook_url: string
+        }
+        Insert: {
+          ai_proxy_endpoint: string
+          client_api_key: string
+          created_at?: string
+          embed_snippet: string
+          external_backend_type?: string | null
+          external_site_url?: string | null
+          features?: Json
+          id?: string
+          level?: number
+          platform_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          webhook_url: string
+        }
+        Update: {
+          ai_proxy_endpoint?: string
+          client_api_key?: string
+          created_at?: string
+          embed_snippet?: string
+          external_backend_type?: string | null
+          external_site_url?: string | null
+          features?: Json
+          id?: string
+          level?: number
+          platform_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b99_integrations_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "generated_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       batshare_assessments: {
         Row: {
           ai_summary: string | null
@@ -1430,6 +1537,7 @@ export type Database = {
           is_for_sale: boolean
           is_public: boolean
           layout_mode: string
+          level: number
           meta: Json | null
           name: string
           owner_email: string | null
@@ -1460,6 +1568,7 @@ export type Database = {
           is_for_sale?: boolean
           is_public?: boolean
           layout_mode?: string
+          level?: number
           meta?: Json | null
           name: string
           owner_email?: string | null
@@ -1490,6 +1599,7 @@ export type Database = {
           is_for_sale?: boolean
           is_public?: boolean
           layout_mode?: string
+          level?: number
           meta?: Json | null
           name?: string
           owner_email?: string | null
