@@ -28,17 +28,60 @@ function makeSlug(name: string) {
   return `${base}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function screenshotUrl(siteUrl: string) {
+  try {
+    const u = new URL(siteUrl);
+    return `https://image.thum.io/get/width/800/crop/600/noanimate/${u.toString()}`;
+  } catch { return ''; }
+}
+
+function faviconUrl(siteUrl: string) {
+  try {
+    const u = new URL(siteUrl);
+    return `https://www.google.com/s2/favicons?sz=128&domain=${u.hostname}`;
+  } catch { return ''; }
+}
+
+// Real HTTP verification of a user's site
+async function verifySite(rawUrl: string) {
+  if (!rawUrl) return { ok: false, error: 'no_url' };
+  let url = rawUrl.trim();
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+  const start = Date.now();
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(url, { method: 'GET', signal: ctrl.signal, redirect: 'follow', headers: { 'User-Agent': 'BatShark99-Verifier/1.0' } });
+    clearTimeout(t);
+    const ms = Date.now() - start;
+    const html = await r.text().catch(() => '');
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i);
+    const ogImg = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i);
+    return {
+      ok: r.ok,
+      status: r.status,
+      response_time_ms: ms,
+      final_url: r.url,
+      title: titleMatch?.[1]?.trim().slice(0, 140) || null,
+      description: descMatch?.[1]?.trim().slice(0, 240) || null,
+      og_image: ogImg?.[1] || null,
+      screenshot: screenshotUrl(url),
+      favicon: faviconUrl(url),
+      bytes: html.length,
+      verified_at: new Date().toISOString(),
+    };
+  } catch (e: any) {
+    return { ok: false, error: e?.message || 'fetch_failed', screenshot: screenshotUrl(url), favicon: faviconUrl(url) };
+  }
+}
+
 async function callAI(messages: any[], schema?: any, opts: { tools?: any[]; model?: string } = {}) {
-  const body: any = {
-    model: opts.model || 'google/gemini-2.5-flash',
-    messages,
-  };
+  const body: any = { model: opts.model || 'google/gemini-2.5-flash', messages };
   if (schema) {
     body.tools = [{ type: 'function', function: { name: 'output', description: 'structured output', parameters: schema } }];
     body.tool_choice = { type: 'function', function: { name: 'output' } };
-  } else if (opts.tools) {
-    body.tools = opts.tools;
-  }
+  } else if (opts.tools) body.tools = opts.tools;
   const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
@@ -53,8 +96,7 @@ async function callAI(messages: any[], schema?: any, opts: { tools?: any[]; mode
   return data.choices?.[0]?.message?.content || '';
 }
 
-// Real web search using Gemini's native Google Search grounding
-async function webSearch(query: string): Promise<{ answer: string; sources: { title: string; url: string; snippet?: string }[] }> {
+async function webSearch(query: string) {
   try {
     const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -62,7 +104,7 @@ async function webSearch(query: string): Promise<{ answer: string; sources: { ti
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'أجب عن السؤال بإجابة دقيقة محدّثة بالعربية مع ذكر مصادر. اختصر بدون مقدمات.' },
+          { role: 'system', content: 'أجب بدقة بالعربية مع مصادر. اختصر بدون مقدمات.' },
           { role: 'user', content: query },
         ],
         tools: [{ google_search: {} }] as any,
@@ -73,15 +115,42 @@ async function webSearch(query: string): Promise<{ answer: string; sources: { ti
     const answer = msg?.content || '';
     const grounding = (msg as any)?.grounding_metadata || data.choices?.[0]?.grounding_metadata || {};
     const chunks = grounding?.grounding_chunks || grounding?.groundingChunks || [];
-    const sources = chunks
-      .map((c: any) => c.web || c)
-      .filter((w: any) => w?.uri || w?.url)
+    const sources = chunks.map((c: any) => c.web || c).filter((w: any) => w?.uri || w?.url)
       .map((w: any) => ({ title: w.title || w.uri || w.url, url: w.uri || w.url }));
     return { answer, sources };
-  } catch (e) {
-    console.error('webSearch failed', e);
-    return { answer: '', sources: [] };
-  }
+  } catch (e) { console.error('webSearch failed', e); return { answer: '', sources: [] }; }
+}
+
+// Visual inspirations: returns named platforms with screenshot URLs
+async function fetchInspirations(topic: string, focus = 'overall') {
+  const data = await callAI([
+    { role: 'system', content: 'أنت مرشد تصميم منصات عالمي. اقترح 5 منصات حقيقية معروفة كمراجع بصرية. أعد روابط حقيقية فقط (https://...). كن دقيقاً.' },
+    { role: 'user', content: `الفكرة: "${topic}". الجانب المطلوب كمرجع بصري: "${focus}" (مثلاً: شكل الصفحة الرئيسية، الدخول/التسجيل، صفحة المنتج، السلة). اقترح 5 منصات شهيرة بروابط رسمية + شرح مختصر لما يميز كل واحدة بصرياً.` },
+  ], {
+    type: 'object',
+    properties: {
+      items: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            url: { type: 'string' },
+            why: { type: 'string' },
+            tags: { type: 'array', items: { type: 'string' } },
+          },
+          required: ['name', 'url', 'why'],
+        },
+      },
+    },
+    required: ['items'],
+  });
+  const items = (data.items || []).slice(0, 6).map((it: any) => ({
+    ...it,
+    screenshot: screenshotUrl(it.url),
+    favicon: faviconUrl(it.url),
+  }));
+  return { focus, items };
 }
 
 function buildIntegration(platformId: string | null, level: number, features: string[] = [], extras: Record<string, any> = {}) {
@@ -101,15 +170,9 @@ function buildIntegration(platformId: string | null, level: number, features: st
 })();
 </script>`;
   return {
-    platform_id: platformId,
-    level,
-    client_api_key: apiKey,
-    webhook_url: webhookUrl,
-    ai_proxy_endpoint: aiProxyEndpoint,
-    embed_snippet: embedSnippet,
-    features,
-    ...extras,
-    status: 'active',
+    platform_id: platformId, level,
+    client_api_key: apiKey, webhook_url: webhookUrl, ai_proxy_endpoint: aiProxyEndpoint,
+    embed_snippet: embedSnippet, features, ...extras, status: 'active',
   };
 }
 
@@ -121,44 +184,39 @@ Deno.serve(async (req) => {
     const action = body.action || new URL(req.url).searchParams.get('action');
     const payload = body.payload || {};
 
-    // ===== assistant chat =====
+    if (action === 'verify_site') {
+      const v = await verifySite(payload.url || '');
+      return ok(v);
+    }
+
+    if (action === 'inspirations') {
+      const ins = await fetchInspirations(payload.topic || '', payload.focus || 'overall');
+      return ok(ins);
+    }
+
     if (action === 'assistant') {
       const reply = await callAI([
-        { role: 'system', content: 'أنت "بات شارك"، مساعد منصة بات شارك 99. ردودك قصيرة ومباشرة بالعربية، وتقترح أزراراً للمستخدم. عند الحاجة، اقترح route من: /b99/level/1 /b99/level/2 /b99/level/3 /b99/ads /b99/platforms /b99/search.' },
+        { role: 'system', content: 'أنت "بات شارك"، مساعد منصة بات شارك 99. ردودك قصيرة ومباشرة بالعربية. روابط ممكنة: /b99/level/1 /b99/level/2 /b99/level/3 /b99/ads /b99/platforms /b99/search.' },
         ...(payload.history || []).map((m: any) => ({ role: m.role, content: m.content })),
         { role: 'user', content: payload.message },
       ], {
         type: 'object',
-        properties: {
-          reply: { type: 'string' },
-          action_route: { type: 'string' },
-          suggestions: { type: 'array', items: { type: 'string' } },
-        },
+        properties: { reply: { type: 'string' }, action_route: { type: 'string' }, suggestions: { type: 'array', items: { type: 'string' } } },
         required: ['reply'],
       });
       return ok(reply);
     }
 
-    // ===== generate platform (level 1 scratch) =====
     if (action === 'generate_platform') {
       const { level = 1, answers = {} } = payload;
       const blueprint = await callAI([
-        { role: 'system', content: 'أنت معماري منصات. أنشئ blueprint احترافي بالعربية لمنصة فعلية.' },
+        { role: 'system', content: 'أنت معماري منصات. أنشئ blueprint احترافي بالعربية لمنصة فعلية، مستوحى من المرجعيات البصرية المختارة إن وُجدت.' },
         { role: 'user', content: `أنشئ منصة من إجابات هذا العميل: ${JSON.stringify(answers)}` },
       ], {
         type: 'object',
         properties: {
-          name: { type: 'string' },
-          tagline: { type: 'string' },
-          platform_type: { type: 'string' },
-          pages: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: { title: { type: 'string' }, sections: { type: 'array', items: { type: 'string' } } },
-              required: ['title'],
-            },
-          },
+          name: { type: 'string' }, tagline: { type: 'string' }, platform_type: { type: 'string' },
+          pages: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, sections: { type: 'array', items: { type: 'string' } } }, required: ['title'] } },
           features: { type: 'array', items: { type: 'string' } },
           brand: { type: 'object', properties: { primary: { type: 'string' }, mood: { type: 'string' } } },
         },
@@ -177,22 +235,22 @@ Deno.serve(async (req) => {
 
       const integration = buildIntegration(platform.id, level, ['backend', 'ai_chat']);
       await supabase.from('b99_integrations').insert({ ...integration }).select();
-
       return ok({ platform, integration });
     }
 
-    // ===== generate integration (level 1 connect / level 2) =====
     if (action === 'generate_integration') {
       const { level = 2, features = [], answers = {}, mode } = payload;
+      // Real verification step
+      const verification = answers.site_url ? await verifySite(answers.site_url) : null;
+
       let platformId: string | null = null;
-      // For connect mode also create a lightweight platform record to track
       if (mode === 'connect' || level === 2) {
-        const name = answers.business_name || 'موقعي';
+        const name = answers.business_name || verification?.title || 'موقعي';
         const slug = makeSlug(name);
         const { data: p } = await supabase.from('generated_platforms').insert({
           slug, name, tagline: answers.site_url || '',
           platform_type: 'connected', pages: [{ title: 'الرئيسية' }],
-          requirements: answers, build_level: `level_${level}_connect`,
+          requirements: { ...answers, verification }, build_level: `level_${level}_connect`,
           level, status: 'live', is_public: false, layout_mode: 'longform', theme_mode: 'light',
         }).select().single();
         platformId = p?.id || null;
@@ -200,6 +258,7 @@ Deno.serve(async (req) => {
       const integration = buildIntegration(platformId, level, features, {
         external_site_url: answers.site_url,
         external_backend_type: answers.backend_type,
+        verification,
       });
       await supabase.from('b99_integrations').insert({ ...integration });
 
@@ -209,21 +268,22 @@ Deno.serve(async (req) => {
         'فعّل الـ Webhook في إعدادات نظامك لإرسال الأحداث المهمة.',
         'افتح لوحة /b99/platforms لمتابعة البيانات الحية.',
       ];
-      return ok({ integration, steps });
+      return ok({ integration, steps, verification });
     }
 
-    // ===== hire AI employee (level 3) =====
     if (action === 'hire_ai_employee') {
-      const { business_name, owner_name, owner_email, tasks = [], data_sources = [], channels = [], schedule = 'daily' } = payload;
+      const { business_name, owner_name, owner_email, site_url, tasks = [], data_sources = [], channels = [], schedule = 'daily' } = payload;
+      const verification = site_url ? await verifySite(site_url) : null;
+
       const summary = await callAI([
-        { role: 'system', content: 'أنت بات شارك. اكتب فقرة قصيرة بالعربية تخاطب فيها المالك بأنك جاهز للبدء، تذكر فيها مهامك وجدولك.' },
-        { role: 'user', content: `الشركة: ${business_name}, المالك: ${owner_name}, المهام: ${tasks.join('، ')}, القنوات: ${channels.join('، ')}, الجدول: ${schedule}` },
+        { role: 'system', content: 'أنت بات شارك. اكتب فقرة قصيرة بالعربية تخاطب فيها المالك بأنك تحققت من موقعه وأنك جاهز للبدء. اذكر مهامك وجدولك بثقة.' },
+        { role: 'user', content: `الشركة: ${business_name}, المالك: ${owner_name}, الموقع: ${site_url || 'غير محدد'} (تحقق: ${verification ? `HTTP ${verification.status}, ${verification.response_time_ms}ms` : 'لا يوجد'}), المهام: ${tasks.join('، ')}, القنوات: ${channels.join('، ')}, الجدول: ${schedule}` },
       ]);
 
-      const integration = buildIntegration(null, 3, tasks, { external_backend_type: 'ai_employee' });
+      const integration = buildIntegration(null, 3, tasks, { external_backend_type: 'ai_employee', external_site_url: site_url, verification });
       const { data: emp } = await supabase.from('b99_ai_employees').insert({
         owner_email, owner_name, business_name, tasks, data_sources, channels, schedule,
-        config: { integration }, status: 'active',
+        config: { integration, verification, site_url }, status: 'active',
       }).select().single();
       await supabase.from('b99_integrations').insert({ ...integration });
 
@@ -231,10 +291,9 @@ Deno.serve(async (req) => {
         title: ({ reports: 'يجهز التقرير الأول', emails: 'يرسل أول إيميل ملخص', employees: 'يقرأ بيانات الموظفين', data_processing: 'يفحص البيانات الواردة', alerts: 'يضبط حدود التنبيهات', forecasts: 'يبني نموذج التنبؤ', monitoring: 'يبدأ مراقبة الأداء', crm: 'ينظم قائمة العملاء' } as any)[t] || t,
         when: schedule === 'realtime' ? 'فوراً' : schedule === 'hourly' ? 'الساعة القادمة' : schedule === 'daily' ? 'غداً صباحاً' : 'الأسبوع القادم',
       }));
-      return ok({ employee: emp, integration, summary, next_actions });
+      return ok({ employee: emp, integration, summary, next_actions, verification });
     }
 
-    // ===== ads generation =====
     if (action === 'generate_ad' || action === 'generate_video_ad') {
       const result = await callAI([
         { role: 'system', content: 'أنت مخرج إعلانات. أنشئ سكربت فيديو إعلاني احترافي بالعربية مع مشاهد وStoryboard.' },
@@ -242,61 +301,26 @@ Deno.serve(async (req) => {
       ], {
         type: 'object',
         properties: {
-          hook: { type: 'string' },
-          ad_copy: { type: 'string' },
-          voiceover_script: { type: 'string' },
-          video_prompt: { type: 'string' },
+          hook: { type: 'string' }, ad_copy: { type: 'string' }, voiceover_script: { type: 'string' }, video_prompt: { type: 'string' },
           video_scenes: { type: 'array', items: { type: 'object', properties: { scene: { type: 'string' }, visual: { type: 'string' }, voice: { type: 'string' }, text_on_screen: { type: 'string' }, duration_sec: { type: 'number' } } } },
-          best_times: { type: 'array', items: { type: 'string' } },
-          hashtags: { type: 'array', items: { type: 'string' } },
-          cta: { type: 'string' },
+          best_times: { type: 'array', items: { type: 'string' } }, hashtags: { type: 'array', items: { type: 'string' } }, cta: { type: 'string' },
         },
         required: ['hook', 'ad_copy', 'video_scenes'],
       });
       return ok(result);
     }
 
-    // ===== SMART SEARCH (web grounded + similar platforms inspirations) =====
     if (action === 'search') {
       const q = (payload.query || '').trim();
-      if (!q) return ok({ answer: '', sources: [], internal: { platforms: [], ads: [] }, inspirations: [] });
-
-      // 1) Real web search (Gemini Google grounding)
+      if (!q) return ok({ answer: '', sources: [], internal: { platforms: [], ads: [] }, inspirations: { items: [] } });
       const web = await webSearch(q);
-
-      // 2) Internal results from this account
       const [{ data: platforms }, { data: ads }] = await Promise.all([
         supabase.from('generated_platforms').select('id,name,tagline,slug,level').ilike('name', `%${q}%`).limit(6),
         supabase.from('ad_campaigns').select('id,name,business_type').ilike('name', `%${q}%`).limit(6),
       ]);
-
-      // 3) Detect "build / similar / مشابه / منصة / موقع" intent → fetch inspirations
       const wantsInspirations = /(منصة|موقع|متجر|أمثلة|مشابه|شبيه|مرجع|reference|inspirat|similar|build|أفكار|تصميم)/i.test(q);
-      let inspirations: any = { items: [], content_ideas: [], layout_ideas: [] };
-      if (wantsInspirations) {
-        try {
-          inspirations = await callAI([
-            { role: 'system', content: 'أنت مرشد تصميم منصات. اقترح منصات مشابهة عالمية وعربية مع روابط إن أمكن، أفكار محتوى، وأفكار تنسيق صفحات. اختصر.' },
-            { role: 'user', content: `أعطني مرجعيات لمنصة بهذه الفكرة: "${q}". 4-6 منصات مشابهة (اسم + رابط أو وصف + ما يميزها)، 5 أفكار محتوى، و4 أفكار ترتيب صفحات.` },
-          ], {
-            type: 'object',
-            properties: {
-              items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, url: { type: 'string' }, region: { type: 'string' }, why: { type: 'string' } }, required: ['name', 'why'] } },
-              content_ideas: { type: 'array', items: { type: 'string' } },
-              layout_ideas: { type: 'array', items: { type: 'string' } },
-            },
-            required: ['items', 'content_ideas', 'layout_ideas'],
-          });
-        } catch (e) { console.error('inspirations failed', e); }
-      }
-
-      return ok({
-        query: q,
-        answer: web.answer,
-        sources: web.sources,
-        internal: { platforms: platforms || [], ads: ads || [] },
-        inspirations,
-      });
+      const inspirations = wantsInspirations ? await fetchInspirations(q, 'overall').catch(() => ({ items: [] })) : { items: [] };
+      return ok({ query: q, answer: web.answer, sources: web.sources, internal: { platforms: platforms || [], ads: ads || [] }, inspirations });
     }
 
     return ok({ error: 'unknown action' }, 400);
