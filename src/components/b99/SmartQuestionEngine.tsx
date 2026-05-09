@@ -100,7 +100,11 @@ export default function SmartQuestionEngine({
           transition={{ duration: 0.25 }}
         >
           <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2 leading-tight">{q.title}</h2>
-          {q.hint && <p className="text-sm text-slate-500 mb-6 leading-relaxed">{q.hint}</p>}
+          {q.hint && <p className="text-sm text-slate-500 mb-4 leading-relaxed">{q.hint}</p>}
+
+          {/* Deep context: Why + Examples + Video */}
+          <QuestionContext q={q} answer={value} />
+
 
           {q.type === 'cards' && q.options && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
