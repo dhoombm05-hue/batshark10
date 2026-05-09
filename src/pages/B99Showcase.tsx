@@ -170,7 +170,7 @@ export default function B99Showcase() {
         </div>
         <div className="grid md:grid-cols-3 gap-5">
           {FEATURES.map((f, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}  transition={{ delay: i * 0.05 }}
               className="group relative p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/5 hover:border-amber-500/30 transition-all">
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-500/0 to-amber-500/0 group-hover:from-amber-500/5 transition-all" />
               <div className="relative">
@@ -195,7 +195,7 @@ export default function B99Showcase() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           {PACKAGES.map((p, i) => (
-            <motion.div key={p.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+            <motion.div key={p.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}  transition={{ delay: i * 0.1 }}
               className={`relative rounded-3xl p-7 border transition-all hover:scale-[1.02] ${
                 p.highlight
                   ? 'bg-gradient-to-b from-amber-500/15 via-amber-500/5 to-transparent border-amber-400/50 shadow-[0_20px_60px_rgba(212,175,55,0.25)]'
@@ -276,7 +276,7 @@ function useLoopKey(intervalMs = 9000) {
 function ReelFrame({ title, subtitle, badge, color, loopKey, children }: any) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+      initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} 
       className="group relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] hover:border-amber-500/40 transition shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/5 bg-black/40">
         <div className="w-2.5 h-2.5 rounded-full bg-rose-400/70" />
@@ -327,9 +327,9 @@ function Sparkline({ data, color = '#fbbf24' }: { data: number[]; color?: string
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-full">
       <motion.polygon points={`0,${h} ${pts} ${w},${h}`} fill={color} opacity={0.18}
-        initial={{ opacity: 0 }} whileInView={{ opacity: 0.18 }} transition={{ duration: 1.2 }} />
+        initial={{ opacity: 0 }} animate={{ opacity: 0.18 }} transition={{ duration: 1.2 }} />
       <motion.polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"
-        initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1.8, ease: 'easeInOut' }} />
+        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.8, ease: 'easeInOut' }} />
     </svg>
   );
 }
@@ -354,7 +354,7 @@ function ReelDashboard() {
         <div className="grid grid-cols-4 gap-2">
           {kpis.map((k, i) => (
             <motion.div key={i}
-              initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 + i * 0.1, duration: 0.5 }}
               className={`relative rounded-xl p-2.5 bg-gradient-to-br ${k.c} border border-white/10 overflow-hidden`}>
               <div className="flex items-center justify-between mb-1.5">
@@ -396,15 +396,15 @@ function ReelDashboard() {
                 return (
                   <>
                     <motion.polygon points={`0,80 ${pts} 280,80`} fill="url(#areaGrad)"
-                      initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1.5, delay: 0.6 }} />
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5, delay: 0.6 }} />
                     <motion.polyline points={pts} fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                      initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 2, ease: 'easeInOut', delay: 0.4 }} />
+                      initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2, ease: 'easeInOut', delay: 0.4 }} />
                     {chartData.map((v, i) => {
                       const x = (i / (chartData.length - 1)) * 280;
                       const y = 80 - ((v - min) / (max - min)) * 70 - 5;
                       return (
                         <motion.circle key={i} cx={x} cy={y} r="2" fill="#fbbf24"
-                          initial={{ opacity: 0, scale: 0 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 + i * 0.1 }} />
+                          initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 + i * 0.1 }} />
                       );
                     })}
                   </>
@@ -413,7 +413,7 @@ function ReelDashboard() {
             </svg>
           </div>
           <motion.div className="absolute top-3 right-3 flex items-center gap-1.5"
-            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 1.5 }}>
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
             <motion.div className="w-1.5 h-1.5 rounded-full bg-emerald-400"
               animate={{ scale: [1, 1.6, 1], opacity: [1, 0.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} />
             <span className="text-[9px] text-emerald-300 font-black tracking-wider">LIVE</span>
@@ -454,7 +454,7 @@ function ReelChat() {
         <div className="flex-1 flex flex-col gap-2 justify-end overflow-hidden py-3">
           {messages.map((m, i) => (
             <motion.div key={i}
-              initial={{ opacity: 0, y: 14, scale: 0.95 }} whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              initial={{ opacity: 0, y: 14, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: m.delay, duration: 0.45, ease: 'easeOut' }}
               className={`max-w-[85%] px-3 py-2 rounded-2xl text-xs font-medium leading-relaxed ${
                 m.from === 'ai'
@@ -474,7 +474,7 @@ function ReelChat() {
           ))}
 
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }} whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 5.4, duration: 0.5 }}
             className="self-start max-w-[90%] rounded-xl bg-gradient-to-br from-violet-500/15 to-fuchsia-500/10 border border-violet-400/40 p-3">
             <div className="flex items-center gap-2 mb-2">
@@ -498,7 +498,7 @@ function ReelChat() {
           </motion.div>
         </div>
 
-        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 6 }}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 6 }}
           className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 border border-white/10">
           <div className="text-[10px] text-white/45 flex-1">اكتب طلبك للذكاء الاصطناعي...</div>
           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
@@ -532,7 +532,7 @@ function ReelAlerts() {
 
         {alerts.map((a, i) => (
           <motion.div key={i}
-            initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }}
             transition={{ delay: a.delay, duration: 0.5 }}
             className={`relative flex items-center gap-3 p-2.5 rounded-xl border ${a.palette.bg} ${a.palette.border}`}>
             <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${a.palette.iconBg} border ${a.palette.border}`}>
@@ -589,7 +589,7 @@ function ReelAdsStudio() {
           <div className="space-y-1 text-[10px] font-medium">
             {lines.map((line, i) => (
               <motion.div key={i}
-                initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: line.delay, duration: 0.4 }}
                 className="flex gap-2 items-start">
                 <span className="text-rose-300 font-mono font-bold shrink-0">{line.time}</span>
@@ -602,7 +602,7 @@ function ReelAdsStudio() {
         <div className="grid grid-cols-4 gap-1.5">
           {storyboard.map((s, i) => (
             <motion.div key={i}
-              initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 2.2 + i * 0.12 }}
               className={`relative aspect-video rounded-lg bg-gradient-to-br ${s.c} overflow-hidden border border-white/10`}>
               <div className="absolute inset-0 bg-black/30" />
