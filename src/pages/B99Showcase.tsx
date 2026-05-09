@@ -111,8 +111,8 @@ export default function B99Showcase() {
         <motion.div style={{ y: heroY, opacity: heroOpacity }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] tracking-[0.2em] mb-8">
-            <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> منصة الأعمال الرقمية الأكثر احترافية
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-200 text-sm font-semibold mb-8">
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> منصة الأعمال الرقمية الأكثر احترافية
           </motion.div>
 
           <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, ease: 'easeOut' }} className="relative inline-block mb-8">
