@@ -187,9 +187,9 @@ export default function B99Showcase() {
       {/* Packages */}
       <section id="packages" className="relative max-w-7xl mx-auto px-5 py-20">
         <div className="text-center mb-14">
-          <div className="text-[10px] tracking-[0.4em] text-amber-400/70 mb-2">PACKAGES</div>
-          <h2 className="text-3xl md:text-5xl font-black mb-3 bg-gradient-to-b from-white to-amber-200/70 bg-clip-text text-transparent">اختر مسارك</h2>
-          <p className="text-white/50 text-sm">كل باقة مصممة بدقة لمرحلة محددة من رحلة عملك الرقمي</p>
+          <div className="text-xs tracking-[0.4em] text-amber-400 font-bold mb-3">PACKAGES</div>
+          <h2 className="text-3xl md:text-5xl font-black mb-3 text-white">اختر مسارك</h2>
+          <p className="text-white/80 text-base font-medium">كل باقة مصممة بدقة لمرحلة محددة من رحلة عملك الرقمي</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
