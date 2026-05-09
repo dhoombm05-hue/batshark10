@@ -126,10 +126,10 @@ export default function B99Showcase() {
 
           <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
             <span className="bg-gradient-to-b from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent">بات شارك 99</span>
-            <span className="block text-2xl md:text-3xl font-light text-white/70 mt-3">المنصة التي تبني، تربط، وتُشغّل أعمالك الرقمية</span>
+            <span className="block text-2xl md:text-3xl font-bold text-white mt-4">المنصة التي تبني، تربط، وتُشغّل أعمالك الرقمية</span>
           </h1>
 
-          <p className="max-w-2xl mx-auto text-white/60 leading-relaxed mb-10 text-sm md:text-base">
+          <p className="max-w-2xl mx-auto text-white/85 leading-loose mb-10 text-base md:text-lg font-medium">
             ثلاث باقات احترافية. محرك ذكاء صناعي حقيقي. ربط فعلي بمواقعك. موظف رقمي يعمل 24/7.
             كل ما تحتاجه لإطلاق أو تعزيز عملك — تحت سقف واحد بمعايير عالمية.
           </p>
