@@ -241,8 +241,8 @@ export default function B99Showcase() {
         <div className="relative rounded-3xl p-12 bg-gradient-to-br from-amber-500/10 via-transparent to-violet-500/10 border border-amber-500/20 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.15),transparent_70%)]" />
           <div className="relative">
-            <h2 className="text-3xl md:text-4xl font-black mb-4 bg-gradient-to-b from-white to-amber-200 bg-clip-text text-transparent">جاهز لتنطلق؟</h2>
-            <p className="text-white/60 mb-8 max-w-xl mx-auto">ادخل تجربة بات شارك 99 الآن. جولة كاملة قبل أي التزام.</p>
+            <h2 className="text-3xl md:text-4xl font-black mb-4 text-white">جاهز لتنطلق؟</h2>
+            <p className="text-white/85 mb-8 max-w-xl mx-auto text-base font-medium">ادخل تجربة بات شارك 99 الآن. جولة كاملة قبل أي التزام.</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button onClick={(e) => { e.stopPropagation(); nav('/b99'); }} size="lg" className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 font-black h-12 px-8 hover:scale-105 transition-transform">
                 ابدأ الجولة المجانية <ArrowLeft className="w-4 h-4 mr-2" />
