@@ -143,13 +143,6 @@ export default function B99Showcase() {
             </Button>
           </div>
 
-          {!hasInteracted && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }}
-              className="mt-8 inline-flex items-center gap-2 text-[11px] text-amber-300/60">
-              <Music className="w-3 h-3" /> اضغط في أي مكان لتشغيل التجربة الصوتية الكاملة
-            </motion.div>
-          )}
         </motion.div>
       </section>
 
