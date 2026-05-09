@@ -39,6 +39,7 @@ import Quizzes from "./pages/Quizzes";
 import Invoices from "./pages/Invoices";
 import Batshare99 from "./pages/Batshare99";
 import BuildBusiness from "./pages/BuildBusiness";
+import B99Showcase from "./pages/B99Showcase";
 import B99Layout from "./pages/b99/B99Layout";
 import B99Home from "./pages/b99/B99Home";
 import B99Generator from "./pages/b99/B99Generator";
@@ -64,6 +65,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<B99Showcase />} />
             <Route path="/login" element={<Login />} />
             <Route path="/build" element={<BuildBusiness />} />
             <Route path="/p/:slug" element={<PlatformView />} />
@@ -80,7 +82,7 @@ const App = () => (
               <Route path="dashboard" element={<B99Dashboard />} />
             </Route>
             <Route path="/setup" element={<SetupCEO />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
             <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
