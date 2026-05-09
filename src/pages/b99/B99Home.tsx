@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Plug, Bot, ArrowLeft, LogIn, ShieldCheck, Zap, Layers, Megaphone, Search, CheckCircle2, Globe2 } from 'lucide-react';
 import logo from '@/assets/batshark-logo-official.png';
-import heroIllustration from '@/assets/batshark99-hero-light.jpg';
 
 const LEVELS = [
   {
@@ -91,22 +90,34 @@ export default function B99Home() {
             </p>
           </div>
 
-          {/* Hero illustration — soft, light, premium */}
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}
+          {/* Hero — official BATSHARK logo as centerpiece */}
+          <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}
             className="relative aspect-square max-w-md mx-auto">
-            <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-violet-100 via-white to-cyan-100 border border-white shadow-2xl shadow-violet-200/40" />
-            <motion.img
-              src={heroIllustration}
-              alt="بات شارك 99"
-              className="relative z-10 w-full h-full object-cover rounded-[3rem] mix-blend-multiply"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            {/* layered glow rings */}
+            <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-violet-100 via-white to-cyan-100 border border-white shadow-2xl shadow-violet-200/50" />
+            <motion.div
+              className="absolute inset-6 rounded-[2.5rem] border border-violet-200/70"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
             />
-            {/* official logo emblem */}
-            <motion.div animate={{ rotate: [0, 5, 0, -5, 0] }} transition={{ duration: 8, repeat: Infinity }}
-              className="absolute -bottom-4 -left-4 z-20 w-20 h-20 rounded-2xl bg-white shadow-xl border border-slate-100 flex items-center justify-center p-3">
-              <img src={logo} alt="" className="w-full h-full object-contain" />
+            <motion.div
+              className="absolute inset-12 rounded-[2rem] border border-cyan-200/70 border-dashed"
+              animate={{ rotate: -360 }}
+              transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+            />
+            {/* official logo */}
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center p-16"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <img src={logo} alt="بات شارك 99" className="w-full h-full object-contain drop-shadow-[0_15px_40px_rgba(15,23,42,0.25)]" />
             </motion.div>
+            {/* corner badge */}
+            <div className="absolute -bottom-3 -left-3 z-20 px-4 py-2 rounded-2xl bg-white shadow-xl border border-slate-100 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span className="text-xs font-bold text-slate-700">Official Identity</span>
+            </div>
           </motion.div>
         </div>
       </section>
