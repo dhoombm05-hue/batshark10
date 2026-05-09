@@ -28,14 +28,16 @@ function makeSlug(name: string) {
   return `${base}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-async function callAI(messages: any[], schema?: any) {
+async function callAI(messages: any[], schema?: any, opts: { tools?: any[]; model?: string } = {}) {
   const body: any = {
-    model: 'google/gemini-2.5-flash',
+    model: opts.model || 'google/gemini-2.5-flash',
     messages,
   };
   if (schema) {
     body.tools = [{ type: 'function', function: { name: 'output', description: 'structured output', parameters: schema } }];
     body.tool_choice = { type: 'function', function: { name: 'output' } };
+  } else if (opts.tools) {
+    body.tools = opts.tools;
   }
   const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -49,6 +51,37 @@ async function callAI(messages: any[], schema?: any) {
     return args ? JSON.parse(args) : {};
   }
   return data.choices?.[0]?.message?.content || '';
+}
+
+// Real web search using Gemini's native Google Search grounding
+async function webSearch(query: string): Promise<{ answer: string; sources: { title: string; url: string; snippet?: string }[] }> {
+  try {
+    const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'أجب عن السؤال بإجابة دقيقة محدّثة بالعربية مع ذكر مصادر. اختصر بدون مقدمات.' },
+          { role: 'user', content: query },
+        ],
+        tools: [{ google_search: {} }] as any,
+      }),
+    });
+    const data = await r.json();
+    const msg = data.choices?.[0]?.message;
+    const answer = msg?.content || '';
+    const grounding = (msg as any)?.grounding_metadata || data.choices?.[0]?.grounding_metadata || {};
+    const chunks = grounding?.grounding_chunks || grounding?.groundingChunks || [];
+    const sources = chunks
+      .map((c: any) => c.web || c)
+      .filter((w: any) => w?.uri || w?.url)
+      .map((w: any) => ({ title: w.title || w.uri || w.url, url: w.uri || w.url }));
+    return { answer, sources };
+  } catch (e) {
+    console.error('webSearch failed', e);
+    return { answer: '', sources: [] };
+  }
 }
 
 function buildIntegration(platformId: string | null, level: number, features: string[] = [], extras: Record<string, any> = {}) {
