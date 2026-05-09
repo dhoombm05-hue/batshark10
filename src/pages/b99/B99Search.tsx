@@ -153,6 +153,35 @@ export default function B99Search() {
                 </section>
               )}
 
+              {/* Images */}
+              {data.images?.length > 0 && (
+                <section>
+                  <SectionTitle icon={ImageIcon} en="Images" ar="صور من الويب" count={data.images.length} />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {data.images.map((img: any, i: number) => (
+                      <a key={i} href={img.url} target="_blank" rel="noreferrer"
+                        className="block aspect-square rounded-2xl overflow-hidden border border-slate-200 hover:border-amber-400 hover:shadow-lg transition group bg-slate-100">
+                        <img src={img.url} alt={img.alt || ''} loading="lazy"
+                          onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Videos */}
+              {data.videos?.length > 0 && (
+                <section>
+                  <SectionTitle icon={Youtube} en="Videos" ar="فيديوهات يوتيوب" count={data.videos.length} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {data.videos.map((v: any, i: number) => (
+                      <VideoCard key={i} video={v} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
               {/* Inspirations: similar platforms */}
               {data.inspirations?.items?.length > 0 && (
                 <section>
