@@ -264,7 +264,16 @@ export default function B99Showcase() {
 }
 
 // =============== Reels — cinematic interactive demos ===============
-function ReelFrame({ title, subtitle, badge, color, children }: any) {
+function useLoopKey(intervalMs = 9000) {
+  const [k, setK] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setK(v => v + 1), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return k;
+}
+
+function ReelFrame({ title, subtitle, badge, color, loopKey, children }: any) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -274,9 +283,13 @@ function ReelFrame({ title, subtitle, badge, color, children }: any) {
         <div className="w-2.5 h-2.5 rounded-full bg-amber-400/70" />
         <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/70" />
         <div className="mx-auto px-3 py-0.5 rounded-md bg-white/5 text-[10px] text-white/60 font-mono">batshark99.app/{badge.toLowerCase().replace(/\s+/g,'-')}</div>
-        <div className={`text-[10px] tracking-widest font-black uppercase ${color}`}>● LIVE</div>
+        <div className={`text-[10px] tracking-widest font-black uppercase ${color} flex items-center gap-1`}>
+          <motion.span className="inline-block w-1.5 h-1.5 rounded-full bg-current"
+            animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.4, repeat: Infinity }} />
+          LIVE
+        </div>
       </div>
-      <div className="relative aspect-[16/10] bg-gradient-to-br from-[#0a0a18] via-[#0c0c20] to-black overflow-hidden">
+      <div key={loopKey} className="relative aspect-[16/10] bg-gradient-to-br from-[#0a0a18] via-[#0c0c20] to-black overflow-hidden">
         {children}
       </div>
       <div className="px-5 py-4 border-t border-white/10 bg-black/50 flex items-center justify-between gap-3">
