@@ -218,7 +218,7 @@ export default function B99Showcase() {
               </div>
               <ul className="space-y-3 mb-7">
                 {p.features.map((f, j) => (
-                  <li key={j} className="flex items-start gap-2 text-sm text-white/70">
+                  <li key={j} className="flex items-start gap-2 text-sm text-white/90 font-medium leading-relaxed">
                     <Check className={`w-4 h-4 shrink-0 mt-0.5 ${p.highlight ? 'text-amber-400' : 'text-emerald-400/80'}`} />
                     <span>{f}</span>
                   </li>
