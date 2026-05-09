@@ -478,35 +478,63 @@ export default function Batshare99() {
           </p>
         </motion.div>
 
-        <Card className="p-6 bg-gradient-to-br from-primary/10 via-section-ai/5 to-transparent border-primary/30">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
-            <div className="flex items-start gap-3">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-500 shadow-lg">
-                <Rocket className="w-6 h-6 text-white" />
+        <Card className="relative p-0 overflow-hidden border-0 shadow-2xl">
+          {/* premium dark gradient backdrop */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-violet-950 to-slate-900" />
+          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(139,92,246,0.5), transparent 40%), radial-gradient(circle at 80% 70%, rgba(34,211,238,0.4), transparent 45%)' }} />
+          <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+
+          <div className="relative p-7 md:p-9 flex flex-col md:flex-row items-stretch gap-6 text-white">
+            {/* Logo emblem */}
+            <div className="shrink-0 flex items-center justify-center">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6 }}
+                className="relative w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-white/95 shadow-[0_20px_60px_rgba(139,92,246,0.5)] border border-white/40 flex items-center justify-center p-3"
+              >
+                <img src={new URL('@/assets/batshark-logo-official.png', import.meta.url).href} alt="BATSHARK" className="w-full h-full object-contain" />
+                <div className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-[10px] font-black text-slate-900 shadow-lg">99</div>
+              </motion.div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-white/10 border-white/20 text-white text-[10px] tracking-widest">PREMIUM PORTAL</Badge>
+                <Badge className="bg-emerald-500/20 border-emerald-400/30 text-emerald-300 text-[10px]">LIVE</Badge>
               </div>
-              <div>
-                <h3 className="font-heading font-bold text-lg">بناء بزنس معين</h3>
-                <p className="text-sm text-muted-foreground max-w-xl mt-1">
-                  منصة مستقلة بواجهة خاصة ورابط مستقل. تتعرف عليك تلقائياً عند الدخول من النظام، وتعمل كزائر عند الدخول من رابط خارجي.
-                </p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {['مبتدئ', 'متوسط', 'متقدم', 'محلل احترافي'].map((l) => (
-                    <Badge key={l} variant="outline" className="text-[11px]">{l}</Badge>
-                  ))}
-                </div>
+              <h3 className="font-heading font-black text-2xl md:text-3xl mb-1.5">
+                بات شارك <span className="bg-gradient-to-l from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">99</span>
+              </h3>
+              <p className="text-sm md:text-base text-slate-300 max-w-xl leading-relaxed">
+                المنصة السيادية لبناء وتعزيز وتوظيف الذكاء لأي بزنس — ثلاث مسارات احترافية، ربط باكند فوري، وموظف رقمي يعمل 24/7.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {['ابني من الصفر', 'عزّز موقعي', 'وظّف بات شارك', 'استوديو إعلانات', 'بحث ذكي'].map((l) => (
+                  <span key={l} className="text-[11px] px-2.5 py-1 rounded-full bg-white/5 border border-white/15 text-slate-200">{l}</span>
+                ))}
               </div>
             </div>
-            <Button asChild size="lg" className="gap-2 bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg hover:opacity-90 whitespace-nowrap">
-              <a href="/b99" target="_blank" rel="noopener noreferrer">
-                <Sparkles className="w-4 h-4" /> فتح Batshark99
+
+            {/* CTA */}
+            <div className="shrink-0 flex md:flex-col items-center justify-center gap-3 md:border-l md:border-white/10 md:pl-6">
+              <Button asChild size="lg" className="h-14 px-7 gap-2 bg-white text-slate-900 hover:bg-violet-50 font-black shadow-[0_10px_40px_rgba(255,255,255,0.25)] whitespace-nowrap">
+                <a href="/b99" target="_blank" rel="noopener noreferrer">
+                  <Sparkles className="w-4 h-4 text-violet-600" /> دخول المنصة
+                </a>
+              </Button>
+              <a href="/b99" target="_blank" rel="noopener noreferrer" className="text-[11px] text-slate-300 hover:text-white underline-offset-4 hover:underline">
+                يفتح في نافذة مستقلة
               </a>
-            </Button>
+            </div>
           </div>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> ذكاء اصطناعي يوجّه ويقترح أفضل الخيارات</div>
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> 4 مستويات بعمق مختلف من التحليل</div>
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> رابط مشاركة مستقل قابل للتوسع</div>
-            <div className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> تخصيص تلقائي للأعضاء، ووضع زائر للزوار</div>
+
+          <div className="relative px-7 md:px-9 py-4 bg-black/30 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px] text-slate-300">
+            <div className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> ذكاء يقترح أفضل خيار</div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 3 مستويات احترافية</div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> رابط مشاركة مستقل</div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> دخول داخلي + وضع زائر</div>
           </div>
         </Card>
 
