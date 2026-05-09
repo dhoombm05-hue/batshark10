@@ -210,32 +210,65 @@ Deno.serve(async (req) => {
     if (action === 'generate_platform') {
       const { level = 1, answers = {} } = payload;
       const blueprint = await callAI([
-        { role: 'system', content: 'أنت معماري منصات. أنشئ blueprint احترافي بالعربية لمنصة فعلية، مستوحى من المرجعيات البصرية المختارة إن وُجدت.' },
-        { role: 'user', content: `أنشئ منصة من إجابات هذا العميل: ${JSON.stringify(answers)}` },
+        { role: 'system', content: 'أنت معماري منصات. أنشئ blueprint احترافي بالعربية لمنصة فعلية، مستوحى من المرجعيات البصرية المختارة إن وُجدت. كل صفحة يجب أن تحوي 4-7 أقسام (sections) متكاملة (hero, features, pricing, stats, testimonials, faq, gallery, cta, contact) مع heading + body + items[] حقيقية.' },
+        { role: 'user', content: `أنشئ منصة من إجابات هذا العميل: ${JSON.stringify(answers)}. نوع البناء: احترافي عميق وليس مبتدئ.` },
       ], {
         type: 'object',
         properties: {
           name: { type: 'string' }, tagline: { type: 'string' }, platform_type: { type: 'string' },
-          pages: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, sections: { type: 'array', items: { type: 'string' } } }, required: ['title'] } },
+          pages: { type: 'array', items: { type: 'object', properties: {
+            title: { type: 'string' }, icon: { type: 'string' },
+            sections: { type: 'array', items: { type: 'object', properties: {
+              type: { type: 'string' }, heading: { type: 'string' }, body: { type: 'string' },
+              items: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, desc: { type: 'string' }, value: { type: 'string' } } } },
+            }, required: ['type'] } },
+          }, required: ['title'] } },
           features: { type: 'array', items: { type: 'string' } },
-          brand: { type: 'object', properties: { primary: { type: 'string' }, mood: { type: 'string' } } },
+          brand: { type: 'object', properties: { primary_color: { type: 'string' }, accent_color: { type: 'string' }, logo_emoji: { type: 'string' }, mood: { type: 'string' } } },
         },
         required: ['name', 'tagline', 'pages'],
       });
 
       const slug = makeSlug(blueprint.name);
+      const ownerPassword = answers.owner_password || makeKey('own').slice(0, 16);
+      const ownerEmail = answers.owner_email || null;
+      const dbChoice = answers.database_choice || 'bs99_hosted';
+
       const { data: platform, error } = await supabase.from('generated_platforms').insert({
         slug, name: blueprint.name, tagline: blueprint.tagline,
         platform_type: blueprint.platform_type || 'general',
         pages: blueprint.pages || [], features: blueprint.features || [],
         brand: blueprint.brand || {}, requirements: answers, build_level: `level_${level}`,
-        level, status: 'live', is_public: true, layout_mode: 'longform', theme_mode: 'light',
+        level, status: 'live', is_public: dbChoice !== 'external', layout_mode: 'longform', theme_mode: 'light',
+        owner_email: ownerEmail, owner_password: ownerPassword,
+        meta: { database_choice: dbChoice, audience: answers.audience, brand_vibe: answers.brand_vibe },
       }).select().single();
       if (error) throw error;
 
-      const integration = buildIntegration(platform.id, level, ['backend', 'ai_chat']);
+      const integration = buildIntegration(platform.id, level, ['backend', 'ai_chat', ...(answers.features || [])], { database_choice: dbChoice });
       await supabase.from('b99_integrations').insert({ ...integration }).select();
-      return ok({ platform, integration });
+      return ok({ platform: { ...platform, owner_password: ownerPassword }, integration });
+    }
+
+    if (action === 'update_platform') {
+      const { slug, owner_password, patch } = payload;
+      if (!slug || !owner_password) return ok({ error: 'missing_credentials' }, 400);
+      const { data: existing } = await supabase.from('generated_platforms')
+        .select('id, owner_password').eq('slug', slug).maybeSingle();
+      if (!existing || existing.owner_password !== owner_password) {
+        return ok({ error: 'invalid_credentials' }, 401);
+      }
+      const allowed: Record<string, any> = {};
+      if (patch.name !== undefined) allowed.name = patch.name;
+      if (patch.tagline !== undefined) allowed.tagline = patch.tagline;
+      if (patch.brand !== undefined) allowed.brand = patch.brand;
+      if (patch.pages !== undefined) allowed.pages = patch.pages;
+      if (patch.is_public !== undefined) allowed.is_public = patch.is_public;
+      if (patch.backend_link !== undefined) allowed.backend_link = patch.backend_link;
+      const { data: updated, error: upErr } = await supabase.from('generated_platforms')
+        .update(allowed).eq('id', existing.id).select().single();
+      if (upErr) throw upErr;
+      return ok({ platform: updated });
     }
 
     if (action === 'generate_integration') {
