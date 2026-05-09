@@ -137,7 +137,7 @@ function NavSection({
 
       {/* Items */}
       {group.items.map((item) => {
-        const active = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+        const active = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
         const colors = colorMap[item.color];
 
         if (collapsed) {
