@@ -14,6 +14,14 @@ type Mode = 'choose' | 'scratch' | 'connect' | 'building' | 'done';
 const SCRATCH_QUESTIONS: SmartQuestion[] = [
   {
     key: 'business_kind', title: 'وش نوع البزنس الي تبي تبنيه؟', hint: 'اختر الأقرب لفكرتك.', type: 'cards',
+    whyThis: 'نوع البزنس يحدد جوهرياً شكل الموقع، الأقسام، نوع قاعدة البيانات، وطريقة استقبال الطلبات. مطعم يحتاج قائمة طعام وسلة، بينما ملعب يحتاج تقويم حجوزات.',
+    examples: [
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.thefork.com', label: 'TheFork — مطاعم', url: 'https://www.thefork.com', tag: 'food' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.playtomic.io', label: 'Playtomic — بادل', url: 'https://www.playtomic.io', tag: 'sport' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.shopify.com', label: 'Shopify — متاجر', url: 'https://www.shopify.com', tag: 'shop' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.coursera.org', label: 'Coursera — تعليم', url: 'https://www.coursera.org', tag: 'edu' },
+    ],
+    videoEmbed: 'https://www.youtube.com/embed/8nbXKW-1uE0',
     options: [
       { value: 'food', label: 'مطعم/أكل صحي', emoji: '🥗', desc: 'منصة طلبات وقوائم' },
       { value: 'sport', label: 'ملاعب/حجوزات', emoji: '🎾', desc: 'بادل، صالات، ملاعب' },
@@ -25,12 +33,24 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
       { value: 'other', label: 'فكرة أخرى', emoji: '✨', desc: 'سنفهمها من وصفك' },
     ],
   },
-  { key: 'idea', title: 'بكلماتك، وش الفكرة بالضبط؟', hint: 'جملة أو سطرين، خلّها واضحة.', type: 'textarea', placeholder: 'مثلاً: متجر يبيع أكلات صحية بالرياض مع توصيل يومي...' },
-  { key: 'business_name', title: 'اسم البزنس / المنصة؟', type: 'text', placeholder: 'مثلاً: Greenly، PadelHub، أوميغا...' },
-  { key: 'unique_value', title: 'ما الذي يميّزك عن المنافسين؟', hint: 'الميزة الواحدة التي تتفوق فيها.', type: 'textarea', placeholder: 'توصيل خلال 30 دقيقة، أرخص 20%، تجربة مستخدم استثنائية...' },
-  { key: 'city', title: 'وين سوقك الأساسي؟', type: 'text', placeholder: 'الرياض، جدة، الدمام، الخليج، عالمي...' },
+  { key: 'idea', title: 'بكلماتك، وش الفكرة بالضبط؟', hint: 'جملة أو سطرين، خلّها واضحة.', type: 'textarea', placeholder: 'مثلاً: متجر يبيع أكلات صحية بالرياض مع توصيل يومي...',
+    whyThis: 'وصفك بكلماتك يلتقطه الذكاء الاصطناعي ليبني محتوى صفحاتك (Hero، عن المنصة، خدماتنا) بنبرتك أنت لا بنبرة قالب جاهز.' },
+  { key: 'business_name', title: 'اسم البزنس / المنصة؟', type: 'text', placeholder: 'مثلاً: Greenly، PadelHub، أوميغا...',
+    whyThis: 'الاسم يصبح: عنوان التبويب في المتصفح، اللوغو، الـ slug في الرابط (/p/your-name)، وعنوان كل الإيميلات الرسمية.' },
+  { key: 'unique_value', title: 'ما الذي يميّزك عن المنافسين؟', hint: 'الميزة الواحدة التي تتفوق فيها.', type: 'textarea', placeholder: 'توصيل خلال 30 دقيقة، أرخص 20%، تجربة مستخدم استثنائية...',
+    whyThis: 'هذه الجملة تتحول مباشرة إلى الـ Hero الرئيسي وأول ما يقرأه الزائر — وهي العامل الأول في قرار الشراء/التسجيل.' },
+  { key: 'city', title: 'وين سوقك الأساسي؟', type: 'text', placeholder: 'الرياض، جدة، الدمام، الخليج، عالمي...',
+    whyThis: 'السوق الجغرافي يحدد: العملة الافتراضية، اللغة الأساسية، خرائط جوجل المضمّنة، وكلمات SEO المحلية.' },
   {
     key: 'audience', title: 'لمن تبني؟ (الجمهور المستهدف)', type: 'cards',
+    whyThis: 'الجمهور يحدد نبرة الكتابة، حجم الخطوط، كثافة العناصر، وحتى نوع الصور: شباب يحبون كثافة وجرأة، فئة فاخرة تحب الفراغات الواسعة والذهبي.',
+    liveExamplesFor: 'website design for',
+    examples: [
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.gymshark.com', label: 'Gymshark — شباب', url: 'https://www.gymshark.com' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.disneyplus.com', label: 'Disney+ — عائلات', url: 'https://www.disneyplus.com' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.rolex.com', label: 'Rolex — فاخر', url: 'https://www.rolex.com' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.salesforce.com', label: 'Salesforce — B2B', url: 'https://www.salesforce.com' },
+    ],
     options: [
       { value: 'b2c_young', label: 'مستهلكين شباب 18-30', emoji: '🧑‍🎓' },
       { value: 'b2c_family', label: 'عائلات', emoji: '👨‍👩‍👧' },
@@ -40,6 +60,17 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
   },
   {
     key: 'brand_vibe', title: 'الإحساس البصري للعلامة؟', hint: 'يحدد لك الألوان والخطوط تلقائياً.', type: 'cards',
+    whyThis: 'الإحساس البصري = شخصية علامتك. اخترت "فخامة"؟ هنا تبدأ بات شارك تستخدم ذهبي/أسود وخطوط Serif. اخترت "تقني داكن"؟ سيان نيون على كحلي. هذا أهم اختيار جمالي.',
+    liveExamplesFor: 'website design',
+    examples: [
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.dior.com', label: 'Dior — فخامة', url: 'https://www.dior.com', tag: 'luxury' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.apple.com', label: 'Apple — عصري نظيف', url: 'https://www.apple.com', tag: 'modern' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://stripe.com', label: 'Stripe — حيوي', url: 'https://stripe.com', tag: 'vibrant' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://www.airbnb.com', label: 'Airbnb — طبيعي', url: 'https://www.airbnb.com', tag: 'natural' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://vercel.com', label: 'Vercel — تقني داكن', url: 'https://vercel.com', tag: 'tech' },
+      { image: 'https://image.thum.io/get/width/600/crop/400/noanimate/https://linear.app', label: 'Linear — مينيمال', url: 'https://linear.app', tag: 'minimal' },
+    ],
+    videoEmbed: 'https://www.youtube.com/embed/Pe0jFDPHkzo',
     options: [
       { value: 'luxury', label: 'فخامة وذهبي', emoji: '✨', desc: 'أسود/ذهبي/كريمي' },
       { value: 'modern', label: 'عصري ونظيف', emoji: '◻️', desc: 'أزرق/أبيض/رمادي' },
@@ -51,6 +82,7 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
   },
   {
     key: 'pages', title: 'وش الصفحات المطلوبة؟', hint: 'اختر اللي تحتاجه (أكثر من واحد).', type: 'multi',
+    whyThis: 'كل صفحة تختارها تُبنى لها روتها الخاص (مثل /pricing, /about) مع أقسام جاهزة. زيادة الصفحات بدون داعٍ تُربك الزائر، فاختر بحكمة.',
     options: [
       { value: 'home', label: 'رئيسية', emoji: '🏠' },
       { value: 'products', label: 'منتجات/قائمة', emoji: '📋' },
@@ -65,6 +97,7 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
   },
   {
     key: 'features', title: 'مزايا تقنية إضافية؟', type: 'multi', optional: true,
+    whyThis: 'المزايا تفعّل أنظمة كاملة في الباكند: تسجيل الدخول يفعّل جداول المستخدمين، الدفع يربط Stripe، الدردشة تفتح قناة WebSocket. اختر فقط ما تحتاجه فعلاً.',
     options: [
       { value: 'auth', label: 'تسجيل دخول للعملاء', emoji: '🔐' },
       { value: 'payments', label: 'دفع إلكتروني', emoji: '💳' },
@@ -76,6 +109,7 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
   },
   {
     key: 'payment', title: 'كيف تستقبل المدفوعات؟', type: 'cards',
+    whyThis: 'طريقة الدفع تحدد نسبة إتمام الطلب (Conversion). الدفع بالبطاقة يرفع الإتمام ضعفين مقارنة بالتحويل البنكي، لكنه يتطلب اشتراك بوابة دفع.',
     options: [
       { value: 'cash', label: 'كاش فقط', emoji: '💵' },
       { value: 'transfer', label: 'تحويل بنكي', emoji: '🏦' },
@@ -85,6 +119,8 @@ const SCRATCH_QUESTIONS: SmartQuestion[] = [
   },
   {
     key: 'database_choice', title: 'أين تريد تخزين بياناتك؟', hint: 'تستطيع تغييرها لاحقاً من لوحة المالك.', type: 'cards',
+    whyThis: 'قاعدة البيانات هي عقل المنصة. استضافة بات شارك = جاهز فوراً وآمن. قاعدتك الخاصة = ملكية كاملة لكن تتحمل إعدادها. بدون قاعدة = موقع عرض فقط مثل Brochure.',
+    videoEmbed: 'https://www.youtube.com/embed/zr1AcZpwFwM',
     options: [
       { value: 'bs99_hosted', label: 'استضافة بات شارك (الأسرع)', emoji: '⚡', desc: 'قاعدة بيانات جاهزة مدارة بالكامل' },
       { value: 'external', label: 'قاعدة بياناتي الخاصة', emoji: '🔌', desc: 'سأربط Supabase/Firebase خاصتي لاحقاً' },

@@ -121,6 +121,72 @@ async function webSearch(query: string) {
   } catch (e) { console.error('webSearch failed', e); return { answer: '', sources: [] }; }
 }
 
+// ====== Visual examples (images of real platforms/concepts) ======
+async function fetchVisualExamples(topic: string, limit = 6) {
+  try {
+    const data = await callAI([
+      { role: 'system', content: 'أنت دليل أمثلة بصرية. أعد روابط مواقع رسمية حقيقية فقط (https://www.brand.com)، لا روابط ميتة ولا تخمين. الأمثلة عالمية ومعروفة.' },
+      { role: 'user', content: `أعطني ${limit} أمثلة لمنصات/مواقع حقيقية تطابق: "${topic}". لكل واحدة: الاسم + الدومين الرسمي + سبب موجز.` },
+    ], {
+      type: 'object',
+      properties: {
+        items: { type: 'array', items: { type: 'object', properties: {
+          label: { type: 'string' }, url: { type: 'string' }, why: { type: 'string' },
+        }, required: ['label', 'url'] } },
+      }, required: ['items'],
+    });
+    return {
+      items: (data.items || []).slice(0, limit).map((it: any) => ({
+        label: it.label, url: it.url, why: it.why,
+        image: screenshotUrl(it.url), favicon: faviconUrl(it.url),
+      })),
+    };
+  } catch (e) { console.error('visual_examples', e); return { items: [] }; }
+}
+
+// ====== YouTube video search via Gemini grounding ======
+async function fetchVideos(topic: string, limit = 6) {
+  try {
+    const data = await callAI([
+      { role: 'system', content: 'أنت مساعد بحث فيديوهات يوتيوب. أعد روابط فيديوهات حقيقية فقط بصيغة https://www.youtube.com/watch?v=XXXXXX. لا تخترع.' },
+      { role: 'user', content: `ابحث عن ${limit} فيديوهات حقيقية في يوتيوب عن: "${topic}". أعد لكل فيديو: العنوان، الرابط الكامل، اسم القناة.` },
+    ], {
+      type: 'object',
+      properties: {
+        items: { type: 'array', items: { type: 'object', properties: {
+          title: { type: 'string' }, url: { type: 'string' }, channel: { type: 'string' },
+        }, required: ['title', 'url'] } },
+      }, required: ['items'],
+    });
+    return (data.items || []).slice(0, limit).map((v: any) => {
+      const id = (v.url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{6,})/) || [])[1];
+      return {
+        title: v.title, channel: v.channel, url: v.url, video_id: id,
+        thumbnail: id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '',
+        embed: id ? `https://www.youtube.com/embed/${id}` : null,
+      };
+    }).filter((v: any) => v.video_id);
+  } catch (e) { console.error('fetchVideos', e); return []; }
+}
+
+// ====== Image search via Gemini (returns direct image URLs) ======
+async function fetchImages(topic: string, limit = 9) {
+  try {
+    const data = await callAI([
+      { role: 'system', content: 'أنت مساعد بحث صور. أعد روابط مباشرة لصور حقيقية متاحة عامة (Unsplash, Pexels, Wikimedia). الروابط يجب أن تكون .jpg/.png/.webp مباشرة.' },
+      { role: 'user', content: `أعطني ${limit} روابط صور حقيقية ذات صلة بـ: "${topic}".` },
+    ], {
+      type: 'object',
+      properties: {
+        items: { type: 'array', items: { type: 'object', properties: {
+          url: { type: 'string' }, alt: { type: 'string' }, source: { type: 'string' },
+        }, required: ['url'] } },
+      }, required: ['items'],
+    });
+    return (data.items || []).slice(0, limit);
+  } catch (e) { console.error('fetchImages', e); return []; }
+}
+
 // Visual inspirations: returns named platforms with screenshot URLs
 async function fetchInspirations(topic: string, focus = 'overall') {
   const data = await callAI([
@@ -134,9 +200,7 @@ async function fetchInspirations(topic: string, focus = 'overall') {
         items: {
           type: 'object',
           properties: {
-            name: { type: 'string' },
-            url: { type: 'string' },
-            why: { type: 'string' },
+            name: { type: 'string' }, url: { type: 'string' }, why: { type: 'string' },
             tags: { type: 'array', items: { type: 'string' } },
           },
           required: ['name', 'url', 'why'],
@@ -192,6 +256,20 @@ Deno.serve(async (req) => {
     if (action === 'inspirations') {
       const ins = await fetchInspirations(payload.topic || '', payload.focus || 'overall');
       return ok(ins);
+    }
+
+    if (action === 'visual_examples') {
+      const ex = await fetchVisualExamples(payload.topic || '', payload.limit || 6);
+      return ok(ex);
+    }
+
+    if (action === 'media_search') {
+      const topic = payload.topic || payload.query || '';
+      const [images, videos] = await Promise.all([
+        fetchImages(topic, payload.image_limit || 9),
+        fetchVideos(topic, payload.video_limit || 6),
+      ]);
+      return ok({ topic, images, videos });
     }
 
     if (action === 'assistant') {
@@ -345,15 +423,21 @@ Deno.serve(async (req) => {
 
     if (action === 'search') {
       const q = (payload.query || '').trim();
-      if (!q) return ok({ answer: '', sources: [], internal: { platforms: [], ads: [] }, inspirations: { items: [] } });
-      const web = await webSearch(q);
-      const [{ data: platforms }, { data: ads }] = await Promise.all([
+      if (!q) return ok({ answer: '', sources: [], internal: { platforms: [], ads: [] }, inspirations: { items: [] }, images: [], videos: [] });
+      const wantsInspirations = /(منصة|موقع|متجر|أمثلة|مشابه|شبيه|مرجع|reference|inspirat|similar|build|أفكار|تصميم|design)/i.test(q);
+      const [web, images, videos, platformsR, adsR, inspirations] = await Promise.all([
+        webSearch(q),
+        fetchImages(q, 9).catch(() => []),
+        fetchVideos(q, 6).catch(() => []),
         supabase.from('generated_platforms').select('id,name,tagline,slug,level').ilike('name', `%${q}%`).limit(6),
         supabase.from('ad_campaigns').select('id,name,business_type').ilike('name', `%${q}%`).limit(6),
+        wantsInspirations ? fetchInspirations(q, 'overall').catch(() => ({ items: [] })) : Promise.resolve({ items: [] }),
       ]);
-      const wantsInspirations = /(منصة|موقع|متجر|أمثلة|مشابه|شبيه|مرجع|reference|inspirat|similar|build|أفكار|تصميم)/i.test(q);
-      const inspirations = wantsInspirations ? await fetchInspirations(q, 'overall').catch(() => ({ items: [] })) : { items: [] };
-      return ok({ query: q, answer: web.answer, sources: web.sources, internal: { platforms: platforms || [], ads: ads || [] }, inspirations });
+      return ok({
+        query: q, answer: web.answer, sources: web.sources,
+        internal: { platforms: platformsR.data || [], ads: adsR.data || [] },
+        inspirations, images, videos,
+      });
     }
 
     return ok({ error: 'unknown action' }, 400);
