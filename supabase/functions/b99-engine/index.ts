@@ -423,15 +423,21 @@ Deno.serve(async (req) => {
 
     if (action === 'search') {
       const q = (payload.query || '').trim();
-      if (!q) return ok({ answer: '', sources: [], internal: { platforms: [], ads: [] }, inspirations: { items: [] } });
-      const web = await webSearch(q);
-      const [{ data: platforms }, { data: ads }] = await Promise.all([
+      if (!q) return ok({ answer: '', sources: [], internal: { platforms: [], ads: [] }, inspirations: { items: [] }, images: [], videos: [] });
+      const wantsInspirations = /(منصة|موقع|متجر|أمثلة|مشابه|شبيه|مرجع|reference|inspirat|similar|build|أفكار|تصميم|design)/i.test(q);
+      const [web, images, videos, platformsR, adsR, inspirations] = await Promise.all([
+        webSearch(q),
+        fetchImages(q, 9).catch(() => []),
+        fetchVideos(q, 6).catch(() => []),
         supabase.from('generated_platforms').select('id,name,tagline,slug,level').ilike('name', `%${q}%`).limit(6),
         supabase.from('ad_campaigns').select('id,name,business_type').ilike('name', `%${q}%`).limit(6),
+        wantsInspirations ? fetchInspirations(q, 'overall').catch(() => ({ items: [] })) : Promise.resolve({ items: [] }),
       ]);
-      const wantsInspirations = /(منصة|موقع|متجر|أمثلة|مشابه|شبيه|مرجع|reference|inspirat|similar|build|أفكار|تصميم)/i.test(q);
-      const inspirations = wantsInspirations ? await fetchInspirations(q, 'overall').catch(() => ({ items: [] })) : { items: [] };
-      return ok({ query: q, answer: web.answer, sources: web.sources, internal: { platforms: platforms || [], ads: ads || [] }, inspirations });
+      return ok({
+        query: q, answer: web.answer, sources: web.sources,
+        internal: { platforms: platformsR.data || [], ads: adsR.data || [] },
+        inspirations, images, videos,
+      });
     }
 
     return ok({ error: 'unknown action' }, 400);
