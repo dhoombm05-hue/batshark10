@@ -255,7 +255,7 @@ export default function B99Showcase() {
         </div>
       </section>
 
-      <footer className="relative border-t border-white/5 py-8 text-center text-xs text-white/30">
+      <footer className="relative border-t border-white/10 py-8 text-center text-sm text-white/60 font-medium">
         © {new Date().getFullYear()} بات شارك 99 — كل الحقوق محفوظة
       </footer>
     </div>
