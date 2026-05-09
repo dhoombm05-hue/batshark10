@@ -278,8 +278,8 @@ function ReelFrame({ title, badge, color, children }: any) {
       <div className="relative aspect-[16/11] bg-gradient-to-br from-slate-900 to-black p-4 overflow-hidden">
         {children}
       </div>
-      <div className="px-4 py-3 border-t border-white/5">
-        <div className="text-sm font-black text-white">{title}</div>
+      <div className="px-4 py-3 border-t border-white/10 bg-black/40">
+        <div className="text-base font-black text-white">{title}</div>
       </div>
     </motion.div>
   );
