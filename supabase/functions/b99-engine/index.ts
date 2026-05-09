@@ -121,6 +121,72 @@ async function webSearch(query: string) {
   } catch (e) { console.error('webSearch failed', e); return { answer: '', sources: [] }; }
 }
 
+// ====== Visual examples (images of real platforms/concepts) ======
+async function fetchVisualExamples(topic: string, limit = 6) {
+  try {
+    const data = await callAI([
+      { role: 'system', content: 'أنت دليل أمثلة بصرية. أعد روابط مواقع رسمية حقيقية فقط (https://www.brand.com)، لا روابط ميتة ولا تخمين. الأمثلة عالمية ومعروفة.' },
+      { role: 'user', content: `أعطني ${limit} أمثلة لمنصات/مواقع حقيقية تطابق: "${topic}". لكل واحدة: الاسم + الدومين الرسمي + سبب موجز.` },
+    ], {
+      type: 'object',
+      properties: {
+        items: { type: 'array', items: { type: 'object', properties: {
+          label: { type: 'string' }, url: { type: 'string' }, why: { type: 'string' },
+        }, required: ['label', 'url'] } },
+      }, required: ['items'],
+    });
+    return {
+      items: (data.items || []).slice(0, limit).map((it: any) => ({
+        label: it.label, url: it.url, why: it.why,
+        image: screenshotUrl(it.url), favicon: faviconUrl(it.url),
+      })),
+    };
+  } catch (e) { console.error('visual_examples', e); return { items: [] }; }
+}
+
+// ====== YouTube video search via Gemini grounding ======
+async function fetchVideos(topic: string, limit = 6) {
+  try {
+    const data = await callAI([
+      { role: 'system', content: 'أنت مساعد بحث فيديوهات يوتيوب. أعد روابط فيديوهات حقيقية فقط بصيغة https://www.youtube.com/watch?v=XXXXXX. لا تخترع.' },
+      { role: 'user', content: `ابحث عن ${limit} فيديوهات حقيقية في يوتيوب عن: "${topic}". أعد لكل فيديو: العنوان، الرابط الكامل، اسم القناة.` },
+    ], {
+      type: 'object',
+      properties: {
+        items: { type: 'array', items: { type: 'object', properties: {
+          title: { type: 'string' }, url: { type: 'string' }, channel: { type: 'string' },
+        }, required: ['title', 'url'] } },
+      }, required: ['items'],
+    });
+    return (data.items || []).slice(0, limit).map((v: any) => {
+      const id = (v.url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{6,})/) || [])[1];
+      return {
+        title: v.title, channel: v.channel, url: v.url, video_id: id,
+        thumbnail: id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '',
+        embed: id ? `https://www.youtube.com/embed/${id}` : null,
+      };
+    }).filter((v: any) => v.video_id);
+  } catch (e) { console.error('fetchVideos', e); return []; }
+}
+
+// ====== Image search via Gemini (returns direct image URLs) ======
+async function fetchImages(topic: string, limit = 9) {
+  try {
+    const data = await callAI([
+      { role: 'system', content: 'أنت مساعد بحث صور. أعد روابط مباشرة لصور حقيقية متاحة عامة (Unsplash, Pexels, Wikimedia). الروابط يجب أن تكون .jpg/.png/.webp مباشرة.' },
+      { role: 'user', content: `أعطني ${limit} روابط صور حقيقية ذات صلة بـ: "${topic}".` },
+    ], {
+      type: 'object',
+      properties: {
+        items: { type: 'array', items: { type: 'object', properties: {
+          url: { type: 'string' }, alt: { type: 'string' }, source: { type: 'string' },
+        }, required: ['url'] } },
+      }, required: ['items'],
+    });
+    return (data.items || []).slice(0, limit);
+  } catch (e) { console.error('fetchImages', e); return []; }
+}
+
 // Visual inspirations: returns named platforms with screenshot URLs
 async function fetchInspirations(topic: string, focus = 'overall') {
   const data = await callAI([
@@ -134,9 +200,7 @@ async function fetchInspirations(topic: string, focus = 'overall') {
         items: {
           type: 'object',
           properties: {
-            name: { type: 'string' },
-            url: { type: 'string' },
-            why: { type: 'string' },
+            name: { type: 'string' }, url: { type: 'string' }, why: { type: 'string' },
             tags: { type: 'array', items: { type: 'string' } },
           },
           required: ['name', 'url', 'why'],
