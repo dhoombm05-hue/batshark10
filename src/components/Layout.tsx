@@ -31,7 +31,7 @@ const navGroups: { groupLabel: string; groupIcon: React.ElementType; groupColor:
     groupIcon: LayoutDashboard,
     groupColor: 'section-finance',
     items: [
-      { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard, color: 'section-finance' },
+      { path: '/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard, color: 'section-finance' },
       { path: '/executive', label: 'اللوحة التنفيذية', icon: BarChart3, color: 'section-revenue' },
       { path: '/operational', label: 'التشغيل اليومي', icon: Activity, color: 'section-ai' },
       { path: '/projects-dashboard', label: 'لوحة المشاريع', icon: FolderKanban, color: 'section-forecast' },
