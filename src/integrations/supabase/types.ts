@@ -92,6 +92,8 @@ export type Database = {
           business_type: string | null
           created_at: string
           cta: string | null
+          duration_seconds: number
+          format: string
           hashtags: Json | null
           id: string
           name: string
@@ -101,6 +103,9 @@ export type Database = {
           templates: Json | null
           updated_at: string
           user_id: string | null
+          video_prompt: string | null
+          video_scenes: Json
+          voiceover_script: string | null
         }
         Insert: {
           ad_copy?: string | null
@@ -113,6 +118,8 @@ export type Database = {
           business_type?: string | null
           created_at?: string
           cta?: string | null
+          duration_seconds?: number
+          format?: string
           hashtags?: Json | null
           id?: string
           name: string
@@ -122,6 +129,9 @@ export type Database = {
           templates?: Json | null
           updated_at?: string
           user_id?: string | null
+          video_prompt?: string | null
+          video_scenes?: Json
+          voiceover_script?: string | null
         }
         Update: {
           ad_copy?: string | null
@@ -134,6 +144,8 @@ export type Database = {
           business_type?: string | null
           created_at?: string
           cta?: string | null
+          duration_seconds?: number
+          format?: string
           hashtags?: Json | null
           id?: string
           name?: string
@@ -143,6 +155,9 @@ export type Database = {
           templates?: Json | null
           updated_at?: string
           user_id?: string | null
+          video_prompt?: string | null
+          video_scenes?: Json
+          voiceover_script?: string | null
         }
         Relationships: []
       }
@@ -1405,68 +1420,92 @@ export type Database = {
       generated_platforms: {
         Row: {
           access_code: string | null
+          backend_link: string | null
           brand: Json | null
           build_level: string
           build_mode: string
           created_at: string
           features: Json | null
           id: string
+          is_for_sale: boolean
           is_public: boolean
+          layout_mode: string
           meta: Json | null
           name: string
           owner_email: string | null
+          owner_password: string | null
           pages: Json
           platform_type: string
+          product_images: Json
           requirements: Json
+          sale_price: number | null
           slug: string
           status: string
           tagline: string | null
+          theme_mode: string
           updated_at: string
           user_id: string | null
+          video_assets: Json
           views: number
         }
         Insert: {
           access_code?: string | null
+          backend_link?: string | null
           brand?: Json | null
           build_level?: string
           build_mode?: string
           created_at?: string
           features?: Json | null
           id?: string
+          is_for_sale?: boolean
           is_public?: boolean
+          layout_mode?: string
           meta?: Json | null
           name: string
           owner_email?: string | null
+          owner_password?: string | null
           pages?: Json
           platform_type?: string
+          product_images?: Json
           requirements?: Json
+          sale_price?: number | null
           slug: string
           status?: string
           tagline?: string | null
+          theme_mode?: string
           updated_at?: string
           user_id?: string | null
+          video_assets?: Json
           views?: number
         }
         Update: {
           access_code?: string | null
+          backend_link?: string | null
           brand?: Json | null
           build_level?: string
           build_mode?: string
           created_at?: string
           features?: Json | null
           id?: string
+          is_for_sale?: boolean
           is_public?: boolean
+          layout_mode?: string
           meta?: Json | null
           name?: string
           owner_email?: string | null
+          owner_password?: string | null
           pages?: Json
           platform_type?: string
+          product_images?: Json
           requirements?: Json
+          sale_price?: number | null
           slug?: string
           status?: string
           tagline?: string | null
+          theme_mode?: string
           updated_at?: string
           user_id?: string | null
+          video_assets?: Json
           views?: number
         }
         Relationships: []
@@ -2874,6 +2913,10 @@ export type Database = {
       verify_platform_access: {
         Args: { _access_code: string; _slug: string }
         Returns: boolean
+      }
+      verify_platform_owner: {
+        Args: { _owner_password: string; _slug: string }
+        Returns: string
       }
     }
     Enums: {
