@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   Search as SearchIcon, Sparkles, ArrowLeft, Globe, RefreshCw, ExternalLink,
-  Layout as LayoutIcon, Lightbulb, Layers,
+  Layout as LayoutIcon, Lightbulb, Layers, Image as ImageIcon, PlayCircle, Youtube,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
