@@ -154,10 +154,11 @@ export default function B99Showcase() {
           <p className="text-white/80 text-base mt-3 font-medium">مقاطع حية مصممة لتشرح ما يحدث داخل المنصة فعلياً</p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-5">
+        <div className="grid lg:grid-cols-2 gap-6">
           <ReelDashboard />
           <ReelChat />
           <ReelAlerts />
+          <ReelAdsStudio />
         </div>
       </section>
 
