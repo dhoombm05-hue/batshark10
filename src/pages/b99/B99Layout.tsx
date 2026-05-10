@@ -90,17 +90,17 @@ export default function B99Layout() {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/40 to-cyan-50/30 text-slate-900 relative overflow-x-hidden">
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 relative overflow-x-hidden">
       {/* Soft background blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
         <motion.div animate={{ x: [0, 40, 0], y: [0, -20, 0] }} transition={{ duration: 18, repeat: Infinity }}
-          className="absolute -top-40 -right-40 w-[700px] h-[700px] rounded-full bg-violet-200/40 blur-[120px]" />
+          className="absolute -top-40 -right-40 w-[700px] h-[700px] rounded-full bg-violet-600/15 blur-[120px]" />
         <motion.div animate={{ x: [0, -30, 0], y: [0, 30, 0] }} transition={{ duration: 22, repeat: Infinity }}
-          className="absolute top-1/3 -left-40 w-[600px] h-[600px] rounded-full bg-cyan-200/40 blur-[120px]" />
-        <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:48px_48px]" />
+          className="absolute top-1/3 -left-40 w-[600px] h-[600px] rounded-full bg-cyan-500/15 blur-[120px]" />
+        <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:48px_48px]" />
       </div>
 
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-slate-200/80 shadow-sm">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/85 border-b border-white/10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
           <button onClick={() => goWithBat('/b99')} className="flex items-center gap-2.5 shrink-0 group">
             <div className="relative">
