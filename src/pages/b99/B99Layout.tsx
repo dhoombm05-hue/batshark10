@@ -90,17 +90,17 @@ export default function B99Layout() {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/40 to-cyan-50/30 text-slate-900 relative overflow-x-hidden">
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 relative overflow-x-hidden">
       {/* Soft background blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
         <motion.div animate={{ x: [0, 40, 0], y: [0, -20, 0] }} transition={{ duration: 18, repeat: Infinity }}
-          className="absolute -top-40 -right-40 w-[700px] h-[700px] rounded-full bg-violet-200/40 blur-[120px]" />
+          className="absolute -top-40 -right-40 w-[700px] h-[700px] rounded-full bg-violet-600/15 blur-[120px]" />
         <motion.div animate={{ x: [0, -30, 0], y: [0, 30, 0] }} transition={{ duration: 22, repeat: Infinity }}
-          className="absolute top-1/3 -left-40 w-[600px] h-[600px] rounded-full bg-cyan-200/40 blur-[120px]" />
-        <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:48px_48px]" />
+          className="absolute top-1/3 -left-40 w-[600px] h-[600px] rounded-full bg-cyan-500/15 blur-[120px]" />
+        <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:48px_48px]" />
       </div>
 
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-slate-200/80 shadow-sm">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/85 border-b border-white/10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
           <button onClick={() => goWithBat('/b99')} className="flex items-center gap-2.5 shrink-0 group">
             <div className="relative">
@@ -108,8 +108,8 @@ export default function B99Layout() {
               <img src={logo} alt="بات شارك 99" className="relative w-10 h-10 drop-shadow-lg" />
             </div>
             <div className="hidden sm:block leading-tight">
-              <div className="font-black text-lg bg-gradient-to-l from-violet-700 via-fuchsia-600 to-cyan-600 bg-clip-text text-transparent">بات شارك 99</div>
-              <div className="text-[9px] text-slate-500 tracking-[0.3em] -mt-0.5">BUILD · CONNECT · SCALE</div>
+              <div className="font-black text-lg bg-gradient-to-l from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">بات شارك 99</div>
+              <div className="text-[9px] text-slate-400 tracking-[0.3em] -mt-0.5">BUILD · CONNECT · SCALE</div>
             </div>
           </button>
 
@@ -118,14 +118,14 @@ export default function B99Layout() {
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input value={searchQ} onChange={(e) => setSearchQ(e.target.value)}
                 placeholder="ابحث في كل المنصة..."
-                className="bg-white border-slate-200 pr-10 h-10 rounded-full text-sm shadow-sm" />
+                className="bg-slate-900/70 border-white/10 text-slate-100 placeholder:text-slate-500 pr-10 h-10 rounded-full text-sm shadow-sm" />
             </div>
           </form>
 
           <nav className="hidden xl:flex items-center gap-0.5">
             {NAV.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.exact}
-                className={({ isActive }) => `px-2.5 py-2 rounded-lg text-xs flex items-center gap-1.5 transition-all whitespace-nowrap ${isActive ? 'bg-violet-100 text-violet-700 font-bold' : 'text-slate-600 hover:text-violet-700 hover:bg-violet-50'}`}>
+                className={({ isActive }) => `px-2.5 py-2 rounded-lg text-xs flex items-center gap-1.5 transition-all whitespace-nowrap ${isActive ? 'bg-violet-500/20 text-violet-200 font-bold border border-violet-400/30' : 'text-slate-300 hover:text-violet-200 hover:bg-white/5'}`}>
                 <n.icon className="w-3.5 h-3.5" /> {n.label}
               </NavLink>
             ))}
@@ -133,15 +133,15 @@ export default function B99Layout() {
 
           <div className="ml-auto xl:ml-0 flex items-center gap-2">
             {identity ? (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 text-xs font-bold">
                 <ShieldCheck className="w-3 h-3" /> {identity.name}
               </div>
             ) : (
-              <Button variant="outline" size="sm" onClick={() => nav('/login')} className="bg-white border-slate-200 text-slate-700 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300 text-xs gap-1">
+              <Button variant="outline" size="sm" onClick={() => nav('/login')} className="bg-white/5 border-white/15 text-slate-100 hover:bg-violet-500/20 hover:text-violet-100 hover:border-violet-400/40 text-xs gap-1">
                 <LogIn className="w-3.5 h-3.5" /> دخول داخلي
               </Button>
             )}
-            <button onClick={() => setMenuOpen(!menuOpen)} className="xl:hidden p-2 rounded-lg bg-violet-100 text-violet-700">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="xl:hidden p-2 rounded-lg bg-violet-500/20 text-violet-200 border border-violet-400/30">
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
@@ -150,17 +150,17 @@ export default function B99Layout() {
         <AnimatePresence>
           {menuOpen && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              className="xl:hidden overflow-hidden border-t border-slate-200 bg-white">
+              className="xl:hidden overflow-hidden border-t border-white/10 bg-slate-950/95">
               <div className="p-4 space-y-1">
                 <form onSubmit={doSearch} className="mb-3">
                   <div className="relative">
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="بحث..." className="bg-slate-50 border-slate-200 pr-10 h-10 rounded-full" />
+                    <Input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="بحث..." className="bg-slate-900/70 border-white/10 text-slate-100 placeholder:text-slate-500 pr-10 h-10 rounded-full" />
                   </div>
                 </form>
                 {NAV.map((n) => (
                   <button key={n.to} onClick={() => goWithBat(n.to)}
-                    className="w-full text-right px-3 py-3 rounded-lg flex items-center gap-2 text-sm text-slate-700 hover:bg-violet-50 hover:text-violet-700">
+                    className="w-full text-right px-3 py-3 rounded-lg flex items-center gap-2 text-sm text-slate-200 hover:bg-violet-500/15 hover:text-violet-100">
                     <n.icon className="w-4 h-4" /> {n.label}
                   </button>
                 ))}
