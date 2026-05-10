@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Lightbulb, TrendingUp, Sparkles, Layers, Search, Star, ArrowLeft, Palette, MousePointerClick, Smartphone, Globe2, Zap, Eye, ShoppingBag, Calendar, Users, Briefcase, GraduationCap, Stethoscope, Utensils, Dumbbell, Plane, Home as HomeIcon, Wand2 } from 'lucide-react';
+import { Lightbulb, TrendingUp, Sparkles, Layers, Search, Star, ArrowLeft, Palette, MousePointerClick, Smartphone, Globe2, Zap, Eye, ShoppingBag, Calendar, Users, Briefcase, GraduationCap, Stethoscope, Utensils, Dumbbell, Plane, Home as HomeIcon, Wand2, ArrowRight, Rocket, Target, Gauge, CheckCircle2, FileCode2 } from 'lucide-react';
 
 /**
  * Inspiration & Self-Improvement Engine
@@ -266,21 +266,29 @@ export default function B99Inspiration() {
               </div>
             </div>
 
-            <Tabs defaultValue="suggestions">
+            <Tabs defaultValue="transformation">
               <TabsList className="bg-slate-900/80 border border-white/10 flex-wrap h-auto">
-                <TabsTrigger value="suggestions" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-amber-500 data-[state=active]:to-rose-500 data-[state=active]:text-white gap-1">
+                <TabsTrigger value="transformation" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-amber-500 data-[state=active]:to-rose-500 data-[state=active]:text-white gap-1">
+                  <Rocket className="w-4 h-4" /> خطة التحوّل الكاملة
+                </TabsTrigger>
+                <TabsTrigger value="suggestions" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white gap-1">
                   <Wand2 className="w-4 h-4" /> توصيات قابلة للتطبيق
                 </TabsTrigger>
-                <TabsTrigger value="mockups" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-cyan-500 data-[state=active]:to-violet-500 data-[state=active]:text-white gap-1">
+                <TabsTrigger value="mockups" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-violet-500 data-[state=active]:to-fuchsia-500 data-[state=active]:text-white gap-1">
                   <Palette className="w-4 h-4" /> توقعات بصرية
                 </TabsTrigger>
-                <TabsTrigger value="inspirations" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-violet-500 data-[state=active]:to-fuchsia-500 data-[state=active]:text-white gap-1">
+                <TabsTrigger value="inspirations" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white gap-1">
                   <Star className="w-4 h-4" /> مراجع عالمية
                 </TabsTrigger>
                 <TabsTrigger value="benchmarks" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-emerald-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white gap-1">
                   <TrendingUp className="w-4 h-4" /> معايير الأداء
                 </TabsTrigger>
               </TabsList>
+
+              {/* TRANSFORMATION — full pro explanation */}
+              <TabsContent value="transformation" className="mt-5 space-y-5">
+                <TransformationPlan biz={active} />
+              </TabsContent>
 
               <TabsContent value="suggestions" className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {active.suggestions.map((s, i) => (
