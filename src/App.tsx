@@ -50,6 +50,8 @@ import B99Dashboard from "./pages/b99/B99Dashboard";
 import B99Level1 from "./pages/b99/B99Level1";
 import B99Level2 from "./pages/b99/B99Level2";
 import B99Level3 from "./pages/b99/B99Level3";
+import B99Linked from "./pages/b99/B99Linked";
+import B99Inspiration from "./pages/b99/B99Inspiration";
 import PlatformView from "./pages/PlatformView";
 import PlatformEditor from "./pages/PlatformEditor";
 import NotFound from "./pages/NotFound";
