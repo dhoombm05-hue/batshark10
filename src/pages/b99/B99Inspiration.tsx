@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Lightbulb, TrendingUp, Sparkles, Layers, Search, Star, ArrowLeft, Palette, MousePointerClick, Smartphone, Globe2, Zap, Eye, ShoppingBag, Calendar, Users, Briefcase, GraduationCap, Stethoscope, Utensils, Dumbbell, Plane, Home as HomeIcon, Wand2 } from 'lucide-react';
+import { Lightbulb, TrendingUp, Sparkles, Layers, Search, Star, ArrowLeft, Palette, MousePointerClick, Smartphone, Globe2, Zap, Eye, ShoppingBag, Calendar, Users, Briefcase, GraduationCap, Stethoscope, Utensils, Dumbbell, Plane, Home as HomeIcon, Wand2, ArrowRight, Rocket, Target, Gauge, CheckCircle2, FileCode2 } from 'lucide-react';
 
 /**
  * Inspiration & Self-Improvement Engine
@@ -266,21 +266,29 @@ export default function B99Inspiration() {
               </div>
             </div>
 
-            <Tabs defaultValue="suggestions">
+            <Tabs defaultValue="transformation">
               <TabsList className="bg-slate-900/80 border border-white/10 flex-wrap h-auto">
-                <TabsTrigger value="suggestions" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-amber-500 data-[state=active]:to-rose-500 data-[state=active]:text-white gap-1">
+                <TabsTrigger value="transformation" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-amber-500 data-[state=active]:to-rose-500 data-[state=active]:text-white gap-1">
+                  <Rocket className="w-4 h-4" /> خطة التحوّل الكاملة
+                </TabsTrigger>
+                <TabsTrigger value="suggestions" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white gap-1">
                   <Wand2 className="w-4 h-4" /> توصيات قابلة للتطبيق
                 </TabsTrigger>
-                <TabsTrigger value="mockups" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-cyan-500 data-[state=active]:to-violet-500 data-[state=active]:text-white gap-1">
+                <TabsTrigger value="mockups" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-violet-500 data-[state=active]:to-fuchsia-500 data-[state=active]:text-white gap-1">
                   <Palette className="w-4 h-4" /> توقعات بصرية
                 </TabsTrigger>
-                <TabsTrigger value="inspirations" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-violet-500 data-[state=active]:to-fuchsia-500 data-[state=active]:text-white gap-1">
+                <TabsTrigger value="inspirations" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white gap-1">
                   <Star className="w-4 h-4" /> مراجع عالمية
                 </TabsTrigger>
                 <TabsTrigger value="benchmarks" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-emerald-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white gap-1">
                   <TrendingUp className="w-4 h-4" /> معايير الأداء
                 </TabsTrigger>
               </TabsList>
+
+              {/* TRANSFORMATION — full pro explanation */}
+              <TabsContent value="transformation" className="mt-5 space-y-5">
+                <TransformationPlan biz={active} />
+              </TabsContent>
 
               <TabsContent value="suggestions" className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {active.suggestions.map((s, i) => (
@@ -411,6 +419,140 @@ function MockupRender({ pattern }: { pattern: Mockup['pattern'] }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/* =============== TRANSFORMATION PLAN — Full professional explanation =============== */
+function TransformationPlan({ biz }: { biz: BizType }) {
+  const steps = [
+    { icon: Target, title: '١. التشخيص', detail: `نحلل موقعك الحالي مقابل أفضل ${biz.inspirations.length} منصات عالمية في قطاع "${biz.name}"، ونحدد الفجوات في تجربة المستخدم، الأداء، الموثوقية، والمحتوى.` },
+    { icon: Palette, title: '٢. الهوية البصرية', detail: `سنطبّق لوحة ألوان متناسقة مستوحاة من ${biz.inspirations[0]?.name || 'الأفضل في القطاع'}، مع تايبوغرافي محترف، تباعد مدروس، وأنماط تظليل/حركة دقيقة.` },
+    { icon: Layers, title: '٣. إعادة هيكلة الصفحات', detail: `سنحوّل الصفحة الرئيسية إلى نمط (${biz.mockups[0]?.title || 'Hero قوي'})، ونعيد ترتيب التدفّق ليصل الزائر للهدف خلال ثلاث نقرات أو أقل.` },
+    { icon: Zap, title: '٤. تطبيق التوصيات الذكية', detail: `سنفعّل ${biz.suggestions.length} توصية مباشرة على موقعك — منها ${biz.suggestions.filter(s => s.impact === 'عالي').length} ذات أثر عالي على معدل التحويل والاحتفاظ.` },
+    { icon: Smartphone, title: '٥. تجربة موبايل من المستوى العالمي', detail: 'إعادة بناء الواجهة بأسلوب Mobile-First، مع أزرار CTA ثابتة، تحميل سريع، وتفاعلات ناعمة بدون أي قفزات بصرية.' },
+    { icon: Gauge, title: '٦. الأداء والقياس', detail: `سنضبط الأداء ليصل لـ ${biz.benchmarks[0]?.v || 'معيار القطاع'} ونثبّت لوحة قياس حية تتابع كل مؤشر مهم في الباكند الخاص بك.` },
+  ];
+
+  const highCount = biz.suggestions.filter(s => s.impact === 'عالي').length;
+  const conversionLift = 12 + highCount * 6;
+  const speedLift = 30 + biz.suggestions.length * 3;
+  const retentionLift = 10 + Math.round(biz.inspirations.length * 4);
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-rose-500/10 to-transparent p-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Rocket className="w-5 h-5 text-amber-300" />
+          <h3 className="text-lg font-black text-white">شرح كامل: كيف سيتحوّل موقعك؟</h3>
+        </div>
+        <p className="text-sm text-slate-100 leading-relaxed">
+          بناءً على نوع عملك <b>"{biz.name}"</b>، إليك خطة التحوّل الكاملة. سنأخذك خطوة بخطوة من الشكل الحالي إلى موقع بمستوى منافسي القطاع العالميين،
+          مع توقّعات رقمية واقعية وملخّص لما سيتغيّر بصرياً وتقنياً وتسويقياً.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
+        <Card className="border-rose-400/30 bg-rose-500/[0.05] p-4 rounded-2xl">
+          <Badge className="bg-rose-500/20 text-rose-200 border-rose-400/40 text-[10px] font-black mb-2">قبل</Badge>
+          <h4 className="text-sm font-black text-white mb-2">الموقع الحالي (نمطي)</h4>
+          <ul className="text-xs text-slate-200 space-y-1.5 list-disc pr-4 leading-relaxed">
+            <li>هوية بصرية مشتّتة، ألوان غير متناسقة</li>
+            <li>صفحة رئيسية عامة بدون CTA واضح</li>
+            <li>تجربة موبايل ضعيفة، تحميل بطيء</li>
+            <li>لا يوجد دليل اجتماعي (مراجعات / شهادات)</li>
+            <li>تدفق تحويل متشتّت بأكثر من 5 نقرات</li>
+          </ul>
+        </Card>
+        <div className="hidden md:flex items-center justify-center text-amber-300">
+          <ArrowLeft className="w-10 h-10" />
+        </div>
+        <Card className="border-emerald-400/40 bg-gradient-to-br from-emerald-500/[0.10] to-cyan-500/[0.05] p-4 rounded-2xl">
+          <Badge className="bg-emerald-500/20 text-emerald-200 border-emerald-400/40 text-[10px] font-black mb-2">بعد</Badge>
+          <h4 className="text-sm font-black text-white mb-2">موقعك المُحوّل</h4>
+          <ul className="text-xs text-slate-100 space-y-1.5 list-disc pr-4 leading-relaxed">
+            <li>هوية بصرية متماسكة بنمط <b>{biz.inspirations[0]?.name || 'عالمي'}</b></li>
+            <li>Hero قوي يوصلك لقرار الشراء بنقرتين</li>
+            <li>تجربة Mobile-First بسرعة {biz.benchmarks[0]?.v || '< 2s'}</li>
+            <li>دليل اجتماعي ومراجعات في كل صفحة مفتاحية</li>
+            <li>تدفّق تحويل مُحسّن بثلاث نقرات أو أقل</li>
+          </ul>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <KpiDelta label="معدل التحويل" delta={`+${conversionLift}%`} hint="متوقّع خلال 30-60 يوم" tone="emerald" />
+        <KpiDelta label="سرعة التحميل" delta={`-${speedLift}%`} hint="زمن وصول أول محتوى" tone="cyan" />
+        <KpiDelta label="معدل الاحتفاظ" delta={`+${retentionLift}%`} hint="عودة الزائر خلال أسبوع" tone="amber" />
+      </div>
+
+      <div>
+        <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-300" /> ٦ خطوات تحوّل تنفّذ تلقائياً
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {steps.map((s, i) => (
+            <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+              className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent p-4 hover:border-amber-400/40 transition">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-lg">
+                  <s.icon className="w-4 h-4 text-white" />
+                </div>
+                <h5 className="text-sm font-black text-white">{s.title}</h5>
+              </div>
+              <p className="text-xs text-slate-200 leading-relaxed">{s.detail}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <Card className="border-white/10 bg-slate-950/60 p-4 rounded-2xl">
+        <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
+          <FileCode2 className="w-4 h-4 text-cyan-300" /> ما الذي ستحصل عليه فعلياً؟
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-200">
+          {[
+            'تطبيق نمط الـHero الجديد على الصفحة الرئيسية',
+            `${biz.mockups.length} نمط بصري جاهز للتبديل بنقرة`,
+            `${biz.suggestions.length} توصية مفعّلة + سجل تنفيذ`,
+            'هوية ألوان وتايبوغرافي موحّدة',
+            'بنية Mobile-First + تحسين سرعة',
+            'لوحة قياس مؤشرات أداء حيّة في الباكند',
+            'تحديث تلقائي شهري بأحدث الممارسات',
+            'نسخة احتياطية قبل كل تحوّل',
+          ].map((d, i) => (
+            <div key={i} className="flex items-start gap-2 rounded-lg bg-white/[0.03] border border-white/10 px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />
+              <span>{d}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-transparent p-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl">
+        <div>
+          <h3 className="text-lg font-black text-white">جاهز نبدأ التحوّل؟</h3>
+          <p className="text-xs text-slate-200 mt-1">سيُطبَّق التحوّل تدريجياً مع نسخة احتياطية، ولك زر التراجع في أي وقت.</p>
+        </div>
+        <Button asChild className="bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black gap-2 rounded-xl shadow-lg">
+          <a href="/b99/platforms"><Sparkles className="w-4 h-4" /> ابدأ التحوّل الآن <ArrowLeft className="w-4 h-4" /></a>
+        </Button>
+      </Card>
+    </div>
+  );
+}
+
+function KpiDelta({ label, delta, hint, tone }: { label: string; delta: string; hint: string; tone: 'emerald' | 'cyan' | 'amber' }) {
+  const tones: Record<string, string> = {
+    emerald: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200',
+    cyan: 'border-cyan-400/40 bg-cyan-500/10 text-cyan-200',
+    amber: 'border-amber-400/40 bg-amber-500/10 text-amber-200',
+  };
+  return (
+    <div className={`rounded-2xl border p-4 ${tones[tone]}`}>
+      <div className="text-[11px] font-black tracking-wider uppercase opacity-80">{label}</div>
+      <div className="text-3xl font-black text-white mt-1">{delta}</div>
+      <div className="text-[11px] mt-1 opacity-80">{hint}</div>
     </div>
   );
 }
