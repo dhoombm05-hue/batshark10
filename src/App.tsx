@@ -83,6 +83,8 @@ const App = () => (
               <Route path="ads" element={<B99Ads />} />
               <Route path="platforms" element={<B99Platforms />} />
               <Route path="search" element={<B99Search />} />
+              <Route path="linked" element={<B99Linked />} />
+              <Route path="inspiration" element={<B99Inspiration />} />
               <Route path="dashboard" element={<B99Dashboard />} />
             </Route>
             <Route path="/setup" element={<SetupCEO />} />

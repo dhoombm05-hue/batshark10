@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Sparkles, Megaphone, Layers, LayoutDashboard, Home, Menu, X, Send, Bot, LogIn, ShieldCheck, Plug } from 'lucide-react';
+import { Search, Sparkles, Megaphone, Layers, LayoutDashboard, Home, Menu, X, Send, Bot, LogIn, ShieldCheck, Plug, Link2, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,8 @@ const NAV = [
   { to: '/b99/level/3', icon: Bot, label: 'وظّف بات شارك' },
   { to: '/b99/ads', icon: Megaphone, label: 'استوديو الإعلانات' },
   { to: '/b99/platforms', icon: Layers, label: 'منصاتي' },
+  { to: '/b99/linked', icon: Link2, label: 'المنصات المربوطة' },
+  { to: '/b99/inspiration', icon: Lightbulb, label: 'محرك الإلهام' },
   { to: '/b99/search', icon: Search, label: 'البحث الذكي' },
 ];
 
