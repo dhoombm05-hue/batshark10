@@ -217,8 +217,8 @@ export default function B99Inspiration() {
   }, [q]);
 
   return (
-    <div className="space-y-6">
-      <header className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/80 p-6">
+    <div dir="rtl" className="space-y-6 bg-slate-950 text-slate-100 p-5 md:p-7 rounded-[2rem] border border-slate-800 shadow-2xl">
+      <header className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-6">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,hsl(45_90%_55%/0.18),transparent_40%),radial-gradient(circle_at_85%_5%,hsl(280_90%_55%/0.18),transparent_40%)]" />
         <div className="relative">
           <Badge className="mb-2 border-white/20 bg-white/10 text-white">Self-Improvement Engine</Badge>
