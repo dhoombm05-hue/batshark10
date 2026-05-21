@@ -5,33 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Lightbulb, TrendingUp, Sparkles, Layers, Search, Star, ArrowLeft, Palette, MousePointerClick, Smartphone, Globe2, Zap, Eye, ShoppingBag, Calendar, Users, Briefcase, GraduationCap, Stethoscope, Utensils, Dumbbell, Plane, Home as HomeIcon, Wand2, ArrowRight, Rocket, Target, Gauge, CheckCircle2, FileCode2 } from 'lucide-react';
+import {
+  Lightbulb, TrendingUp, Sparkles, Layers, Search, Star, ArrowLeft, Palette,
+  Smartphone, Zap, ShoppingBag, Calendar, Users, Briefcase, GraduationCap,
+  Utensils, Dumbbell, Wand2, Rocket, Target, Gauge, CheckCircle2, FileCode2,
+} from 'lucide-react';
 
-/**
- * Inspiration & Self-Improvement Engine
- * — قاعدة بيانات ضخمة لكل نوع موقع، مع توقعات بصرية واقتراحات ذكية قابلة للتطبيق.
- */
-
-type Suggestion = {
-  title: string;
-  detail: string;
-  impact: 'عالي' | 'متوسط' | 'منخفض';
-  area: string;
-};
-
-type Mockup = {
-  title: string;
-  hint: string;
-  // CSS gradient + simple visual
-  bg: string;
-  pattern: 'cards' | 'split' | 'hero' | 'grid' | 'list';
-};
-
+type Suggestion = { title: string; detail: string; impact: 'عالي' | 'متوسط' | 'منخفض'; area: string };
+type Mockup = { title: string; hint: string; pattern: 'cards' | 'split' | 'hero' | 'grid' | 'list' };
 type BizType = {
-  key: string;
-  name: string;
-  icon: any;
-  color: string;
+  key: string; name: string; icon: any;
   benchmarks: { label: string; v: string; sub: string }[];
   inspirations: { name: string; why: string; tags: string[] }[];
   suggestions: Suggestion[];
@@ -39,306 +22,245 @@ type BizType = {
 };
 
 const DB: BizType[] = [
-  {
-    key: 'ecommerce', name: 'متجر إلكتروني', icon: ShoppingBag, color: 'from-amber-500 to-rose-500',
+  { key: 'ecommerce', name: 'متجر إلكتروني', icon: ShoppingBag,
     benchmarks: [
-      { label: 'وقت تحميل الصفحة', v: '< 1.8s', sub: 'Amazon/Shopify benchmark' },
-      { label: 'معدل تحويل صحي', v: '2.5% – 4%', sub: 'متوسط القطاع' },
-      { label: 'سلة مهجورة', v: '< 65%', sub: 'الأفضل في فئته' },
+      { label: 'وقت التحميل', v: '< 1.8s', sub: 'Amazon/Shopify' },
+      { label: 'معدل التحويل', v: '2.5–4%', sub: 'صحي' },
+      { label: 'سلة مهجورة', v: '< 65%', sub: 'الأفضل' },
     ],
     inspirations: [
-      { name: 'Apple Store', why: 'صور منتج عملاقة + تايبوغرافي نظيف + فيديو منتج 360°', tags: ['Hero ضخم', 'سرد بصري', 'حركة سلسة'] },
-      { name: 'Allbirds', why: 'لوحة ألوان طبيعية، تركيز على القصة، سلة بنقرة واحدة', tags: ['Storytelling', 'Sustainability', 'One-click'] },
-      { name: 'Aesop', why: 'تباعد مدروس، خط أنيق، صفحات منتج كقصيدة', tags: ['Editorial', 'Whitespace', 'Premium'] },
+      { name: 'Apple Store', why: 'صور منتج عملاقة + تايبوغرافي نظيف', tags: ['Hero ضخم', 'سرد بصري'] },
+      { name: 'Allbirds', why: 'لوحة طبيعية، قصة، سلة بنقرة', tags: ['Storytelling', 'One-click'] },
+      { name: 'Aesop', why: 'تباعد مدروس، خط أنيق', tags: ['Editorial', 'Premium'] },
     ],
     suggestions: [
-      { title: 'صور منتج 360° + Zoom', detail: 'أضف عرض دوار للمنتج وزووم بدقة عالية، يرفع معدل التحويل +28%', impact: 'عالي', area: 'صفحة منتج' },
-      { title: 'Sticky Add-to-Cart', detail: 'زر إضافة للسلة يبقى ظاهراً عند التمرير على الموبايل', impact: 'عالي', area: 'تجربة موبايل' },
-      { title: 'Cross-sell ذكي', detail: 'اقتراح "أضيف معه" بناءً على تحليل سلال العملاء — يرفع متوسط الطلب +18%', impact: 'متوسط', area: 'سلة' },
-      { title: 'Trust badges + مراجعات', detail: 'شارات أمان الدفع + 5 مراجعات على الأقل بكل صفحة منتج', impact: 'عالي', area: 'ثقة' },
-      { title: 'Checkout بخطوة واحدة', detail: 'دمج العنوان + الدفع + الملخص في صفحة واحدة', impact: 'عالي', area: 'دفع' },
+      { title: 'صور 360° + Zoom', detail: 'يرفع التحويل +28%', impact: 'عالي', area: 'منتج' },
+      { title: 'Sticky Add-to-Cart', detail: 'زر إضافة ثابت بالموبايل', impact: 'عالي', area: 'موبايل' },
+      { title: 'Cross-sell ذكي', detail: 'أضيف معه — يرفع AOV +18%', impact: 'متوسط', area: 'سلة' },
+      { title: 'Trust badges + مراجعات', detail: '5 مراجعات بكل صفحة', impact: 'عالي', area: 'ثقة' },
+      { title: 'Checkout بخطوة', detail: 'دمج العنوان + الدفع', impact: 'عالي', area: 'دفع' },
     ],
     mockups: [
-      { title: 'Hero مع منتج عائم', hint: 'صورة كبيرة، عنوان غامق، CTA ذهبي', bg: 'from-amber-200 to-rose-200', pattern: 'hero' },
-      { title: 'شبكة منتجات أنيقة', hint: '3 أعمدة، ظل ناعم، Hover Reveal', bg: 'from-slate-100 to-slate-200', pattern: 'grid' },
-      { title: 'Split: قصة + شراء', hint: 'نصف صورة، نصف نص + سعر', bg: 'from-stone-100 to-amber-100', pattern: 'split' },
-    ],
-  },
-  {
-    key: 'booking', name: 'حجوزات ومواعيد', icon: Calendar, color: 'from-cyan-500 to-blue-500',
+      { title: 'Hero مع منتج عائم', hint: 'صورة كبيرة + CTA', pattern: 'hero' },
+      { title: 'شبكة منتجات', hint: '3 أعمدة، Hover Reveal', pattern: 'grid' },
+      { title: 'Split: قصة + شراء', hint: 'نصف صورة، نصف نص', pattern: 'split' },
+    ] },
+  { key: 'booking', name: 'حجوزات', icon: Calendar,
     benchmarks: [
-      { label: 'خطوات الحجز', v: '≤ 3 خطوات', sub: 'الأفضل في فئته' },
-      { label: 'إلغاء قبل ساعتين', v: '< 8%', sub: 'صحي' },
-      { label: 'إعادة حجز خلال شهر', v: '> 35%', sub: 'ولاء قوي' },
+      { label: 'خطوات الحجز', v: '≤ 3', sub: 'الأفضل' },
+      { label: 'إعادة حجز', v: '> 35%', sub: 'ولاء قوي' },
     ],
     inspirations: [
-      { name: 'Calendly', why: 'تقويم فوري بنقرة، اختيار وقت بدون تسجيل', tags: ['Frictionless', 'Calendar-first'] },
-      { name: 'OpenTable', why: 'نتائج فورية + تقييمات + خرائط', tags: ['Search', 'Reviews', 'Maps'] },
-      { name: 'Booking.com', why: 'فلاتر قوية + نُدرة (متبقي 2 فقط) + صور حقيقية', tags: ['Urgency', 'Filters', 'Photos'] },
+      { name: 'Calendly', why: 'تقويم فوري بنقرة', tags: ['Frictionless'] },
+      { name: 'OpenTable', why: 'نتائج + تقييمات + خرائط', tags: ['Search', 'Maps'] },
+      { name: 'Booking.com', why: 'فلاتر + نُدرة + صور', tags: ['Urgency', 'Filters'] },
     ],
     suggestions: [
-      { title: 'تقويم مرئي بألوان الإتاحة', detail: 'أخضر متاح، أصفر مزدحم، أحمر ممتلئ — بدل قوائم نصية', impact: 'عالي', area: 'UX' },
-      { title: 'تذكير WhatsApp تلقائي', detail: 'قبل الموعد بساعة + رابط إعادة الجدولة بضغطة', impact: 'عالي', area: 'احتفاظ' },
-      { title: 'حجز سريع من الإعلان', detail: 'رابط Deep-link يفتح وقت محدد جاهز للتأكيد', impact: 'متوسط', area: 'تسويق' },
+      { title: 'تقويم بألوان الإتاحة', detail: 'بدل قوائم نصية', impact: 'عالي', area: 'UX' },
+      { title: 'تذكير WhatsApp', detail: 'قبل بساعة + جدولة', impact: 'عالي', area: 'احتفاظ' },
     ],
     mockups: [
-      { title: 'Hero بتقويم مدمج', hint: 'العنوان + اختر يوم/وقت في نفس الشاشة', bg: 'from-cyan-100 to-blue-200', pattern: 'hero' },
-      { title: 'بطاقات الخدمة', hint: 'سعر + مدة + زر "احجز"', bg: 'from-sky-100 to-cyan-100', pattern: 'cards' },
-    ],
-  },
-  {
-    key: 'restaurant', name: 'مطعم / كافيه', icon: Utensils, color: 'from-rose-500 to-amber-500',
-    benchmarks: [
-      { label: 'صور قائمة الطعام', v: '> 80% من الأصناف', sub: 'الأفضل' },
-      { label: 'وقت الإعداد', v: 'يظهر بوضوح', sub: 'يقلل الشكاوى 40%' },
-    ],
+      { title: 'Hero بتقويم مدمج', hint: 'اختر يوم في نفس الشاشة', pattern: 'hero' },
+      { title: 'بطاقات الخدمة', hint: 'سعر + مدة + احجز', pattern: 'cards' },
+    ] },
+  { key: 'restaurant', name: 'مطعم', icon: Utensils,
+    benchmarks: [{ label: 'صور القائمة', v: '> 80%', sub: 'الأفضل' }],
     inspirations: [
-      { name: 'Sweetgreen', why: 'بناء وجبة تفاعلي + ألوان طازجة', tags: ['Build-a-bowl', 'Fresh palette'] },
-      { name: 'Chipotle', why: 'تطبيق بسيط + طلب مسبق + مكافآت', tags: ['Order-ahead', 'Loyalty'] },
+      { name: 'Sweetgreen', why: 'بناء وجبة تفاعلي', tags: ['Build-a-bowl'] },
+      { name: 'Chipotle', why: 'طلب مسبق + مكافآت', tags: ['Order-ahead'] },
     ],
     suggestions: [
-      { title: 'صور احترافية لكل صنف', detail: 'صور علوية بإضاءة طبيعية + خلفية موحدة', impact: 'عالي', area: 'محتوى' },
-      { title: 'منيو حسب الفئة + فلاتر', detail: 'نباتي / حار / صحي / حلا — يقلل وقت اتخاذ القرار', impact: 'متوسط', area: 'UX' },
-      { title: 'برنامج ولاء بسيط', detail: 'كل 10 وجبات = وجبة مجانية + إشعار تلقائي', impact: 'عالي', area: 'احتفاظ' },
+      { title: 'صور احترافية', detail: 'علوية بإضاءة طبيعية', impact: 'عالي', area: 'محتوى' },
+      { title: 'فلاتر منيو', detail: 'نباتي/حار/صحي', impact: 'متوسط', area: 'UX' },
     ],
-    mockups: [
-      { title: 'Hero طعام دافئ', hint: 'صورة طبق + CTA "اطلب الآن"', bg: 'from-orange-100 to-rose-200', pattern: 'hero' },
-      { title: 'منيو بصري', hint: 'شبكة صور + سعر + إضافة سريعة', bg: 'from-amber-100 to-orange-200', pattern: 'grid' },
-    ],
-  },
-  {
-    key: 'fitness', name: 'لياقة / نادي رياضي', icon: Dumbbell, color: 'from-emerald-500 to-cyan-500',
-    benchmarks: [
-      { label: 'معدل تجديد الاشتراك', v: '> 70%', sub: 'صحي' },
-      { label: 'حضور أسبوعي', v: '≥ 3 مرات', sub: 'مؤشر ولاء' },
-    ],
+    mockups: [{ title: 'Hero طعام دافئ', hint: 'طبق + اطلب الآن', pattern: 'hero' }] },
+  { key: 'fitness', name: 'نادي رياضي', icon: Dumbbell,
+    benchmarks: [{ label: 'تجديد الاشتراك', v: '> 70%', sub: 'صحي' }],
     inspirations: [
-      { name: 'Equinox', why: 'تصوير سينمائي + تجربة Premium', tags: ['Cinematic', 'Premium'] },
-      { name: 'ClassPass', why: 'حجز فصول من تطبيق واحد', tags: ['Multi-gym', 'Easy booking'] },
+      { name: 'Equinox', why: 'سينمائي + Premium', tags: ['Cinematic'] },
+      { name: 'ClassPass', why: 'حجز فصول من تطبيق', tags: ['Easy booking'] },
     ],
     suggestions: [
-      { title: 'فيديوهات تمارين قصيرة', detail: '15-30 ثانية لكل تمرين، تشغل تلقائياً عند التمرير', impact: 'عالي', area: 'محتوى' },
-      { title: 'تتبع تقدم العميل', detail: 'لوحة شخصية تعرض الحضور والتقدم — يرفع الاحتفاظ +25%', impact: 'عالي', area: 'احتفاظ' },
+      { title: 'فيديوهات تمارين قصيرة', detail: '15-30 ثانية تلقائياً', impact: 'عالي', area: 'محتوى' },
+      { title: 'تتبع تقدم العميل', detail: 'لوحة شخصية للحضور', impact: 'عالي', area: 'احتفاظ' },
     ],
-    mockups: [
-      { title: 'Hero فيديو ديناميكي', hint: 'فيديو خلفية + شعار + CTA كبير', bg: 'from-emerald-200 to-cyan-200', pattern: 'hero' },
-    ],
-  },
-  {
-    key: 'service', name: 'منصة خدمات', icon: Briefcase, color: 'from-violet-500 to-fuchsia-500',
-    benchmarks: [
-      { label: 'وقت الرد على طلب', v: '< 4 ساعات', sub: 'يرفع الحجز 3×' },
-      { label: 'مراجعات بـ 5 نجوم', v: '> 75%', sub: 'هدف' },
-    ],
+    mockups: [{ title: 'Hero فيديو ديناميكي', hint: 'فيديو خلفية + CTA', pattern: 'hero' }] },
+  { key: 'service', name: 'خدمات', icon: Briefcase,
+    benchmarks: [{ label: 'وقت الرد', v: '< 4 ساعات', sub: 'يرفع الحجز 3×' }],
     inspirations: [
-      { name: 'Fiverr', why: 'بطاقات خدمة موحدة + سعر بادئ + تقييم', tags: ['Cards', 'Starting price', 'Reviews'] },
-      { name: 'Thumbtack', why: 'مطابقة ذكية + عرض أسعار', tags: ['Matching', 'Quotes'] },
+      { name: 'Fiverr', why: 'بطاقات + سعر بادئ + تقييم', tags: ['Cards'] },
+      { name: 'Thumbtack', why: 'مطابقة ذكية + عروض', tags: ['Matching'] },
     ],
     suggestions: [
-      { title: 'باقات بثلاث مستويات', detail: 'Basic / Pro / Premium — يبسّط القرار ويرفع الـAOV', impact: 'عالي', area: 'تسعير' },
-      { title: 'نموذج طلب ذكي', detail: '5 أسئلة فقط، يولّد عرض سعر تلقائي', impact: 'متوسط', area: 'تحويل' },
+      { title: '٣ باقات', detail: 'Basic/Pro/Premium', impact: 'عالي', area: 'تسعير' },
+      { title: 'نموذج طلب ذكي', detail: '5 أسئلة + عرض تلقائي', impact: 'متوسط', area: 'تحويل' },
     ],
-    mockups: [
-      { title: 'Split Hero خدمة', hint: 'نص + صورة عمل سابق', bg: 'from-violet-200 to-fuchsia-200', pattern: 'split' },
-      { title: '3 باقات سعرية', hint: 'بطاقة وسطى مميزة بلون', bg: 'from-violet-100 to-purple-200', pattern: 'cards' },
-    ],
-  },
-  {
-    key: 'community', name: 'مجتمع / مدونة', icon: Users, color: 'from-fuchsia-500 to-pink-500',
-    benchmarks: [
-      { label: 'أعضاء نشطين شهرياً', v: '> 30%', sub: 'مؤشر صحة' },
-      { label: 'مدة الجلسة', v: '> 4 دقائق', sub: 'محتوى جذّاب' },
-    ],
+    mockups: [{ title: '3 باقات سعرية', hint: 'بطاقة وسطى مميزة', pattern: 'cards' }] },
+  { key: 'community', name: 'مجتمع/مدونة', icon: Users,
+    benchmarks: [{ label: 'نشطين شهرياً', v: '> 30%', sub: 'صحة' }],
     inspirations: [
-      { name: 'Substack', why: 'تركيز على القراءة + اشتراك بضغطة', tags: ['Reading-first', 'Subscription'] },
-      { name: 'Discord', why: 'قنوات + أدوار + هوية مرئية', tags: ['Channels', 'Roles'] },
+      { name: 'Substack', why: 'تركيز على القراءة', tags: ['Reading-first'] },
+      { name: 'Discord', why: 'قنوات + أدوار', tags: ['Channels'] },
     ],
-    suggestions: [
-      { title: 'صفحة كاتب احترافية', detail: 'سيرة + كل المقالات + اشتراك مباشر', impact: 'متوسط', area: 'محتوى' },
-      { title: 'إشعارات RSS + Email', detail: 'لكل قسم اشتراك مستقل', impact: 'متوسط', area: 'احتفاظ' },
-    ],
-    mockups: [
-      { title: 'List مقالات', hint: 'صورة + عنوان + كاتب + وقت قراءة', bg: 'from-pink-100 to-fuchsia-200', pattern: 'list' },
-    ],
-  },
-  {
-    key: 'startup', name: 'شركة ناشئة / SaaS', icon: Sparkles, color: 'from-indigo-500 to-violet-500',
-    benchmarks: [
-      { label: 'Trial → Paid', v: '> 25%', sub: 'صحي' },
-      { label: 'Time-to-Value', v: '< 5 دقائق', sub: 'الأفضل' },
-    ],
+    suggestions: [{ title: 'صفحة كاتب', detail: 'سيرة + اشتراك', impact: 'متوسط', area: 'محتوى' }],
+    mockups: [{ title: 'List مقالات', hint: 'صورة + عنوان + وقت', pattern: 'list' }] },
+  { key: 'startup', name: 'SaaS', icon: Sparkles,
+    benchmarks: [{ label: 'Trial → Paid', v: '> 25%', sub: 'صحي' }],
     inspirations: [
-      { name: 'Linear', why: 'تايبوغرافي + موشن دقيق + Dark mode', tags: ['Typography', 'Motion', 'Dark'] },
-      { name: 'Stripe', why: 'وثائق + أمثلة كود حية', tags: ['Docs', 'Live demos'] },
-      { name: 'Notion', why: 'منتج تفاعلي في الصفحة الأولى', tags: ['Product-led', 'Interactive'] },
+      { name: 'Linear', why: 'تايبوغرافي + موشن دقيق', tags: ['Motion'] },
+      { name: 'Stripe', why: 'وثائق + أمثلة حية', tags: ['Docs'] },
     ],
     suggestions: [
-      { title: 'Demo تفاعلي بدون تسجيل', detail: 'يجرب المنتج فوراً + يحفظ تقدمه عند التسجيل', impact: 'عالي', area: 'تحويل' },
-      { title: 'Logos عملاء + شهادات', detail: 'أعلى الصفحة + بطاقات مقتطفات', impact: 'متوسط', area: 'ثقة' },
-      { title: 'Pricing مقارن وشفاف', detail: 'جدول مقارنة + FAQ + ضمان استرجاع', impact: 'عالي', area: 'تسعير' },
+      { title: 'Demo تفاعلي', detail: 'يجرب فوراً بدون تسجيل', impact: 'عالي', area: 'تحويل' },
+      { title: 'Logos عملاء', detail: 'أعلى الصفحة', impact: 'متوسط', area: 'ثقة' },
     ],
-    mockups: [
-      { title: 'Hero عنوان غامق', hint: 'عنوان عملاق + sub + CTA + screenshot', bg: 'from-indigo-100 to-violet-200', pattern: 'hero' },
-      { title: 'Logo cloud', hint: 'شعارات عملاء بصف واحد', bg: 'from-slate-100 to-indigo-100', pattern: 'list' },
-    ],
-  },
-  {
-    key: 'education', name: 'تعليم / كورسات', icon: GraduationCap, color: 'from-blue-500 to-cyan-500',
-    benchmarks: [
-      { label: 'إكمال الكورس', v: '> 60%', sub: 'هدف' },
-      { label: 'تقييم بعد الكورس', v: '> 4.5/5', sub: 'تميّز' },
-    ],
+    mockups: [{ title: 'Hero عنوان غامق', hint: 'عملاق + sub + CTA', pattern: 'hero' }] },
+  { key: 'education', name: 'كورسات', icon: GraduationCap,
+    benchmarks: [{ label: 'إكمال الكورس', v: '> 60%', sub: 'هدف' }],
     inspirations: [
-      { name: 'Coursera', why: 'مسارات منظمة + شهادات + مدرسون معروفون', tags: ['Paths', 'Certificates'] },
-      { name: 'MasterClass', why: 'إنتاج سينمائي + خبراء عالميون', tags: ['Cinematic', 'Experts'] },
+      { name: 'Coursera', why: 'مسارات + شهادات', tags: ['Paths'] },
+      { name: 'MasterClass', why: 'إنتاج سينمائي', tags: ['Cinematic'] },
     ],
-    suggestions: [
-      { title: 'مقدمة فيديو لكل كورس', detail: '60-90 ثانية تعرض المدرس والمحتوى', impact: 'عالي', area: 'تحويل' },
-      { title: 'مسارات تعليمية', detail: 'اربط الكورسات في رحلة واحدة', impact: 'متوسط', area: 'محتوى' },
-    ],
-    mockups: [
-      { title: 'بطاقات كورس', hint: 'صورة + مدرس + مدة + سعر', bg: 'from-blue-100 to-cyan-200', pattern: 'cards' },
-    ],
-  },
+    suggestions: [{ title: 'مقدمة فيديو 60 ثانية', detail: 'لكل كورس', impact: 'عالي', area: 'تحويل' }],
+    mockups: [{ title: 'بطاقات كورس', hint: 'صورة + مدرس + سعر', pattern: 'cards' }] },
 ];
-
-const ALL_TYPES = DB;
 
 export default function B99Inspiration() {
   const [active, setActive] = useState<BizType>(DB[0]);
   const [q, setQ] = useState('');
 
-  useEffect(() => { document.title = 'محرك الإلهام والتطوير الذاتي — بات شارك 99'; }, []);
+  useEffect(() => { document.title = 'محرك الإلهام — بات شارك 99'; }, []);
 
   const filtered = useMemo(() => {
-    if (!q.trim()) return ALL_TYPES;
-    const t = q.trim().toLowerCase();
-    return ALL_TYPES.filter(b => b.name.includes(q) || b.key.includes(t));
+    if (!q.trim()) return DB;
+    return DB.filter(b => b.name.includes(q) || b.key.includes(q.toLowerCase()));
   }, [q]);
 
   return (
-    <div dir="rtl" className="space-y-6">
-      <header className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,hsl(45_90%_55%/0.18),transparent_40%),radial-gradient(circle_at_85%_5%,hsl(280_90%_55%/0.18),transparent_40%)]" />
-        <div className="relative">
-          <Badge className="mb-2 border-white/20 bg-white/10 text-white">Self-Improvement Engine</Badge>
-          <h1 className="flex items-center gap-2 text-2xl md:text-4xl font-black">
-            <Lightbulb className="w-7 h-7 text-amber-300" /> محرك الإلهام والتطوير الذاتي
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm text-slate-200 leading-relaxed">
-            قاعدة بيانات حيّة لكل نوع موقع — تحليل أفضل المنصات العالمية، توصيات قابلة للتطبيق، وتوقعات بصرية لشكل موقعك بعد التطوير.
-            اختر نوع عملك وستحصل على خطة تحسين كاملة.
-          </p>
-          <div className="mt-4 flex items-center gap-2 max-w-md">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث في أنواع الأعمال..." className="bg-slate-950/70 border-white/15 text-white pr-10" />
-            </div>
+    <div dir="rtl" className="space-y-6 text-black">
+      {/* HEADER — B/W with blue accent */}
+      <Card className="border-2 border-black bg-white p-6 rounded-none shadow-[6px_6px_0_0_#000]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <Badge className="mb-2 bg-blue-600 text-white border-0 text-[10px] tracking-[0.2em] font-black rounded-none">SELF-IMPROVEMENT ENGINE</Badge>
+            <h1 className="flex items-center gap-2 text-2xl md:text-3xl font-black text-black">
+              <Lightbulb className="w-7 h-7 text-blue-600" /> محرك الإلهام والتطوير
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-black/70 leading-relaxed font-medium">
+              قاعدة بيانات حيّة لكل نوع موقع — تحليل أفضل المنصات، توصيات قابلة للتطبيق، وتوقعات بصرية.
+            </p>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/50" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث في أنواع الأعمال..."
+              className="bg-white border-2 border-black text-black pr-10 rounded-none h-11 font-medium" />
           </div>
         </div>
-      </header>
+      </Card>
 
-      {/* Types selector */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-        {filtered.map(t => (
-          <button key={t.key} onClick={() => setActive(t)}
-            className={`group relative p-3 rounded-2xl border transition-all overflow-hidden text-right ${active.key === t.key ? 'border-amber-400/60 bg-amber-500/10' : 'border-white/10 bg-white/[0.03] hover:border-white/30'}`}>
-            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center mb-2 shadow-lg`}>
-              <t.icon className="w-4 h-4 text-white" />
-            </div>
-            <div className="text-sm font-black text-white">{t.name}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">{t.suggestions.length} توصية · {t.inspirations.length} مرجع</div>
-          </button>
-        ))}
+      {/* Types grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+        {filtered.map(t => {
+          const isActive = active.key === t.key;
+          return (
+            <button key={t.key} onClick={() => setActive(t)}
+              className={`group p-4 text-right border-2 transition-all ${
+                isActive
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-[4px_4px_0_0_#000]'
+                  : 'bg-white text-black border-black hover:shadow-[3px_3px_0_0_#000]'
+              }`}>
+              <div className={`w-10 h-10 flex items-center justify-center mb-2 border-2 ${isActive ? 'bg-white border-white text-blue-600' : 'bg-black border-black text-white'}`}>
+                <t.icon className="w-5 h-5" />
+              </div>
+              <div className="text-sm font-black">{t.name}</div>
+              <div className={`text-[10px] mt-0.5 ${isActive ? 'text-white/80' : 'text-black/60'}`}>
+                {t.suggestions.length} توصية · {t.inspirations.length} مرجع
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Active type detail */}
       <AnimatePresence mode="wait">
-        <motion.div key={active.key} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-          <Card className="border-white/15 bg-slate-950/70 p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${active.color} flex items-center justify-center shadow-lg`}>
-                <active.icon className="w-6 h-6 text-white" />
+        <motion.div key={active.key} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+          <Card className="border-2 border-black bg-white p-5 rounded-none shadow-[4px_4px_0_0_#000]">
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b-2 border-black">
+              <div className="w-12 h-12 bg-blue-600 text-white border-2 border-black flex items-center justify-center">
+                <active.icon className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-[11px] tracking-wider text-amber-300 font-black">BUSINESS TYPE</div>
-                <h2 className="text-2xl font-black text-white">{active.name}</h2>
+                <div className="text-[11px] tracking-[0.25em] text-blue-600 font-black">BUSINESS TYPE</div>
+                <h2 className="text-2xl font-black text-black">{active.name}</h2>
               </div>
             </div>
 
             <Tabs defaultValue="transformation">
-              <TabsList className="bg-slate-900/80 border border-white/10 flex-wrap h-auto">
-                <TabsTrigger value="transformation" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-amber-500 data-[state=active]:to-rose-500 data-[state=active]:text-white gap-1">
-                  <Rocket className="w-4 h-4" /> خطة التحوّل الكاملة
-                </TabsTrigger>
-                <TabsTrigger value="suggestions" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white gap-1">
-                  <Wand2 className="w-4 h-4" /> توصيات قابلة للتطبيق
-                </TabsTrigger>
-                <TabsTrigger value="mockups" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-violet-500 data-[state=active]:to-fuchsia-500 data-[state=active]:text-white gap-1">
-                  <Palette className="w-4 h-4" /> توقعات بصرية
-                </TabsTrigger>
-                <TabsTrigger value="inspirations" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white gap-1">
-                  <Star className="w-4 h-4" /> مراجع عالمية
-                </TabsTrigger>
-                <TabsTrigger value="benchmarks" className="data-[state=active]:bg-gradient-to-l data-[state=active]:from-emerald-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white gap-1">
-                  <TrendingUp className="w-4 h-4" /> معايير الأداء
-                </TabsTrigger>
+              <TabsList className="bg-white border-2 border-black h-auto flex-wrap gap-1 p-1 rounded-none">
+                {[
+                  { v: 'transformation', i: Rocket, l: 'خطة التحوّل' },
+                  { v: 'suggestions', i: Wand2, l: 'توصيات' },
+                  { v: 'mockups', i: Palette, l: 'توقعات بصرية' },
+                  { v: 'inspirations', i: Star, l: 'مراجع' },
+                  { v: 'benchmarks', i: TrendingUp, l: 'معايير' },
+                ].map(t => (
+                  <TabsTrigger key={t.v} value={t.v}
+                    className="data-[state=active]:bg-black data-[state=active]:text-white text-black font-black gap-1 rounded-none px-3 py-2">
+                    <t.i className="w-4 h-4" /> {t.l}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
-              {/* TRANSFORMATION — full pro explanation */}
-              <TabsContent value="transformation" className="mt-5 space-y-5">
+              <TabsContent value="transformation" className="mt-5">
                 <TransformationPlan biz={active} />
               </TabsContent>
 
               <TabsContent value="suggestions" className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                {active.suggestions.map((s, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                    className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent p-4 hover:border-amber-400/40 transition">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <Badge className={`${s.impact === 'عالي' ? 'bg-rose-500/20 text-rose-200 border-rose-400/30' : s.impact === 'متوسط' ? 'bg-amber-500/20 text-amber-200 border-amber-400/30' : 'bg-slate-500/20 text-slate-200 border-slate-400/30'} text-[10px] font-black border`}>
-                        أثر {s.impact}
-                      </Badge>
-                      <span className="text-[10px] text-slate-400 font-bold">{s.area}</span>
-                    </div>
-                    <h3 className="text-sm font-black text-white mb-1">{s.title}</h3>
-                    <p className="text-xs text-slate-300 leading-relaxed">{s.detail}</p>
-                    <Button size="sm" className="mt-3 bg-amber-500/20 text-amber-100 hover:bg-amber-500/30 border border-amber-400/30 gap-1 h-8 text-xs">
-                      <Sparkles className="w-3 h-3" /> طبّق على موقعي
-                    </Button>
-                  </motion.div>
-                ))}
+                {active.suggestions.map((s, i) => {
+                  const tone = s.impact === 'عالي' ? 'bg-red-600' : s.impact === 'متوسط' ? 'bg-blue-600' : 'bg-black';
+                  return (
+                    <motion.div key={i} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                      className="border-2 border-black bg-white p-4 hover:shadow-[3px_3px_0_0_#000] transition-shadow">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className={`${tone} text-white border-0 rounded-none text-[10px] font-black`}>أثر {s.impact}</Badge>
+                        <span className="text-[10px] text-black/60 font-bold">{s.area}</span>
+                      </div>
+                      <h3 className="text-sm font-black text-black mb-1">{s.title}</h3>
+                      <p className="text-xs text-black/70 leading-relaxed">{s.detail}</p>
+                      <Button size="sm" className="mt-3 bg-green-600 hover:bg-green-700 text-white border-2 border-black rounded-none gap-1 h-8 text-xs font-bold">
+                        <Sparkles className="w-3 h-3" /> طبّق على موقعي
+                      </Button>
+                    </motion.div>
+                  );
+                })}
               </TabsContent>
 
               <TabsContent value="mockups" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {active.mockups.map((m, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                      className="rounded-2xl border border-white/10 overflow-hidden bg-slate-950/50">
-                      <div className={`h-44 bg-gradient-to-br ${m.bg} relative overflow-hidden`}>
+                    <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                      className="border-2 border-black overflow-hidden bg-white">
+                      <div className="h-44 bg-white border-b-2 border-black relative">
                         <MockupRender pattern={m.pattern} />
                       </div>
                       <div className="p-3">
-                        <div className="text-sm font-black text-white">{m.title}</div>
-                        <div className="text-[11px] text-slate-300 mt-0.5">{m.hint}</div>
+                        <div className="text-sm font-black text-black">{m.title}</div>
+                        <div className="text-[11px] text-black/60 mt-0.5">{m.hint}</div>
                       </div>
                     </motion.div>
                   ))}
-                </div>
-                <div className="mt-4 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-100">
-                  <Lightbulb className="inline w-4 h-4 ml-1" /> هذه توقعات بصرية مبنية على أفضل ممارسات قطاع <b>{active.name}</b>. اختر النمط الأقرب لرؤيتك واطلب من بات شارك تطبيقه.
                 </div>
               </TabsContent>
 
               <TabsContent value="inspirations" className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {active.inspirations.map((insp, i) => (
-                  <div key={i} className="rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/[0.06] to-transparent p-4">
+                  <div key={i} className="border-2 border-black bg-white p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                      <h3 className="text-base font-black text-white">{insp.name}</h3>
+                      <Star className="w-4 h-4 text-blue-600 fill-blue-600" />
+                      <h3 className="text-base font-black text-black">{insp.name}</h3>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed mb-2">{insp.why}</p>
+                    <p className="text-xs text-black/70 leading-relaxed mb-2">{insp.why}</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {insp.tags.map((t, j) => <Badge key={j} variant="outline" className="border-white/15 bg-white/5 text-[10px] text-slate-200">{t}</Badge>)}
+                      {insp.tags.map((t, j) => <Badge key={j} className="border-2 border-black bg-white text-[10px] text-black rounded-none font-bold">{t}</Badge>)}
                     </div>
                   </div>
                 ))}
@@ -346,11 +268,11 @@ export default function B99Inspiration() {
 
               <TabsContent value="benchmarks" className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
                 {active.benchmarks.map((b, i) => (
-                  <Card key={i} className="border-emerald-400/20 bg-emerald-500/5 p-4 text-center">
-                    <div className="text-[11px] text-emerald-300 font-bold mb-1">{b.label}</div>
-                    <div className="text-3xl font-black text-white">{b.v}</div>
-                    <div className="text-[10px] text-slate-300 mt-1">{b.sub}</div>
-                  </Card>
+                  <div key={i} className="border-2 border-black bg-white p-4 text-center">
+                    <div className="text-[11px] text-blue-600 font-black mb-1">{b.label}</div>
+                    <div className="text-3xl font-black text-black">{b.v}</div>
+                    <div className="text-[10px] text-black/60 mt-1">{b.sub}</div>
+                  </div>
                 ))}
               </TabsContent>
             </Tabs>
@@ -358,12 +280,12 @@ export default function B99Inspiration() {
         </motion.div>
       </AnimatePresence>
 
-      <Card className="border-amber-400/30 bg-gradient-to-r from-amber-500/10 via-rose-500/5 to-transparent p-5 flex flex-wrap items-center justify-between gap-4">
+      <Card className="border-2 border-black bg-black text-white p-5 flex flex-wrap items-center justify-between gap-4 rounded-none">
         <div>
-          <h3 className="text-lg font-black text-white">جاهز لتطبيق التوصيات على موقعك؟</h3>
-          <p className="text-xs text-slate-200 mt-1">انتقل إلى Platform Studio واطلب التحسينات مباشرة.</p>
+          <h3 className="text-lg font-black">جاهز لتطبيق التوصيات على موقعك؟</h3>
+          <p className="text-xs text-white/70 mt-1">انتقل لاستوديو المنصات ونفّذ التحوّل مباشرة.</p>
         </div>
-        <Button asChild className="bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black gap-2">
+        <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-white rounded-none font-black gap-2">
           <a href="/b99/platforms"><Sparkles className="w-4 h-4" /> ابدأ التطوير <ArrowLeft className="w-4 h-4" /></a>
         </Button>
       </Card>
@@ -372,50 +294,47 @@ export default function B99Inspiration() {
 }
 
 function MockupRender({ pattern }: { pattern: Mockup['pattern'] }) {
-  const block = 'bg-white/80 rounded shadow-sm';
+  const block = 'bg-black/10 border border-black/30';
   if (pattern === 'hero') return (
     <div className="absolute inset-0 p-4 flex flex-col">
-      <div className="h-3 w-24 bg-white/70 rounded mb-3" />
-      <div className="h-6 w-3/4 bg-white rounded mb-2" />
-      <div className="h-3 w-1/2 bg-white/70 rounded mb-4" />
-      <div className="h-7 w-28 bg-slate-900/80 rounded-lg" />
-      <div className="absolute right-4 bottom-4 w-20 h-20 bg-white rounded-2xl shadow-lg" />
+      <div className="h-3 w-24 bg-black/30 mb-3" />
+      <div className="h-6 w-3/4 bg-black mb-2" />
+      <div className="h-3 w-1/2 bg-black/40 mb-4" />
+      <div className="h-7 w-28 bg-blue-600" />
+      <div className="absolute right-4 bottom-4 w-20 h-20 bg-black/10 border-2 border-black" />
     </div>
   );
   if (pattern === 'split') return (
     <div className="absolute inset-0 p-4 flex gap-3">
       <div className="flex-1 flex flex-col gap-2">
-        <div className="h-3 w-24 bg-white/70 rounded" />
-        <div className="h-5 w-full bg-white rounded" />
-        <div className="h-3 w-3/4 bg-white/70 rounded" />
-        <div className="h-7 w-24 bg-slate-900/80 rounded-lg mt-auto" />
+        <div className="h-3 w-24 bg-black/30" />
+        <div className="h-5 w-full bg-black" />
+        <div className="h-3 w-3/4 bg-black/40" />
+        <div className="h-7 w-24 bg-blue-600 mt-auto" />
       </div>
-      <div className="w-1/2 bg-white/80 rounded-xl shadow" />
+      <div className="w-1/2 bg-black/15 border-2 border-black" />
     </div>
   );
   if (pattern === 'grid') return (
     <div className="absolute inset-0 p-3 grid grid-cols-3 gap-2">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className={`${block} h-full`} />
-      ))}
+      {Array.from({ length: 6 }).map((_, i) => <div key={i} className={`${block} h-full`} />)}
     </div>
   );
   if (pattern === 'cards') return (
     <div className="absolute inset-0 p-3 flex gap-2 items-stretch">
       {[0,1,2].map(i => (
-        <div key={i} className={`${block} flex-1 ${i === 1 ? 'scale-105 shadow-md ring-2 ring-slate-900/30' : ''}`} />
+        <div key={i} className={`${block} flex-1 ${i === 1 ? 'bg-blue-600/20 border-blue-600 border-2' : ''}`} />
       ))}
     </div>
   );
-  // list
   return (
     <div className="absolute inset-0 p-3 flex flex-col gap-2">
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="flex gap-2 items-center">
-          <div className="w-10 h-10 bg-white/80 rounded-lg" />
+          <div className="w-10 h-10 bg-black/15 border border-black/30" />
           <div className="flex-1 flex flex-col gap-1">
-            <div className="h-2.5 w-3/4 bg-white/80 rounded" />
-            <div className="h-2 w-1/2 bg-white/60 rounded" />
+            <div className="h-2.5 w-3/4 bg-black/40" />
+            <div className="h-2 w-1/2 bg-black/25" />
           </div>
         </div>
       ))}
@@ -423,136 +342,121 @@ function MockupRender({ pattern }: { pattern: Mockup['pattern'] }) {
   );
 }
 
-/* =============== TRANSFORMATION PLAN — Full professional explanation =============== */
 function TransformationPlan({ biz }: { biz: BizType }) {
   const steps = [
-    { icon: Target, title: '١. التشخيص', detail: `نحلل موقعك الحالي مقابل أفضل ${biz.inspirations.length} منصات عالمية في قطاع "${biz.name}"، ونحدد الفجوات في تجربة المستخدم، الأداء، الموثوقية، والمحتوى.` },
-    { icon: Palette, title: '٢. الهوية البصرية', detail: `سنطبّق لوحة ألوان متناسقة مستوحاة من ${biz.inspirations[0]?.name || 'الأفضل في القطاع'}، مع تايبوغرافي محترف، تباعد مدروس، وأنماط تظليل/حركة دقيقة.` },
-    { icon: Layers, title: '٣. إعادة هيكلة الصفحات', detail: `سنحوّل الصفحة الرئيسية إلى نمط (${biz.mockups[0]?.title || 'Hero قوي'})، ونعيد ترتيب التدفّق ليصل الزائر للهدف خلال ثلاث نقرات أو أقل.` },
-    { icon: Zap, title: '٤. تطبيق التوصيات الذكية', detail: `سنفعّل ${biz.suggestions.length} توصية مباشرة على موقعك — منها ${biz.suggestions.filter(s => s.impact === 'عالي').length} ذات أثر عالي على معدل التحويل والاحتفاظ.` },
-    { icon: Smartphone, title: '٥. تجربة موبايل من المستوى العالمي', detail: 'إعادة بناء الواجهة بأسلوب Mobile-First، مع أزرار CTA ثابتة، تحميل سريع، وتفاعلات ناعمة بدون أي قفزات بصرية.' },
-    { icon: Gauge, title: '٦. الأداء والقياس', detail: `سنضبط الأداء ليصل لـ ${biz.benchmarks[0]?.v || 'معيار القطاع'} ونثبّت لوحة قياس حية تتابع كل مؤشر مهم في الباكند الخاص بك.` },
+    { icon: Target, title: '١. التشخيص', detail: `نحلل موقعك الحالي مقابل أفضل ${biz.inspirations.length} منصات عالمية في "${biz.name}"، ونحدد الفجوات في UX والأداء والمحتوى.` },
+    { icon: Palette, title: '٢. الهوية البصرية', detail: `سنطبّق لوحة ألوان متناسقة مستوحاة من ${biz.inspirations[0]?.name || 'الأفضل'}، مع تايبوغرافي محترف.` },
+    { icon: Layers, title: '٣. إعادة هيكلة', detail: `سنحوّل الرئيسية إلى نمط (${biz.mockups[0]?.title || 'Hero قوي'})، الزائر يصل للهدف خلال ٣ نقرات.` },
+    { icon: Zap, title: '٤. تطبيق التوصيات', detail: `سنفعّل ${biz.suggestions.length} توصية — منها ${biz.suggestions.filter(s => s.impact === 'عالي').length} عالية الأثر.` },
+    { icon: Smartphone, title: '٥. تجربة Mobile-First', detail: 'CTA ثابت، تحميل سريع، تفاعلات ناعمة بدون قفزات.' },
+    { icon: Gauge, title: '٦. الأداء والقياس', detail: `أداء يصل لـ ${biz.benchmarks[0]?.v || 'معيار القطاع'} + لوحة قياس حية.` },
   ];
 
-  const highCount = biz.suggestions.filter(s => s.impact === 'عالي').length;
-  const conversionLift = 12 + highCount * 6;
-  const speedLift = 30 + biz.suggestions.length * 3;
-  const retentionLift = 10 + Math.round(biz.inspirations.length * 4);
+  const high = biz.suggestions.filter(s => s.impact === 'عالي').length;
+  const cLift = 12 + high * 6;
+  const sLift = 30 + biz.suggestions.length * 3;
+  const rLift = 10 + Math.round(biz.inspirations.length * 4);
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/15 via-rose-500/10 to-transparent p-5">
+      <div className="border-2 border-black bg-blue-600 text-white p-5">
         <div className="flex items-center gap-2 mb-2">
-          <Rocket className="w-5 h-5 text-amber-300" />
-          <h3 className="text-lg font-black text-white">شرح كامل: كيف سيتحوّل موقعك؟</h3>
+          <Rocket className="w-5 h-5" />
+          <h3 className="text-lg font-black">شرح كامل: كيف سيتحوّل موقعك؟</h3>
         </div>
-        <p className="text-sm text-slate-100 leading-relaxed">
-          بناءً على نوع عملك <b>"{biz.name}"</b>، إليك خطة التحوّل الكاملة. سنأخذك خطوة بخطوة من الشكل الحالي إلى موقع بمستوى منافسي القطاع العالميين،
-          مع توقّعات رقمية واقعية وملخّص لما سيتغيّر بصرياً وتقنياً وتسويقياً.
+        <p className="text-sm leading-relaxed">
+          بناءً على نوع عملك <b>"{biz.name}"</b> — خطة تحوّل كاملة من الشكل الحالي إلى موقع بمستوى منافسي القطاع العالميين،
+          مع توقّعات رقمية واقعية لما سيتغيّر بصرياً وتقنياً وتسويقياً.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
-        <Card className="border-rose-400/30 bg-rose-500/[0.05] p-4 rounded-2xl">
-          <Badge className="bg-rose-500/20 text-rose-200 border-rose-400/40 text-[10px] font-black mb-2">قبل</Badge>
-          <h4 className="text-sm font-black text-white mb-2">الموقع الحالي (نمطي)</h4>
-          <ul className="text-xs text-slate-200 space-y-1.5 list-disc pr-4 leading-relaxed">
+        <Card className="border-2 border-black bg-white p-4 rounded-none">
+          <Badge className="bg-red-600 text-white border-0 rounded-none text-[10px] font-black mb-2">قبل</Badge>
+          <h4 className="text-sm font-black text-black mb-2">الموقع الحالي</h4>
+          <ul className="text-xs text-black/80 space-y-1.5 list-disc pr-4 leading-relaxed font-medium">
             <li>هوية بصرية مشتّتة، ألوان غير متناسقة</li>
             <li>صفحة رئيسية عامة بدون CTA واضح</li>
             <li>تجربة موبايل ضعيفة، تحميل بطيء</li>
-            <li>لا يوجد دليل اجتماعي (مراجعات / شهادات)</li>
-            <li>تدفق تحويل متشتّت بأكثر من 5 نقرات</li>
+            <li>لا يوجد دليل اجتماعي</li>
+            <li>تدفّق بـ ٥+ نقرات</li>
           </ul>
         </Card>
-        <div className="hidden md:flex items-center justify-center text-amber-300">
+        <div className="hidden md:flex items-center justify-center text-black">
           <ArrowLeft className="w-10 h-10" />
         </div>
-        <Card className="border-emerald-400/40 bg-gradient-to-br from-emerald-500/[0.10] to-cyan-500/[0.05] p-4 rounded-2xl">
-          <Badge className="bg-emerald-500/20 text-emerald-200 border-emerald-400/40 text-[10px] font-black mb-2">بعد</Badge>
-          <h4 className="text-sm font-black text-white mb-2">موقعك المُحوّل</h4>
-          <ul className="text-xs text-slate-100 space-y-1.5 list-disc pr-4 leading-relaxed">
-            <li>هوية بصرية متماسكة بنمط <b>{biz.inspirations[0]?.name || 'عالمي'}</b></li>
-            <li>Hero قوي يوصلك لقرار الشراء بنقرتين</li>
-            <li>تجربة Mobile-First بسرعة {biz.benchmarks[0]?.v || '< 2s'}</li>
-            <li>دليل اجتماعي ومراجعات في كل صفحة مفتاحية</li>
-            <li>تدفّق تحويل مُحسّن بثلاث نقرات أو أقل</li>
+        <Card className="border-2 border-black bg-green-600 text-white p-4 rounded-none">
+          <Badge className="bg-white text-green-700 border-0 rounded-none text-[10px] font-black mb-2">بعد</Badge>
+          <h4 className="text-sm font-black mb-2">موقعك المُحوّل</h4>
+          <ul className="text-xs space-y-1.5 list-disc pr-4 leading-relaxed font-medium">
+            <li>هوية متماسكة بنمط <b>{biz.inspirations[0]?.name || 'عالمي'}</b></li>
+            <li>Hero قوي يوصل لقرار الشراء بنقرتين</li>
+            <li>Mobile-First بسرعة {biz.benchmarks[0]?.v || '< 2s'}</li>
+            <li>دليل اجتماعي بكل صفحة</li>
+            <li>تدفّق بثلاث نقرات أو أقل</li>
           </ul>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <KpiDelta label="معدل التحويل" delta={`+${conversionLift}%`} hint="متوقّع خلال 30-60 يوم" tone="emerald" />
-        <KpiDelta label="سرعة التحميل" delta={`-${speedLift}%`} hint="زمن وصول أول محتوى" tone="cyan" />
-        <KpiDelta label="معدل الاحتفاظ" delta={`+${retentionLift}%`} hint="عودة الزائر خلال أسبوع" tone="amber" />
+        <KpiDelta label="معدل التحويل" delta={`+${cLift}%`} hint="خلال 30-60 يوم" color="green" />
+        <KpiDelta label="سرعة التحميل" delta={`-${sLift}%`} hint="زمن أول محتوى" color="blue" />
+        <KpiDelta label="معدل الاحتفاظ" delta={`+${rLift}%`} hint="عودة خلال أسبوع" color="red" />
       </div>
 
       <div>
-        <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-300" /> ٦ خطوات تحوّل تنفّذ تلقائياً
+        <h4 className="text-sm font-black text-black mb-3 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-green-600" /> ٦ خطوات تنفّذ تلقائياً
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {steps.map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-              className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent p-4 hover:border-amber-400/40 transition">
+            <motion.div key={i} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+              className="border-2 border-black bg-white p-4 hover:shadow-[3px_3px_0_0_#000] transition-shadow">
               <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-lg">
-                  <s.icon className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 bg-blue-600 text-white border-2 border-black flex items-center justify-center">
+                  <s.icon className="w-4 h-4" />
                 </div>
-                <h5 className="text-sm font-black text-white">{s.title}</h5>
+                <h5 className="text-sm font-black text-black">{s.title}</h5>
               </div>
-              <p className="text-xs text-slate-200 leading-relaxed">{s.detail}</p>
+              <p className="text-xs text-black/75 leading-relaxed font-medium">{s.detail}</p>
             </motion.div>
           ))}
         </div>
       </div>
 
-      <Card className="border-white/10 bg-slate-950/60 p-4 rounded-2xl">
-        <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-          <FileCode2 className="w-4 h-4 text-cyan-300" /> ما الذي ستحصل عليه فعلياً؟
+      <Card className="border-2 border-black bg-white p-4 rounded-none">
+        <h4 className="text-sm font-black text-black mb-3 flex items-center gap-2">
+          <FileCode2 className="w-4 h-4 text-blue-600" /> ما الذي ستحصل عليه فعلياً
         </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-black font-medium">
           {[
-            'تطبيق نمط الـHero الجديد على الصفحة الرئيسية',
-            `${biz.mockups.length} نمط بصري جاهز للتبديل بنقرة`,
+            'تطبيق نمط الـHero الجديد',
+            `${biz.mockups.length} نمط بصري للتبديل بنقرة`,
             `${biz.suggestions.length} توصية مفعّلة + سجل تنفيذ`,
             'هوية ألوان وتايبوغرافي موحّدة',
             'بنية Mobile-First + تحسين سرعة',
-            'لوحة قياس مؤشرات أداء حيّة في الباكند',
-            'تحديث تلقائي شهري بأحدث الممارسات',
+            'لوحة قياس مؤشرات حيّة',
+            'تحديث تلقائي شهري',
             'نسخة احتياطية قبل كل تحوّل',
           ].map((d, i) => (
-            <div key={i} className="flex items-start gap-2 rounded-lg bg-white/[0.03] border border-white/10 px-3 py-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />
+            <div key={i} className="flex items-start gap-2 border-2 border-black px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
               <span>{d}</span>
             </div>
           ))}
         </div>
       </Card>
-
-      <Card className="border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-transparent p-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl">
-        <div>
-          <h3 className="text-lg font-black text-white">جاهز نبدأ التحوّل؟</h3>
-          <p className="text-xs text-slate-200 mt-1">سيُطبَّق التحوّل تدريجياً مع نسخة احتياطية، ولك زر التراجع في أي وقت.</p>
-        </div>
-        <Button asChild className="bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black gap-2 rounded-xl shadow-lg">
-          <a href="/b99/platforms"><Sparkles className="w-4 h-4" /> ابدأ التحوّل الآن <ArrowLeft className="w-4 h-4" /></a>
-        </Button>
-      </Card>
     </div>
   );
 }
 
-function KpiDelta({ label, delta, hint, tone }: { label: string; delta: string; hint: string; tone: 'emerald' | 'cyan' | 'amber' }) {
-  const tones: Record<string, string> = {
-    emerald: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200',
-    cyan: 'border-cyan-400/40 bg-cyan-500/10 text-cyan-200',
-    amber: 'border-amber-400/40 bg-amber-500/10 text-amber-200',
-  };
+function KpiDelta({ label, delta, hint, color }: { label: string; delta: string; hint: string; color: 'green' | 'blue' | 'red' }) {
+  const bg = color === 'green' ? 'bg-green-600' : color === 'blue' ? 'bg-blue-600' : 'bg-red-600';
   return (
-    <div className={`rounded-2xl border p-4 ${tones[tone]}`}>
-      <div className="text-[11px] font-black tracking-wider uppercase opacity-80">{label}</div>
-      <div className="text-3xl font-black text-white mt-1">{delta}</div>
-      <div className="text-[11px] mt-1 opacity-80">{hint}</div>
+    <div className={`border-2 border-black ${bg} text-white p-4`}>
+      <div className="text-[11px] font-black tracking-wider uppercase opacity-90">{label}</div>
+      <div className="text-3xl font-black mt-1">{delta}</div>
+      <div className="text-[11px] mt-1 opacity-90">{hint}</div>
     </div>
   );
 }
