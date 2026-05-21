@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useOutletContext } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -383,60 +383,13 @@ export default function B99Ads() {
                 )}
               </Card>
 
-              {/* STORYBOARD */}
+              {/* PLAYABLE AD — real generated images + browser TTS */}
               {scenes.length > 0 && (
-                <Card className="border border-slate-200 bg-white p-6 rounded-3xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <LayersIcon className="w-4 h-4 text-amber-600" />
-                      <span className="text-[10px] tracking-[0.3em] text-amber-700 font-black uppercase">Storyboard</span>
-                      <span className="text-sm font-black text-slate-900">— مشهد بمشهد</span>
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {(campaign.duration_seconds || form.duration) + 'ث'} · {FORMATS.find(f=>f.value===(campaign.format || form.format))?.label}
-                    </div>
-                  </div>
-
-                  <div className={cn(
-                    'relative mx-auto rounded-3xl overflow-hidden border border-slate-200 bg-slate-950',
-                    form.format === 'vertical' ? 'aspect-[9/16] max-w-[280px]'
-                      : form.format === 'square' ? 'aspect-square max-w-md'
-                      : 'aspect-video max-w-2xl'
-                  )}>
-                    <AnimatePresence mode="wait">
-                      <motion.div key={sceneIdx}
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
-                        className="absolute inset-0 flex flex-col justify-between p-5"
-                        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #422006 100%)' }}>
-                        <div className="text-[10px] text-amber-300/80 uppercase tracking-widest">مشهد {sceneIdx + 1} / {scenes.length}</div>
-                        <div className="space-y-2 text-center">
-                          <div className="text-2xl md:text-3xl font-black text-white drop-shadow-lg leading-tight">
-                            {scenes[sceneIdx].on_screen_text || scenes[sceneIdx].text_on_screen}
-                          </div>
-                          <div className="text-xs text-amber-100/70 italic">{scenes[sceneIdx].visual}</div>
-                        </div>
-                        <div className="rounded-lg bg-black/40 border border-amber-300/20 p-2.5">
-                          <div className="text-[10px] text-amber-300 mb-0.5 flex items-center gap-1"><Mic className="w-3 h-3" /> صوت</div>
-                          <div className="text-xs text-white">{scenes[sceneIdx].voiceover || scenes[sceneIdx].voice}</div>
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between">
-                    <Button size="sm" variant="ghost" onClick={() => setSceneIdx((i) => Math.max(0, i - 1))} disabled={sceneIdx === 0}>
-                      <ChevronRight className="w-4 h-4" /> السابق
-                    </Button>
-                    <div className="flex gap-1">
-                      {scenes.map((_: any, i: number) => (
-                        <div key={i} className={cn('w-2 h-2 rounded-full transition', i === sceneIdx ? 'bg-amber-500 w-5' : 'bg-slate-300')} />
-                      ))}
-                    </div>
-                    <Button size="sm" variant="ghost" onClick={() => setSceneIdx((i) => Math.min(scenes.length - 1, i + 1))} disabled={sceneIdx === scenes.length - 1}>
-                      التالي <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Card>
+                <PlayableAd
+                  scenes={scenes}
+                  format={campaign.format || form.format}
+                  voiceoverScript={campaign.voiceover_script}
+                />
               )}
 
               {/* AI Video Prompt */}
@@ -591,3 +544,102 @@ function Info({ label, value, icon: Icon }: any) {
     </div>
   );
 }
+
+/* ===== Playable Ad — real generated images + browser TTS voiceover ===== */
+function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format: string; voiceoverScript?: string }) {
+  const [idx, setIdx] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const timerRef = useRef<any>(null);
+
+  const aspect = format === 'vertical' ? 'aspect-[9/16] max-w-[300px]'
+    : format === 'square' ? 'aspect-square max-w-md' : 'aspect-video max-w-2xl';
+
+  const stop = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    window.speechSynthesis?.cancel();
+    setPlaying(false);
+  };
+
+  const playFrom = (start: number) => {
+    if (!('speechSynthesis' in window)) { toast.error('المتصفح لا يدعم تشغيل الصوت'); return; }
+    setPlaying(true);
+    setIdx(start);
+    const runScene = (i: number) => {
+      if (i >= scenes.length) { setPlaying(false); return; }
+      setIdx(i);
+      const s = scenes[i];
+      const dur = Math.max(2, Number(s.duration_sec) || 4);
+      const text = s.voice || s.on_screen_text || '';
+      window.speechSynthesis.cancel();
+      if (text) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ar-SA';
+        u.rate = 1.0;
+        window.speechSynthesis.speak(u);
+      }
+      timerRef.current = setTimeout(() => runScene(i + 1), dur * 1000);
+    };
+    runScene(start);
+  };
+
+  useEffect(() => () => stop(), []);
+
+  const cur = scenes[idx] || {};
+
+  return (
+    <div className="bg-white border-2 border-black p-5 shadow-[4px_4px_0_0_#000]">
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm font-black text-black">▶ إعلانك جاهز — تشغيل فعلي</div>
+        <div className="flex items-center gap-2">
+          {playing ? (
+            <Button size="sm" onClick={stop} className="bg-red-600 hover:bg-red-700 text-white rounded-none border-2 border-black font-bold">إيقاف</Button>
+          ) : (
+            <Button size="sm" onClick={() => playFrom(0)} className="bg-green-600 hover:bg-green-700 text-white rounded-none border-2 border-black font-bold gap-1">
+              <Play className="w-4 h-4" /> تشغيل
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className={cn('relative mx-auto overflow-hidden bg-black border-2 border-black', aspect)}>
+        {cur.image_url ? (
+          <img src={cur.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-black" />
+        )}
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute top-3 right-3 text-[10px] px-2 py-1 bg-black/70 text-white font-bold">
+          مشهد {idx + 1} / {scenes.length}
+        </div>
+        <div className="absolute inset-x-0 bottom-0 p-4 text-center">
+          <div className="text-2xl md:text-3xl font-black text-white drop-shadow-[2px_2px_0_#000] leading-tight">
+            {cur.on_screen_text || ''}
+          </div>
+        </div>
+        {/* progress bar */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-white/20">
+          <div className="h-full bg-blue-500 transition-all" style={{ width: `${((idx + 1) / scenes.length) * 100}%` }} />
+        </div>
+      </div>
+
+      {/* Scene thumbs */}
+      <div className="mt-4 grid grid-cols-3 md:grid-cols-6 gap-2">
+        {scenes.map((s: any, i: number) => (
+          <button key={i} onClick={() => { stop(); setIdx(i); }}
+            className={cn('relative aspect-square overflow-hidden border-2', i === idx ? 'border-blue-600' : 'border-black')}>
+            {s.image_url
+              ? <img src={s.image_url} alt="" className="w-full h-full object-cover" />
+              : <div className="w-full h-full bg-black/80" />}
+            <div className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[9px] py-0.5 text-center font-bold">{i + 1}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 text-xs text-black/70">
+        <strong>الصوت:</strong> {cur.voice || '—'}
+      </div>
+    </div>
+  );
+}
+

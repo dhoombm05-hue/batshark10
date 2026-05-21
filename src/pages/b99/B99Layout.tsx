@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Sparkles, Megaphone, Layers, LayoutDashboard, Home, Menu, X, Send, Bot, LogIn, ShieldCheck, Plug, Link2, Lightbulb } from 'lucide-react';
+import { Search, Sparkles, Megaphone, Layers, Home, Menu, X, Send, Bot, LogIn, ShieldCheck, Plug, Link2, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,10 +25,9 @@ export default function B99Layout() {
   const loc = useLocation();
   const [identity, setIdentity] = useState<{ userId?: string; name?: string; email?: string } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [batFlying, setBatFlying] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [chat, setChat] = useState<any[]>([
-    { role: 'assistant', content: 'أهلاً بك في بات شارك 99. اكتب ما تريد بناءه أو فهمه وسأرشدك مباشرة.' },
+    { role: 'assistant', content: 'أهلاً بك في بات شارك 99. اكتب ما تريد بناءه وسأرشدك مباشرة.' },
   ]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -37,13 +36,6 @@ export default function B99Layout() {
 
   useEffect(() => {
     document.title = 'بات شارك 99 — منصة بناء وتعزيز الأعمال';
-    const attack = (event: Event) => {
-      const to = (event as CustomEvent<{ to?: string }>).detail?.to;
-      setBatFlying(true);
-      setTimeout(() => { if (to) nav(to); }, 600);
-      setTimeout(() => setBatFlying(false), 1400);
-    };
-    window.addEventListener('batshark:attack', attack as EventListener);
     (async () => {
       const { data } = await supabase.auth.getSession();
       const u = data.session?.user;
@@ -52,19 +44,11 @@ export default function B99Layout() {
         setIdentity({ userId: u.id, email: u.email, name: prof?.display_name || u.email?.split('@')[0] });
       }
     })();
-    return () => window.removeEventListener('batshark:attack', attack as EventListener);
   }, []);
 
-  useEffect(() => {
-    if (lastPath.current !== loc.pathname) {
-      setBatFlying(true);
-      lastPath.current = loc.pathname;
-      const t = setTimeout(() => setBatFlying(false), 1200);
-      return () => clearTimeout(t);
-    }
-  }, [loc.pathname]);
+  useEffect(() => { lastPath.current = loc.pathname; }, [loc.pathname]);
 
-  const goWithBat = (to: string) => { setMenuOpen(false); nav(to); };
+  const goTo = (to: string) => { setMenuOpen(false); nav(to); };
 
   const sendChat = async () => {
     if (!chatInput.trim() || chatLoading) return;
@@ -78,7 +62,7 @@ export default function B99Layout() {
       });
       if (error) throw error;
       setChat((c) => [...c, { role: 'assistant', content: data.reply, route: data.action_route, suggestions: data.suggestions } as any]);
-      if (data.action_route) setTimeout(() => goWithBat(data.action_route), 800);
+      if (data.action_route) setTimeout(() => goTo(data.action_route), 400);
     } catch (e: any) { toast.error(e.message || 'خطأ بالمساعد'); }
     finally { setChatLoading(false); }
   };
@@ -90,42 +74,30 @@ export default function B99Layout() {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 relative overflow-x-hidden">
-      {/* Soft background blobs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
-        <motion.div animate={{ x: [0, 40, 0], y: [0, -20, 0] }} transition={{ duration: 18, repeat: Infinity }}
-          className="absolute -top-40 -right-40 w-[700px] h-[700px] rounded-full bg-violet-600/15 blur-[120px]" />
-        <motion.div animate={{ x: [0, -30, 0], y: [0, 30, 0] }} transition={{ duration: 22, repeat: Infinity }}
-          className="absolute top-1/3 -left-40 w-[600px] h-[600px] rounded-full bg-cyan-500/15 blur-[120px]" />
-        <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:48px_48px]" />
-      </div>
-
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/85 border-b border-white/10 shadow-lg">
+    <div dir="rtl" className="min-h-screen bg-white text-black">
+      <header className="sticky top-0 z-40 bg-white border-b-2 border-black">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
-          <button onClick={() => goWithBat('/b99')} className="flex items-center gap-2.5 shrink-0 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-400 to-cyan-400 blur-xl opacity-40 group-hover:opacity-70 transition" />
-              <img src={logo} alt="بات شارك 99" className="relative w-10 h-10 drop-shadow-lg" />
-            </div>
+          <button onClick={() => goTo('/b99')} className="flex items-center gap-2.5 shrink-0">
+            <img src={logo} alt="بات شارك 99" className="w-9 h-9" />
             <div className="hidden sm:block leading-tight">
-              <div className="font-black text-lg bg-gradient-to-l from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">بات شارك 99</div>
-              <div className="text-[9px] text-slate-400 tracking-[0.3em] -mt-0.5">BUILD · CONNECT · SCALE</div>
+              <div className="font-black text-lg text-black">بات شارك <span className="text-blue-600">99</span></div>
+              <div className="text-[9px] text-black/60 tracking-[0.3em] -mt-0.5">BUILD · CONNECT · SCALE</div>
             </div>
           </button>
 
           <form onSubmit={doSearch} className="flex-1 max-w-xl mx-auto hidden md:block">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/50" />
               <Input value={searchQ} onChange={(e) => setSearchQ(e.target.value)}
                 placeholder="ابحث في كل المنصة..."
-                className="bg-slate-900/70 border-white/10 text-slate-100 placeholder:text-slate-500 pr-10 h-10 rounded-full text-sm shadow-sm" />
+                className="bg-white border-2 border-black text-black placeholder:text-black/40 pr-10 h-10 rounded-none text-sm" />
             </div>
           </form>
 
           <nav className="hidden xl:flex items-center gap-0.5">
             {NAV.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.exact}
-                className={({ isActive }) => `px-2.5 py-2 rounded-lg text-xs flex items-center gap-1.5 transition-all whitespace-nowrap ${isActive ? 'bg-violet-500/20 text-violet-200 font-bold border border-violet-400/30' : 'text-slate-300 hover:text-violet-200 hover:bg-white/5'}`}>
+                className={({ isActive }) => `px-2.5 py-2 text-xs flex items-center gap-1.5 transition-colors whitespace-nowrap border-2 ${isActive ? 'bg-blue-600 text-white border-blue-600 font-bold' : 'text-black border-transparent hover:border-black'}`}>
                 <n.icon className="w-3.5 h-3.5" /> {n.label}
               </NavLink>
             ))}
@@ -133,15 +105,15 @@ export default function B99Layout() {
 
           <div className="ml-auto xl:ml-0 flex items-center gap-2">
             {identity ? (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 text-xs font-bold">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-xs font-bold">
                 <ShieldCheck className="w-3 h-3" /> {identity.name}
               </div>
             ) : (
-              <Button variant="outline" size="sm" onClick={() => nav('/login')} className="bg-white/5 border-white/15 text-slate-100 hover:bg-violet-500/20 hover:text-violet-100 hover:border-violet-400/40 text-xs gap-1">
-                <LogIn className="w-3.5 h-3.5" /> دخول داخلي
+              <Button variant="outline" size="sm" onClick={() => nav('/login')} className="bg-white border-2 border-black text-black hover:bg-black hover:text-white rounded-none text-xs gap-1 font-bold">
+                <LogIn className="w-3.5 h-3.5" /> دخول
               </Button>
             )}
-            <button onClick={() => setMenuOpen(!menuOpen)} className="xl:hidden p-2 rounded-lg bg-violet-500/20 text-violet-200 border border-violet-400/30">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="xl:hidden p-2 border-2 border-black text-black">
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
@@ -149,18 +121,18 @@ export default function B99Layout() {
 
         <AnimatePresence>
           {menuOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              className="xl:hidden overflow-hidden border-t border-white/10 bg-slate-950/95">
+            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
+              className="xl:hidden overflow-hidden border-t-2 border-black bg-white">
               <div className="p-4 space-y-1">
                 <form onSubmit={doSearch} className="mb-3">
                   <div className="relative">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="بحث..." className="bg-slate-900/70 border-white/10 text-slate-100 placeholder:text-slate-500 pr-10 h-10 rounded-full" />
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/50" />
+                    <Input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="بحث..." className="bg-white border-2 border-black text-black pr-10 h-10 rounded-none" />
                   </div>
                 </form>
                 {NAV.map((n) => (
-                  <button key={n.to} onClick={() => goWithBat(n.to)}
-                    className="w-full text-right px-3 py-3 rounded-lg flex items-center gap-2 text-sm text-slate-200 hover:bg-violet-500/15 hover:text-violet-100">
+                  <button key={n.to} onClick={() => goTo(n.to)}
+                    className="w-full text-right px-3 py-3 flex items-center gap-2 text-sm text-black hover:bg-blue-600 hover:text-white border-2 border-transparent hover:border-blue-600 font-bold">
                     <n.icon className="w-4 h-4" /> {n.label}
                   </button>
                 ))}
@@ -170,74 +142,47 @@ export default function B99Layout() {
         </AnimatePresence>
       </header>
 
-      {/* Cinematic bat attack overlay */}
-      <AnimatePresence>
-        {batFlying && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center overflow-hidden">
-            <motion.div className="absolute inset-0 bg-white"
-              initial={{ opacity: 0 }} animate={{ opacity: [0, 0.5, 0.85, 0.3, 0] }}
-              transition={{ duration: 1.2, times: [0, 0.3, 0.5, 0.75, 1] }} />
-            <motion.div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.35),transparent_60%)]"
-              initial={{ scale: 0.2, opacity: 0 }} animate={{ scale: [0.2, 0.6, 1.4, 2.2], opacity: [0, 0.6, 0.9, 0] }}
-              transition={{ duration: 1.2 }} />
-            <motion.img src={logo} alt="" className="relative z-10 drop-shadow-[0_0_60px_rgba(139,92,246,0.9)]"
-              initial={{ scale: 0.05, opacity: 0, rotate: -8, y: 40 }}
-              animate={{ scale: [0.05, 0.4, 1.4, 3.2, 1.1, 0.3], opacity: [0, 0.8, 1, 1, 1, 0], rotate: [-8, -3, 2, 0, -2, 6], y: [40, 20, 0, -10, -10, -60] }}
-              transition={{ duration: 1.2, ease: [0.6, 0.05, 0.3, 1], times: [0, 0.2, 0.45, 0.6, 0.8, 1] }}
-              style={{ width: '38vmin', height: 'auto' }} />
-            <motion.div className="absolute rounded-full border-2 border-violet-400"
-              initial={{ width: 0, height: 0, opacity: 0 }}
-              animate={{ width: ['0vmin','0vmin','120vmin'], height: ['0vmin','0vmin','120vmin'], opacity: [0, 0.9, 0] }}
-              transition={{ duration: 1.2, times: [0, 0.55, 0.95] }} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <main className="relative z-10 max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8">
         <Outlet context={{ identity }} />
       </main>
 
       <button onClick={() => setAssistantOpen(true)} aria-label="مساعد بات شارك"
-        className="fixed bottom-5 left-5 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-500 shadow-[0_8px_32px_rgba(139,92,246,0.5)] flex items-center justify-center hover:scale-110 transition-transform">
-        <Bot className="w-7 h-7 text-white" />
+        className="fixed bottom-5 left-5 z-40 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white border-2 border-black shadow-[4px_4px_0_0_#000] flex items-center justify-center transition-colors">
+        <Bot className="w-6 h-6" />
       </button>
 
       <AnimatePresence>
         {assistantOpen && (
-          <motion.div initial={{ opacity: 0, y: 30, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed bottom-24 left-5 z-40 w-[min(380px,calc(100vw-2rem))] h-[480px] rounded-2xl bg-white border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-l from-violet-50 to-cyan-50">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="fixed bottom-24 left-5 z-40 w-[min(380px,calc(100vw-2rem))] h-[480px] bg-white border-2 border-black shadow-[6px_6px_0_0_#000] flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b-2 border-black bg-blue-600 text-white">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center"><Bot className="w-5 h-5 text-white" /></div>
-                <div>
-                  <div className="text-sm font-bold text-slate-900">مساعد بات شارك</div>
-                  <div className="text-[10px] text-emerald-600 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> متصل</div>
-                </div>
+                <Bot className="w-5 h-5" />
+                <div className="text-sm font-bold">مساعد بات شارك</div>
               </div>
-              <button onClick={() => setAssistantOpen(false)}><X className="w-4 h-4 text-slate-400 hover:text-slate-700" /></button>
+              <button onClick={() => setAssistantOpen(false)}><X className="w-4 h-4" /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-slate-50/50">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-white">
               {chat.map((m, i) => (
                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
-                  <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm ${m.role === 'user' ? 'bg-violet-100 text-violet-900 border border-violet-200' : 'bg-white border border-slate-200 text-slate-700 shadow-sm'}`}>
+                  <div className={`max-w-[85%] px-3 py-2 text-sm border-2 ${m.role === 'user' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-black text-black'}`}>
                     {m.content}
                     {(m as any).suggestions?.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {(m as any).suggestions.map((s: string, j: number) => (
                           <button key={j} onClick={() => setChatInput(s)}
-                            className="text-[11px] px-2 py-1 rounded-full bg-violet-50 border border-violet-200 hover:bg-violet-100 text-violet-700">{s}</button>
+                            className="text-[11px] px-2 py-1 border-2 border-black bg-white hover:bg-black hover:text-white font-bold">{s}</button>
                         ))}
                       </div>
                     )}
                   </div>
                 </div>
               ))}
-              {chatLoading && <div className="text-xs text-slate-500 flex items-center gap-2"><span className="inline-block w-2 h-2 rounded-full bg-violet-500 animate-bounce" /> يفكر...</div>}
+              {chatLoading && <div className="text-xs text-black/60">يفكر...</div>}
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); sendChat(); }} className="p-3 border-t border-slate-100 flex gap-2 bg-white">
-              <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="اسأل أو وجّهني..." className="bg-slate-50 border-slate-200 text-sm h-10" />
-              <Button type="submit" size="sm" disabled={chatLoading} className="bg-gradient-to-r from-violet-500 to-cyan-500"><Send className="w-4 h-4" /></Button>
+            <form onSubmit={(e) => { e.preventDefault(); sendChat(); }} className="p-2 border-t-2 border-black flex gap-2 bg-white">
+              <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="اسأل أو وجّهني..." className="bg-white border-2 border-black text-sm h-10 rounded-none" />
+              <Button type="submit" size="sm" disabled={chatLoading} className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-black rounded-none font-bold"><Send className="w-4 h-4" /></Button>
             </form>
           </motion.div>
         )}

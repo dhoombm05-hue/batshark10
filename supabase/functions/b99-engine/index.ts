@@ -144,29 +144,68 @@ async function fetchVisualExamples(topic: string, limit = 6) {
   } catch (e) { console.error('visual_examples', e); return { items: [] }; }
 }
 
-// ====== YouTube video search via Gemini grounding ======
-async function fetchVideos(topic: string, limit = 6) {
+// ====== YouTube video search — validated via oembed ======
+async function validateYouTube(videoId: string): Promise<any | null> {
   try {
+    const r = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`, {
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+async function fetchVideos(topic: string, limit = 9) {
+  try {
+    // Ask AI for MORE than needed so we can filter dead ones
     const data = await callAI([
-      { role: 'system', content: 'أنت مساعد بحث فيديوهات يوتيوب. أعد روابط فيديوهات حقيقية فقط بصيغة https://www.youtube.com/watch?v=XXXXXX. لا تخترع.' },
-      { role: 'user', content: `ابحث عن ${limit} فيديوهات حقيقية في يوتيوب عن: "${topic}". أعد لكل فيديو: العنوان، الرابط الكامل، اسم القناة.` },
+      { role: 'system', content: 'You return real YouTube video IDs only. Output JSON array. Never invent IDs. Prefer popular channels with millions of views.' },
+      { role: 'user', content: `Find ${limit * 2} real, currently-available YouTube videos about: "${topic}". For each return the 11-char video_id, full title, and channel name.` },
     ], {
       type: 'object',
       properties: {
         items: { type: 'array', items: { type: 'object', properties: {
-          title: { type: 'string' }, url: { type: 'string' }, channel: { type: 'string' },
-        }, required: ['title', 'url'] } },
+          video_id: { type: 'string' }, title: { type: 'string' }, channel: { type: 'string' },
+        }, required: ['video_id', 'title'] } },
       }, required: ['items'],
     });
-    return (data.items || []).slice(0, limit).map((v: any) => {
-      const id = (v.url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{6,})/) || [])[1];
+    const candidates = (data.items || []).filter((v: any) => /^[A-Za-z0-9_-]{11}$/.test(v.video_id));
+    // Validate in parallel, keep only those that resolve
+    const validated = await Promise.all(candidates.slice(0, limit * 2).map(async (v: any) => {
+      const meta = await validateYouTube(v.video_id);
+      if (!meta) return null;
       return {
-        title: v.title, channel: v.channel, url: v.url, video_id: id,
-        thumbnail: id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '',
-        embed: id ? `https://www.youtube.com/embed/${id}` : null,
+        title: meta.title || v.title,
+        channel: meta.author_name || v.channel,
+        url: `https://www.youtube.com/watch?v=${v.video_id}`,
+        video_id: v.video_id,
+        thumbnail: meta.thumbnail_url || `https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg`,
+        embed: `https://www.youtube.com/embed/${v.video_id}`,
       };
-    }).filter((v: any) => v.video_id);
+    }));
+    return validated.filter(Boolean).slice(0, limit);
   } catch (e) { console.error('fetchVideos', e); return []; }
+}
+
+// ====== Generate REAL scene images using Gemini image model ======
+async function generateSceneImage(prompt: string): Promise<string | null> {
+  try {
+    const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{ role: 'user', content: prompt }],
+        modalities: ['image', 'text'],
+      }),
+    });
+    if (!r.ok) { console.error('image gen', r.status, await r.text()); return null; }
+    const data = await r.json();
+    const msg = data.choices?.[0]?.message;
+    const imgs = msg?.images || [];
+    const url = imgs[0]?.image_url?.url || null;
+    return url; // data:image/png;base64,...
+  } catch (e) { console.error('generateSceneImage', e); return null; }
 }
 
 // ====== Image search via Gemini (returns direct image URLs) ======
@@ -407,17 +446,46 @@ Deno.serve(async (req) => {
 
     if (action === 'generate_ad' || action === 'generate_video_ad') {
       const result = await callAI([
-        { role: 'system', content: 'أنت مخرج إعلانات. أنشئ سكربت فيديو إعلاني احترافي بالعربية مع مشاهد وStoryboard.' },
+        { role: 'system', content: 'أنت مخرج إعلانات فيديو احترافي. أنشئ سكربت إعلان قابل للإنتاج فعلياً بالعربية. كل مشهد: visual (وصف بصري دقيق بالإنجليزية لتوليد صورة سينمائية واقعية)، voice (صوت بالعربية)، on_screen_text (نص قصير على الشاشة بالعربية)، duration_sec.' },
         { role: 'user', content: JSON.stringify(payload) },
       ], {
         type: 'object',
         properties: {
-          hook: { type: 'string' }, ad_copy: { type: 'string' }, voiceover_script: { type: 'string' }, video_prompt: { type: 'string' },
-          video_scenes: { type: 'array', items: { type: 'object', properties: { scene: { type: 'string' }, visual: { type: 'string' }, voice: { type: 'string' }, text_on_screen: { type: 'string' }, duration_sec: { type: 'number' } } } },
+          name: { type: 'string' }, hook: { type: 'string' }, ad_copy: { type: 'string' }, voiceover_script: { type: 'string' },
+          video_scenes: { type: 'array', items: { type: 'object', properties: {
+            visual: { type: 'string' }, voice: { type: 'string' }, on_screen_text: { type: 'string' }, duration_sec: { type: 'number' },
+          }, required: ['visual', 'voice'] } },
           best_times: { type: 'array', items: { type: 'string' } }, hashtags: { type: 'array', items: { type: 'string' } }, cta: { type: 'string' },
         },
         required: ['hook', 'ad_copy', 'video_scenes'],
       });
+
+      // Generate REAL scene images in parallel (max 6 scenes)
+      const scenes = (result.video_scenes || []).slice(0, 6);
+      const format = payload.format || 'vertical';
+      const orientation = format === 'vertical' ? 'vertical 9:16 portrait composition'
+        : format === 'square' ? '1:1 square composition' : '16:9 horizontal cinematic composition';
+      const stylePrompt = `cinematic professional advertising photo, ${orientation}, high detail, vibrant studio lighting, premium brand aesthetic, photorealistic, 4k, no text overlay`;
+      const sceneImages = await Promise.all(scenes.map(async (s: any) => {
+        const url = await generateSceneImage(`${s.visual}. Style: ${stylePrompt}`);
+        return { ...s, image_url: url };
+      }));
+      result.video_scenes = sceneImages;
+      result.has_real_images = sceneImages.some((s: any) => s.image_url);
+
+      // Persist campaign if user provided
+      if (body.userId) {
+        try {
+          await supabase.from('ad_campaigns').insert({
+            user_id: body.userId, name: result.name || `${payload.businessType || 'حملة'} — ${new Date().toLocaleDateString('ar')}`,
+            business_type: payload.businessType, goal: payload.goal, budget_daily: payload.budget,
+            duration_seconds: payload.duration, format: payload.format,
+            scenes: sceneImages, voiceover_script: result.voiceover_script, hook: result.hook,
+            ad_copy: result.ad_copy, cta: result.cta, hashtags: result.hashtags,
+            best_times: result.best_times, platforms: payload.targetPlatforms || [],
+          });
+        } catch (e) { console.error('save ad_campaign', e); }
+      }
       return ok(result);
     }
 
