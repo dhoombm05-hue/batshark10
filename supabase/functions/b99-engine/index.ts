@@ -446,17 +446,46 @@ Deno.serve(async (req) => {
 
     if (action === 'generate_ad' || action === 'generate_video_ad') {
       const result = await callAI([
-        { role: 'system', content: 'أنت مخرج إعلانات. أنشئ سكربت فيديو إعلاني احترافي بالعربية مع مشاهد وStoryboard.' },
+        { role: 'system', content: 'أنت مخرج إعلانات فيديو احترافي. أنشئ سكربت إعلان قابل للإنتاج فعلياً بالعربية. كل مشهد: visual (وصف بصري دقيق بالإنجليزية لتوليد صورة سينمائية واقعية)، voice (صوت بالعربية)، on_screen_text (نص قصير على الشاشة بالعربية)، duration_sec.' },
         { role: 'user', content: JSON.stringify(payload) },
       ], {
         type: 'object',
         properties: {
-          hook: { type: 'string' }, ad_copy: { type: 'string' }, voiceover_script: { type: 'string' }, video_prompt: { type: 'string' },
-          video_scenes: { type: 'array', items: { type: 'object', properties: { scene: { type: 'string' }, visual: { type: 'string' }, voice: { type: 'string' }, text_on_screen: { type: 'string' }, duration_sec: { type: 'number' } } } },
+          name: { type: 'string' }, hook: { type: 'string' }, ad_copy: { type: 'string' }, voiceover_script: { type: 'string' },
+          video_scenes: { type: 'array', items: { type: 'object', properties: {
+            visual: { type: 'string' }, voice: { type: 'string' }, on_screen_text: { type: 'string' }, duration_sec: { type: 'number' },
+          }, required: ['visual', 'voice'] } },
           best_times: { type: 'array', items: { type: 'string' } }, hashtags: { type: 'array', items: { type: 'string' } }, cta: { type: 'string' },
         },
         required: ['hook', 'ad_copy', 'video_scenes'],
       });
+
+      // Generate REAL scene images in parallel (max 6 scenes)
+      const scenes = (result.video_scenes || []).slice(0, 6);
+      const format = payload.format || 'vertical';
+      const orientation = format === 'vertical' ? 'vertical 9:16 portrait composition'
+        : format === 'square' ? '1:1 square composition' : '16:9 horizontal cinematic composition';
+      const stylePrompt = `cinematic professional advertising photo, ${orientation}, high detail, vibrant studio lighting, premium brand aesthetic, photorealistic, 4k, no text overlay`;
+      const sceneImages = await Promise.all(scenes.map(async (s: any) => {
+        const url = await generateSceneImage(`${s.visual}. Style: ${stylePrompt}`);
+        return { ...s, image_url: url };
+      }));
+      result.video_scenes = sceneImages;
+      result.has_real_images = sceneImages.some((s: any) => s.image_url);
+
+      // Persist campaign if user provided
+      if (body.userId) {
+        try {
+          await supabase.from('ad_campaigns').insert({
+            user_id: body.userId, name: result.name || `${payload.businessType || 'حملة'} — ${new Date().toLocaleDateString('ar')}`,
+            business_type: payload.businessType, goal: payload.goal, budget_daily: payload.budget,
+            duration_seconds: payload.duration, format: payload.format,
+            scenes: sceneImages, voiceover_script: result.voiceover_script, hook: result.hook,
+            ad_copy: result.ad_copy, cta: result.cta, hashtags: result.hashtags,
+            best_times: result.best_times, platforms: payload.targetPlatforms || [],
+          });
+        } catch (e) { console.error('save ad_campaign', e); }
+      }
       return ok(result);
     }
 
