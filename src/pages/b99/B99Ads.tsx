@@ -544,3 +544,102 @@ function Info({ label, value, icon: Icon }: any) {
     </div>
   );
 }
+
+/* ===== Playable Ad — real generated images + browser TTS voiceover ===== */
+function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format: string; voiceoverScript?: string }) {
+  const [idx, setIdx] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const timerRef = useRef<any>(null);
+
+  const aspect = format === 'vertical' ? 'aspect-[9/16] max-w-[300px]'
+    : format === 'square' ? 'aspect-square max-w-md' : 'aspect-video max-w-2xl';
+
+  const stop = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    window.speechSynthesis?.cancel();
+    setPlaying(false);
+  };
+
+  const playFrom = (start: number) => {
+    if (!('speechSynthesis' in window)) { toast.error('المتصفح لا يدعم تشغيل الصوت'); return; }
+    setPlaying(true);
+    setIdx(start);
+    const runScene = (i: number) => {
+      if (i >= scenes.length) { setPlaying(false); return; }
+      setIdx(i);
+      const s = scenes[i];
+      const dur = Math.max(2, Number(s.duration_sec) || 4);
+      const text = s.voice || s.on_screen_text || '';
+      window.speechSynthesis.cancel();
+      if (text) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ar-SA';
+        u.rate = 1.0;
+        window.speechSynthesis.speak(u);
+      }
+      timerRef.current = setTimeout(() => runScene(i + 1), dur * 1000);
+    };
+    runScene(start);
+  };
+
+  useEffect(() => () => stop(), []);
+
+  const cur = scenes[idx] || {};
+
+  return (
+    <div className="bg-white border-2 border-black p-5 shadow-[4px_4px_0_0_#000]">
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm font-black text-black">▶ إعلانك جاهز — تشغيل فعلي</div>
+        <div className="flex items-center gap-2">
+          {playing ? (
+            <Button size="sm" onClick={stop} className="bg-red-600 hover:bg-red-700 text-white rounded-none border-2 border-black font-bold">إيقاف</Button>
+          ) : (
+            <Button size="sm" onClick={() => playFrom(0)} className="bg-green-600 hover:bg-green-700 text-white rounded-none border-2 border-black font-bold gap-1">
+              <Play className="w-4 h-4" /> تشغيل
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className={cn('relative mx-auto overflow-hidden bg-black border-2 border-black', aspect)}>
+        {cur.image_url ? (
+          <img src={cur.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-black" />
+        )}
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute top-3 right-3 text-[10px] px-2 py-1 bg-black/70 text-white font-bold">
+          مشهد {idx + 1} / {scenes.length}
+        </div>
+        <div className="absolute inset-x-0 bottom-0 p-4 text-center">
+          <div className="text-2xl md:text-3xl font-black text-white drop-shadow-[2px_2px_0_#000] leading-tight">
+            {cur.on_screen_text || ''}
+          </div>
+        </div>
+        {/* progress bar */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-white/20">
+          <div className="h-full bg-blue-500 transition-all" style={{ width: `${((idx + 1) / scenes.length) * 100}%` }} />
+        </div>
+      </div>
+
+      {/* Scene thumbs */}
+      <div className="mt-4 grid grid-cols-3 md:grid-cols-6 gap-2">
+        {scenes.map((s: any, i: number) => (
+          <button key={i} onClick={() => { stop(); setIdx(i); }}
+            className={cn('relative aspect-square overflow-hidden border-2', i === idx ? 'border-blue-600' : 'border-black')}>
+            {s.image_url
+              ? <img src={s.image_url} alt="" className="w-full h-full object-cover" />
+              : <div className="w-full h-full bg-black/80" />}
+            <div className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[9px] py-0.5 text-center font-bold">{i + 1}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 text-xs text-black/70">
+        <strong>الصوت:</strong> {cur.voice || '—'}
+      </div>
+    </div>
+  );
+}
+
