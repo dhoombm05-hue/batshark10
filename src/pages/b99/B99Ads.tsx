@@ -563,8 +563,15 @@ function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format
 
   const playFrom = (start: number) => {
     if (!('speechSynthesis' in window)) { toast.error('المتصفح لا يدعم تشغيل الصوت'); return; }
-    setPlaying(true);
-    setIdx(start);
+    const voices = window.speechSynthesis.getVoices?.() || [];
+    const score = (v: SpeechSynthesisVoice) => {
+      const n = (v.name || '').toLowerCase(); let s = 0;
+      if (/ar.SA/i.test(v.lang)) s += 50; else if (/^ar/i.test(v.lang)) s += 30;
+      if (/google/.test(n)) s += 25; if (/natural|neural|online|premium|enhanced/.test(n)) s += 30;
+      return s;
+    };
+    const bestVoice = [...voices].sort((a, b) => score(b) - score(a))[0];
+    setPlaying(true); setIdx(start);
     const runScene = (i: number) => {
       if (i >= scenes.length) { setPlaying(false); return; }
       setIdx(i);
@@ -574,8 +581,8 @@ function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format
       window.speechSynthesis.cancel();
       if (text) {
         const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'ar-SA';
-        u.rate = 1.0;
+        u.lang = 'ar-SA'; u.rate = 0.9; u.pitch = 1.05; u.volume = 1;
+        if (bestVoice) u.voice = bestVoice;
         window.speechSynthesis.speak(u);
       }
       timerRef.current = setTimeout(() => runScene(i + 1), dur * 1000);
