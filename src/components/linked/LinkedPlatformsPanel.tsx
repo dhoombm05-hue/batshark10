@@ -228,22 +228,27 @@ export default function LinkedPlatformsPanel({
                       </Card>
                     </TabsContent>
 
-                    {/* BACKEND */}
+                    {/* BACKEND — rich, professional */}
                     <TabsContent value="backend" className="mt-5 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <StatBox icon={Database} label="نوع المنصة" value={active.platform_type} />
-                        <StatBox icon={ShieldCheck} label="الملكية" value={active.owner_password ? 'مفعّلة' : 'غير مفعّلة'} />
-                        <StatBox icon={KeyRound} label="معروضة للبيع" value={active.is_for_sale ? `${active.sale_price} ر.س` : 'لا'} />
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <StatBox icon={Database} label="نوع المنصة" value={active.platform_type || '—'} />
+                        <StatBox icon={Layers} label="المستوى" value={`L${active.level ?? 1}`} />
+                        <StatBox icon={ShieldCheck} label="الملكية" value={active.owner_password ? 'مفعّلة' : 'لا'} />
+                        <StatBox icon={KeyRound} label="للبيع" value={active.is_for_sale ? `${active.sale_price} ر.س` : 'لا'} />
+                        <StatBox icon={Eye} label="مشاهدات" value={String(active.views ?? 0)} />
+                        <StatBox icon={BarChart3} label="صفحات" value={String((active.pages || []).length)} />
+                        <StatBox icon={Activity} label="ميزات" value={String((active.features || []).length)} />
+                        <StatBox icon={Sparkles} label="نمط البناء" value={active.layout_mode || '—'} />
                       </div>
 
                       <Card className="border-2 border-black bg-white p-4 rounded-xl">
-                        <h3 className="text-sm font-black text-black mb-3 flex items-center gap-2 pb-2 border-b border-black">
+                        <h3 className="text-sm font-black text-black mb-3 flex items-center gap-2 pb-2 border-b-2 border-black">
                           <Server className="w-4 h-4" /> الربط والباكند
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           <RowEdit label="رابط الباكند" value={active.backend_link || ''} placeholder="batshark99 أو URL خارجي" onSave={(v) => updateField(active.id, { backend_link: v })} />
                           <RowEdit label="إيميل المالك" value={active.owner_email || ''} onSave={(v) => updateField(active.id, { owner_email: v })} />
-                          <RowEdit label="رمز الملكية" value={active.owner_password || ''} placeholder="يُمنح للمشتري عند البيع" onSave={(v) => updateField(active.id, { owner_password: v || null })} />
+                          <RowEdit label="رمز الملكية" value={active.owner_password || ''} placeholder="يُمنح للمشتري" onSave={(v) => updateField(active.id, { owner_password: v || null })} />
                           <RowSwitch label="معروضة للبيع" checked={!!active.is_for_sale} onChange={(v) => updateField(active.id, { is_for_sale: v })} />
                           {active.is_for_sale && (
                             <RowEdit label="سعر البيع (ر.س)" value={String(active.sale_price ?? 0)} onSave={(v) => updateField(active.id, { sale_price: Number(v) || 0 })} />
@@ -252,17 +257,86 @@ export default function LinkedPlatformsPanel({
                       </Card>
 
                       <Card className="border-2 border-black bg-white p-4 rounded-xl">
-                        <h3 className="text-sm font-black text-black mb-3 flex items-center gap-2 pb-2 border-b border-black">
-                          <Database className="w-4 h-4" /> الروابط والمعرفات
+                        <h3 className="text-sm font-black text-black mb-3 flex items-center gap-2 pb-2 border-b-2 border-black">
+                          <Database className="w-4 h-4" /> الروابط والمعرفات والميتاداتا
                         </h3>
-                        <div className="space-y-2 text-xs">
+                        <div className="space-y-1.5 text-xs">
                           <KV k="رابط عام" v={`${location.origin}/p/${active.slug}`} onCopy={copy} />
+                          <KV k="Slug" v={active.slug} onCopy={copy} />
                           <KV k="معرّف الموقع" v={active.id} onCopy={copy} />
                           <KV k="نمط البناء" v={active.layout_mode} />
+                          <KV k="نمط الثيم" v={active.theme_mode || '—'} />
                           <KV k="مستوى البناء" v={active.build_level} />
+                          <KV k="اللون الأساسي" v={active.brand?.primary_color || '—'} />
+                          <KV k="اللون المساعد" v={active.brand?.accent_color || '—'} />
+                          <KV k="رمز التعبير" v={active.brand?.logo_emoji || '—'} />
+                          <KV k="مزاج العلامة" v={active.brand?.mood || '—'} />
+                          <KV k="أنشئت في" v={new Date(active.created_at).toLocaleString('ar-SA')} />
                           <KV k="آخر تحديث" v={new Date(active.updated_at).toLocaleString('ar-SA')} />
                         </div>
                       </Card>
+
+                      {/* PAGES BREAKDOWN */}
+                      {(active.pages || []).length > 0 && (
+                        <Card className="border-2 border-black bg-white p-4 rounded-xl">
+                          <h3 className="text-sm font-black text-black mb-3 flex items-center gap-2 pb-2 border-b-2 border-black">
+                            <BarChart3 className="w-4 h-4" /> صفحات المنصة ({(active.pages || []).length})
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {(active.pages || []).map((pg: any, i: number) => (
+                              <div key={i} className="border-2 border-black bg-white p-2.5 flex items-center justify-between">
+                                <div>
+                                  <div className="text-sm font-black text-black">{pg.icon || '📄'} {pg.title}</div>
+                                  <div className="text-[10px] text-neutral-600 font-bold">{(pg.sections || []).length} قسم</div>
+                                </div>
+                                <Badge className="bg-black text-white border-0 rounded-md text-[9px] font-black">#{i + 1}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+
+                      {/* FEATURES */}
+                      {(active.features || []).length > 0 && (
+                        <Card className="border-2 border-black bg-white p-4 rounded-xl">
+                          <h3 className="text-sm font-black text-black mb-3 flex items-center gap-2 pb-2 border-b-2 border-black">
+                            <Sparkles className="w-4 h-4" /> الميزات المفعّلة
+                          </h3>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(active.features || []).map((f: string, i: number) => (
+                              <Badge key={i} className="bg-black text-white border-0 rounded-md text-[10px] font-bold">{f}</Badge>
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+
+                      {/* REQUIREMENTS / ORIGINAL ANSWERS */}
+                      {active.requirements && Object.keys(active.requirements).length > 0 && (
+                        <Card className="border-2 border-black bg-white p-4 rounded-xl">
+                          <h3 className="text-sm font-black text-black mb-3 flex items-center gap-2 pb-2 border-b-2 border-black">
+                            <Database className="w-4 h-4" /> متطلبات البناء الأصلية
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-xs">
+                            {Object.entries(active.requirements).slice(0, 16).map(([k, v]) => (
+                              <KV key={k} k={k} v={typeof v === 'string' || typeof v === 'number' ? String(v) : JSON.stringify(v).slice(0, 80)} />
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+
+                      {/* META */}
+                      {active.meta && Object.keys(active.meta).length > 0 && (
+                        <Card className="border-2 border-black bg-white p-4 rounded-xl">
+                          <h3 className="text-sm font-black text-black mb-3 flex items-center gap-2 pb-2 border-b-2 border-black">
+                            <Activity className="w-4 h-4" /> ميتاداتا تقنية
+                          </h3>
+                          <div className="space-y-1.5 text-xs">
+                            {Object.entries(active.meta).map(([k, v]) => (
+                              <KV key={k} k={k} v={typeof v === 'string' || typeof v === 'number' ? String(v) : JSON.stringify(v).slice(0, 100)} />
+                            ))}
+                          </div>
+                        </Card>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </Card>

@@ -10,12 +10,18 @@ export function useArabicTTS() {
   useEffect(() => {
     const pickVoice = () => {
       const voices = window.speechSynthesis?.getVoices?.() || [];
-      // Prefer Arabic Saudi
-      const v =
-        voices.find(v => /ar.SA/i.test(v.lang)) ||
-        voices.find(v => /^ar/i.test(v.lang)) ||
-        voices[0] || null;
-      setVoice(v);
+      const score = (v: SpeechSynthesisVoice) => {
+        const n = (v.name || '').toLowerCase(); let s = 0;
+        if (/ar.SA/i.test(v.lang)) s += 50;
+        else if (/^ar/i.test(v.lang)) s += 30;
+        if (/google/.test(n)) s += 25;
+        if (/microsoft/.test(n)) s += 20;
+        if (/natural|neural|online|premium|enhanced/.test(n)) s += 30;
+        if (/hamed|naayf|salim|hoda|zariyah/.test(n)) s += 15;
+        return s;
+      };
+      const sorted = [...voices].sort((a, b) => score(b) - score(a));
+      setVoice(sorted[0] || null);
     };
     pickVoice();
     window.speechSynthesis?.addEventListener?.('voiceschanged', pickVoice);
@@ -27,8 +33,8 @@ export function useArabicTTS() {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'ar-SA';
-    u.rate = 0.95;
-    u.pitch = 1;
+    u.rate = 0.9;
+    u.pitch = 1.05;
     u.volume = 1;
     if (voice) u.voice = voice;
     u.onstart = () => setSpeaking(true);

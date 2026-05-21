@@ -68,6 +68,8 @@ export default function B99Ads() {
   const [history, setHistory] = useState<any[]>([]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [sceneIdx, setSceneIdx] = useState(0);
+  const [refVideos, setRefVideos] = useState<any[]>([]);
+  const [refLoading, setRefLoading] = useState(false);
 
   useEffect(() => {
     if (prefill) {
@@ -92,15 +94,25 @@ export default function B99Ads() {
   };
 
   const generate = async () => {
-    setLoading(true); setCampaign(null); setSceneIdx(0);
+    setLoading(true); setCampaign(null); setSceneIdx(0); setRefVideos([]);
     try {
+      // Step 1 — fetch REAL reference videos via deep search (YouTube oembed-validated)
+      setRefLoading(true);
+      const refTopic = `${form.businessType} ${form.goal} إعلان تسويق ${form.city}`;
+      supabase.functions.invoke('b99-engine', {
+        body: { action: 'media_search', payload: { topic: refTopic, video_limit: 6, image_limit: 0 } },
+      }).then(({ data }) => {
+        setRefVideos(data?.videos || []);
+      }).finally(() => setRefLoading(false));
+
+      // Step 2 — generate the AI ad (scenes + voice + real images)
       const { data, error } = await supabase.functions.invoke('b99-engine', {
         body: { action: 'generate_video_ad', userId: identity?.userId, payload: form },
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
       setCampaign(data.campaign || data);
-      toast.success('تم بناء حملة الفيديو');
+      toast.success('تم بناء حملة الفيديو الاحترافية');
       loadHistory();
     } catch (e: any) {
       toast.error(e.message || 'تعذر التوليد');
@@ -383,6 +395,41 @@ export default function B99Ads() {
                 )}
               </Card>
 
+              {/* REAL REFERENCE VIDEOS — pulled from YouTube via deep search */}
+              {(refLoading || refVideos.length > 0) && (
+                <Card className="bg-white border-2 border-black p-5 shadow-[4px_4px_0_0_#000] rounded-none">
+                  <div className="flex items-center justify-between mb-3 pb-3 border-b-2 border-black">
+                    <div className="flex items-center gap-2">
+                      <Video className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <div className="text-sm font-black text-black">فيديوهات حقيقية مرجعية</div>
+                        <div className="text-[11px] text-black/60">بحث عميق من يوتيوب — مرجعك البصري قبل الإنتاج</div>
+                      </div>
+                    </div>
+                    {refLoading && <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {refVideos.map((v: any) => (
+                      <a key={v.video_id} href={v.url} target="_blank" rel="noreferrer"
+                        className="group border-2 border-black hover:shadow-[3px_3px_0_0_#000] transition-shadow bg-white">
+                        <div className="relative aspect-video bg-black overflow-hidden">
+                          <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <div className="w-12 h-12 bg-red-600 border-2 border-white flex items-center justify-center">
+                              <Play className="w-5 h-5 text-white fill-white" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-2.5">
+                          <div className="text-xs font-bold text-black line-clamp-2">{v.title}</div>
+                          <div className="text-[10px] text-black/60 mt-1">{v.channel}</div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
               {/* PLAYABLE AD — real generated images + browser TTS */}
               {scenes.length > 0 && (
                 <PlayableAd
@@ -563,8 +610,15 @@ function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format
 
   const playFrom = (start: number) => {
     if (!('speechSynthesis' in window)) { toast.error('المتصفح لا يدعم تشغيل الصوت'); return; }
-    setPlaying(true);
-    setIdx(start);
+    const voices = window.speechSynthesis.getVoices?.() || [];
+    const score = (v: SpeechSynthesisVoice) => {
+      const n = (v.name || '').toLowerCase(); let s = 0;
+      if (/ar.SA/i.test(v.lang)) s += 50; else if (/^ar/i.test(v.lang)) s += 30;
+      if (/google/.test(n)) s += 25; if (/natural|neural|online|premium|enhanced/.test(n)) s += 30;
+      return s;
+    };
+    const bestVoice = [...voices].sort((a, b) => score(b) - score(a))[0];
+    setPlaying(true); setIdx(start);
     const runScene = (i: number) => {
       if (i >= scenes.length) { setPlaying(false); return; }
       setIdx(i);
@@ -574,8 +628,8 @@ function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format
       window.speechSynthesis.cancel();
       if (text) {
         const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'ar-SA';
-        u.rate = 1.0;
+        u.lang = 'ar-SA'; u.rate = 0.9; u.pitch = 1.05; u.volume = 1;
+        if (bestVoice) u.voice = bestVoice;
         window.speechSynthesis.speak(u);
       }
       timerRef.current = setTimeout(() => runScene(i + 1), dur * 1000);
