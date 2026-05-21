@@ -144,29 +144,68 @@ async function fetchVisualExamples(topic: string, limit = 6) {
   } catch (e) { console.error('visual_examples', e); return { items: [] }; }
 }
 
-// ====== YouTube video search via Gemini grounding ======
-async function fetchVideos(topic: string, limit = 6) {
+// ====== YouTube video search — validated via oembed ======
+async function validateYouTube(videoId: string): Promise<any | null> {
   try {
+    const r = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`, {
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+async function fetchVideos(topic: string, limit = 9) {
+  try {
+    // Ask AI for MORE than needed so we can filter dead ones
     const data = await callAI([
-      { role: 'system', content: 'أنت مساعد بحث فيديوهات يوتيوب. أعد روابط فيديوهات حقيقية فقط بصيغة https://www.youtube.com/watch?v=XXXXXX. لا تخترع.' },
-      { role: 'user', content: `ابحث عن ${limit} فيديوهات حقيقية في يوتيوب عن: "${topic}". أعد لكل فيديو: العنوان، الرابط الكامل، اسم القناة.` },
+      { role: 'system', content: 'You return real YouTube video IDs only. Output JSON array. Never invent IDs. Prefer popular channels with millions of views.' },
+      { role: 'user', content: `Find ${limit * 2} real, currently-available YouTube videos about: "${topic}". For each return the 11-char video_id, full title, and channel name.` },
     ], {
       type: 'object',
       properties: {
         items: { type: 'array', items: { type: 'object', properties: {
-          title: { type: 'string' }, url: { type: 'string' }, channel: { type: 'string' },
-        }, required: ['title', 'url'] } },
+          video_id: { type: 'string' }, title: { type: 'string' }, channel: { type: 'string' },
+        }, required: ['video_id', 'title'] } },
       }, required: ['items'],
     });
-    return (data.items || []).slice(0, limit).map((v: any) => {
-      const id = (v.url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{6,})/) || [])[1];
+    const candidates = (data.items || []).filter((v: any) => /^[A-Za-z0-9_-]{11}$/.test(v.video_id));
+    // Validate in parallel, keep only those that resolve
+    const validated = await Promise.all(candidates.slice(0, limit * 2).map(async (v: any) => {
+      const meta = await validateYouTube(v.video_id);
+      if (!meta) return null;
       return {
-        title: v.title, channel: v.channel, url: v.url, video_id: id,
-        thumbnail: id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '',
-        embed: id ? `https://www.youtube.com/embed/${id}` : null,
+        title: meta.title || v.title,
+        channel: meta.author_name || v.channel,
+        url: `https://www.youtube.com/watch?v=${v.video_id}`,
+        video_id: v.video_id,
+        thumbnail: meta.thumbnail_url || `https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg`,
+        embed: `https://www.youtube.com/embed/${v.video_id}`,
       };
-    }).filter((v: any) => v.video_id);
+    }));
+    return validated.filter(Boolean).slice(0, limit);
   } catch (e) { console.error('fetchVideos', e); return []; }
+}
+
+// ====== Generate REAL scene images using Gemini image model ======
+async function generateSceneImage(prompt: string): Promise<string | null> {
+  try {
+    const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{ role: 'user', content: prompt }],
+        modalities: ['image', 'text'],
+      }),
+    });
+    if (!r.ok) { console.error('image gen', r.status, await r.text()); return null; }
+    const data = await r.json();
+    const msg = data.choices?.[0]?.message;
+    const imgs = msg?.images || [];
+    const url = imgs[0]?.image_url?.url || null;
+    return url; // data:image/png;base64,...
+  } catch (e) { console.error('generateSceneImage', e); return null; }
 }
 
 // ====== Image search via Gemini (returns direct image URLs) ======
