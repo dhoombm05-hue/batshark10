@@ -383,60 +383,13 @@ export default function B99Ads() {
                 )}
               </Card>
 
-              {/* STORYBOARD */}
+              {/* PLAYABLE AD — real generated images + browser TTS */}
               {scenes.length > 0 && (
-                <Card className="border border-slate-200 bg-white p-6 rounded-3xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <LayersIcon className="w-4 h-4 text-amber-600" />
-                      <span className="text-[10px] tracking-[0.3em] text-amber-700 font-black uppercase">Storyboard</span>
-                      <span className="text-sm font-black text-slate-900">— مشهد بمشهد</span>
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {(campaign.duration_seconds || form.duration) + 'ث'} · {FORMATS.find(f=>f.value===(campaign.format || form.format))?.label}
-                    </div>
-                  </div>
-
-                  <div className={cn(
-                    'relative mx-auto rounded-3xl overflow-hidden border border-slate-200 bg-slate-950',
-                    form.format === 'vertical' ? 'aspect-[9/16] max-w-[280px]'
-                      : form.format === 'square' ? 'aspect-square max-w-md'
-                      : 'aspect-video max-w-2xl'
-                  )}>
-                    <AnimatePresence mode="wait">
-                      <motion.div key={sceneIdx}
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
-                        className="absolute inset-0 flex flex-col justify-between p-5"
-                        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #422006 100%)' }}>
-                        <div className="text-[10px] text-amber-300/80 uppercase tracking-widest">مشهد {sceneIdx + 1} / {scenes.length}</div>
-                        <div className="space-y-2 text-center">
-                          <div className="text-2xl md:text-3xl font-black text-white drop-shadow-lg leading-tight">
-                            {scenes[sceneIdx].on_screen_text || scenes[sceneIdx].text_on_screen}
-                          </div>
-                          <div className="text-xs text-amber-100/70 italic">{scenes[sceneIdx].visual}</div>
-                        </div>
-                        <div className="rounded-lg bg-black/40 border border-amber-300/20 p-2.5">
-                          <div className="text-[10px] text-amber-300 mb-0.5 flex items-center gap-1"><Mic className="w-3 h-3" /> صوت</div>
-                          <div className="text-xs text-white">{scenes[sceneIdx].voiceover || scenes[sceneIdx].voice}</div>
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between">
-                    <Button size="sm" variant="ghost" onClick={() => setSceneIdx((i) => Math.max(0, i - 1))} disabled={sceneIdx === 0}>
-                      <ChevronRight className="w-4 h-4" /> السابق
-                    </Button>
-                    <div className="flex gap-1">
-                      {scenes.map((_: any, i: number) => (
-                        <div key={i} className={cn('w-2 h-2 rounded-full transition', i === sceneIdx ? 'bg-amber-500 w-5' : 'bg-slate-300')} />
-                      ))}
-                    </div>
-                    <Button size="sm" variant="ghost" onClick={() => setSceneIdx((i) => Math.min(scenes.length - 1, i + 1))} disabled={sceneIdx === scenes.length - 1}>
-                      التالي <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Card>
+                <PlayableAd
+                  scenes={scenes}
+                  format={campaign.format || form.format}
+                  voiceoverScript={campaign.voiceover_script}
+                />
               )}
 
               {/* AI Video Prompt */}
