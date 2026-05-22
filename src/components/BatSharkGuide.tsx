@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import { 
   X, Send, Loader2, ChevronRight, Sparkles, 
   LayoutDashboard, FolderKanban, Users, ListTodo, 
   Brain, Bell, FileText, FlaskConical, TrendingUp,
-  Volume2, BookOpen, MessageCircle, Zap, Target
+  Volume2, BookOpen, MessageCircle, Zap, Target, HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
