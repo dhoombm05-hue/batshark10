@@ -292,44 +292,25 @@ export default function BatSharkGuide() {
     window.speechSynthesis.speak(utterance);
   }, []);
 
+  const loc = useLocation();
+  // Hide entirely on B99 platform and generated platform pages — they have their own assistant
+  if (loc.pathname.startsWith('/b99') || loc.pathname.startsWith('/p/') || loc.pathname === '/' || loc.pathname === '/build') {
+    return null;
+  }
+
   return (
     <>
-      {/* ================================================================== */}
-      {/* FLOATING TRIGGER BUTTON */}
-      {/* ================================================================== */}
+      {/* Minimal corner FAB — only icon, no label, bottom-right (out of the way) */}
       <motion.button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 group print:hidden"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        className="fixed bottom-5 right-5 z-40 w-11 h-11 rounded-full bg-foreground text-background shadow-lg flex items-center justify-center print:hidden hover:scale-105 transition-transform"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1, type: 'spring' }}
+        aria-label="دليل بات شارك"
+        title="دليل بات شارك"
       >
-        {/* Glow ring */}
-        <motion.div
-          className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-chart-1 to-section-ai opacity-60 blur-xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.6, 0.4] }}
-          transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-        />
-        
-        {/* Main button */}
-        <div className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-foreground/95 backdrop-blur-md shadow-elevated border border-white/10">
-          <span className="text-background font-heading font-bold text-sm">دليل BatShark</span>
-          <div className="relative">
-            <img 
-              src={logo} 
-              alt="BatShark" 
-              className="w-8 h-8 object-contain drop-shadow-lg" 
-            />
-            {/* Subtle pulse */}
-            <motion.div
-              className="absolute inset-0 rounded-full bg-primary/30"
-              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-            />
-          </div>
-        </div>
+        <HelpCircle className="w-5 h-5" />
       </motion.button>
 
       {/* ================================================================== */}
