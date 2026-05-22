@@ -171,9 +171,46 @@ export default function B99Layout() {
         </AnimatePresence>
       </header>
 
+      {/* ═══ MUSIC BAR: search YouTube + autoplay ═══ */}
+      <div className="sticky top-16 z-30 bg-black text-white border-b-2 border-black">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 flex-wrap">
+          <Music className="w-4 h-4 text-green-400 shrink-0" />
+          <form onSubmit={playMusic} className="flex-1 flex items-center gap-2 min-w-[200px]">
+            <Input
+              value={musicQ}
+              onChange={(e) => setMusicQ(e.target.value)}
+              placeholder="اكتب اسم الأغنية وسيتم تشغيلها مباشرة..."
+              className="flex-1 h-8 rounded-none bg-white text-black border-2 border-white text-xs placeholder:text-black/40"
+            />
+            <Button type="submit" size="sm" disabled={musicLoading} className="h-8 rounded-none bg-green-500 hover:bg-green-600 text-black border-2 border-white font-bold text-xs px-3">
+              {musicLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'شغّل'}
+            </Button>
+          </form>
+          {track && (
+            <div className="flex items-center gap-2">
+              <button onClick={toggleMusic} className="h-7 px-2 bg-white text-black border-2 border-white text-xs font-bold flex items-center gap-1">
+                {musicPlaying ? <><Pause className="w-3 h-3" /> إيقاف</> : <><Play className="w-3 h-3" /> تشغيل</>}
+              </button>
+              <span className="text-[11px] truncate max-w-[180px] text-green-300">{track.title}</span>
+            </div>
+          )}
+        </div>
+        {/* Hidden YouTube audio iframe */}
+        {track && (
+          <iframe
+            ref={ytRef}
+            title="bs99-music"
+            src={`${track.embed}?autoplay=${musicPlaying ? 1 : 0}&controls=0&modestbranding=1`}
+            allow="autoplay; encrypted-media"
+            className="absolute -bottom-1 left-0 w-1 h-1 opacity-0 pointer-events-none"
+          />
+        )}
+      </div>
+
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Outlet context={{ identity }} />
       </main>
+
 
       <button onClick={() => setAssistantOpen(true)} aria-label="مساعد بات شارك"
         className="fixed bottom-5 left-5 z-40 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white border-2 border-black shadow-[4px_4px_0_0_#000] flex items-center justify-center transition-colors">
