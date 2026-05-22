@@ -116,9 +116,7 @@ export default function B99Generator() {
   const config = level ? LEVEL_CONFIG[level] : null;
   const [answers, setAnswers] = useState<Record<string, any>>({ payment: 'كاش فقط' });
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
   const [platform, setPlatform] = useState<any>(null);
-  const [buildLoading, setBuildLoading] = useState(false);
 
   const progress = useMemo(() => {
     if (!config) return 0;
@@ -131,60 +129,37 @@ export default function B99Generator() {
 
   const update = (key: string, value: any) => setAnswers((a) => ({ ...a, [key]: value }));
 
+  const levelNumber = (l: Level) => ({ beginner: 1, intermediate: 2, advanced: 3, analyst: 4 }[l]);
+
   const generate = async () => {
     if (!config || !level) return;
     const missing = config.questions.find((q) => q.required && !String(answers[q.key] ?? '').trim());
     if (missing) return toast.error(`أكمل: ${missing.label}`);
     setLoading(true);
-    setResult(null);
     setPlatform(null);
     try {
+      const enriched = {
+        ...answers,
+        level_track: level,
+        owner_email: identity?.email || answers.owner_email,
+        platform_type_hint: inferPlatformType(String(answers.business_request || '')),
+        access_code: answers.access_code || '',
+      };
       const { data, error } = await supabase.functions.invoke('b99-engine', {
-        body: { action: 'generator_step', payload: { level, answers, mode: 'final', build_intent: true } },
+        body: { action: 'generate_platform', userId: identity?.userId, payload: { level: levelNumber(level), answers: enriched } },
       });
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      setResult(data);
-      toast.success('تم توليد مخطط المنصة حسب المستوى');
+      if (data?.error) throw new Error(data.error);
+      if (!data?.platform) throw new Error('لم يتم بناء المنصة');
+      setPlatform(data.platform);
+      toast.success('تم بناء منصة فعلية ورابط مستقل');
     } catch (e: any) {
-      toast.error(e.message || 'تعذر التوليد');
+      toast.error(e.message || 'تعذر البناء');
     } finally {
       setLoading(false);
     }
   };
 
-  const buildPlatform = async () => {
-    if (!config || !level || !result) return;
-    setBuildLoading(true);
-    try {
-      const brief = result.generated_platform_brief || {};
-      const name = brief.name || result.idea_name || answers.business_request?.slice(0, 40) || 'منصة جديدة';
-      const { data, error } = await supabase.functions.invoke('b99-engine', {
-        body: {
-          action: 'generate_platform',
-          userId: identity?.userId,
-          payload: {
-            name,
-            purpose: brief.purpose || result.description || answers.business_request,
-            platformType: brief.platform_type || inferPlatformType(String(answers.business_request || '')),
-            accessCode: answers.access_code || '',
-            ownerEmail: identity?.email || '',
-            buildLevel: level,
-            buildMode: 'step-by-step',
-            requirements: { level, answers, ai_result: result, requested_payment: answers.payment || 'كاش فقط' },
-          },
-        },
-      });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      setPlatform(data.platform);
-      toast.success('تم إنشاء منصة كاملة ورابط مستقل');
-    } catch (e: any) {
-      toast.error(e.message || 'تعذر بناء المنصة');
-    } finally {
-      setBuildLoading(false);
-    }
-  };
 
   if (!config) {
     return (
@@ -290,44 +265,38 @@ export default function B99Generator() {
       </div>
 
       <AnimatePresence>
-        {result && (
+        {platform && (
           <motion.section initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <Card className="overflow-hidden border-white/10 bg-gradient-to-br from-cyan-500/12 via-violet-500/10 to-rose-500/10 p-6">
-              <Badge className="mb-3 border-emerald-500/30 bg-emerald-500/15 text-emerald-300">توافق {result.match_score || 91}%</Badge>
-              <h2 className="text-2xl md:text-4xl font-black">{result.idea_name}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">{result.description}</p>
+            <Card className="overflow-hidden border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-cyan-500/10 to-blue-500/10 p-6">
+              <Badge className="mb-3 border-emerald-500/30 bg-emerald-500/15 text-emerald-300">
+                <CheckCircle2 className="ml-1 inline h-3 w-3" /> منصة فعلية جاهزة
+              </Badge>
+              <h2 className="text-2xl md:text-4xl font-black">{platform.name}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">{platform.tagline}</p>
               <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-                <MiniStat icon={Target} label="التموضع" value={result.positioning || 'واضح'} />
+                <MiniStat icon={Layers} label="عدد الصفحات" value={String((platform.pages || []).length)} />
                 <MiniStat icon={CreditCard} label="الدفع" value={answers.payment || 'كاش فقط'} />
                 <MiniStat icon={Image} label="الهيرو" value={answers.main_image || 'حسب النشاط'} />
-                <MiniStat icon={Layers} label="نوع المنصة" value={result.generated_platform_brief?.platform_type || inferPlatformType(String(answers.business_request || ''))} />
+                <MiniStat icon={Target} label="نوع المنصة" value={platform.platform_type || inferPlatformType(String(answers.business_request || ''))} />
               </div>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {(result.roadmap || []).slice(0, 6).map((r: any, i: number) => (
-                <Card key={i} className="border-white/10 bg-white/[0.035] p-4">
-                  <div className="mb-2 flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-xs font-black">{i + 1}</span><b className="text-sm">{r.phase}</b></div>
-                  <p className="text-[11px] text-cyan-200">{r.duration}</p>
-                  <ul className="mt-2 list-disc space-y-1 pr-4 text-xs text-slate-400">{r.actions?.slice(0, 3).map((a: string, j: number) => <li key={j}>{a}</li>)}</ul>
-                </Card>
-              ))}
-            </div>
-
             <Card className="border-white/10 bg-slate-950/80 p-5">
-              <h3 className="mb-3 flex items-center gap-2 font-black"><Rocket className="h-4 w-4 text-cyan-300" /> تنفيذ الطلب النهائي</h3>
+              <h3 className="mb-3 flex items-center gap-2 font-black"><Rocket className="h-4 w-4 text-cyan-300" /> منصتك أصبحت حية</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Button onClick={buildPlatform} disabled={buildLoading} className="h-12 bg-cyan-500 text-white hover:bg-cyan-400">
-                  {buildLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Layers className="h-4 w-4" />} إنشاء المنصة الكاملة
-                </Button>
-                <Button onClick={() => navigate('/b99/ads', { state: { prefill: { businessType: result.idea_name, brief: result.description } } })} className="h-12 bg-rose-500 text-white hover:bg-rose-400"><Megaphone className="h-4 w-4" /> حملة إعلانية لها</Button>
-                {platform && <Button onClick={() => window.open(`/p/${platform.slug}`, '_blank')} className="h-12 bg-white text-slate-950 hover:bg-slate-200"><ExternalLink className="h-4 w-4" /> فتح المنصة</Button>}
+                <Button onClick={() => window.open(`/p/${platform.slug}`, '_blank')} className="h-12 bg-cyan-500 text-white hover:bg-cyan-400"><ExternalLink className="h-4 w-4" /> فتح المنصة الحية</Button>
+                <Button onClick={() => window.open(`/p/${platform.slug}/edit`, '_blank')} className="h-12 bg-white text-slate-950 hover:bg-slate-200"><Wrench className="h-4 w-4" /> محرر المالك</Button>
+                <Button onClick={() => navigate('/b99/ads', { state: { prefill: { businessType: platform.name, brief: platform.tagline } } })} className="h-12 bg-rose-500 text-white hover:bg-rose-400"><Megaphone className="h-4 w-4" /> حملة إعلانية لها</Button>
               </div>
-              {platform && <p className="mt-3 text-xs text-emerald-300"><CheckCircle2 className="inline h-3.5 w-3.5" /> تم حفظها: /p/{platform.slug}</p>}
+              <p className="mt-3 text-xs text-emerald-300"><CheckCircle2 className="inline h-3.5 w-3.5" /> الرابط: /p/{platform.slug}</p>
+              {platform.owner_password && (
+                <p className="mt-1 text-[11px] text-amber-300"><Lock className="inline h-3 w-3" /> كلمة سر المالك (احفظها): <code className="rounded bg-black/40 px-1.5 py-0.5">{platform.owner_password}</code></p>
+              )}
             </Card>
           </motion.section>
         )}
       </AnimatePresence>
+
     </div>
   );
 }
