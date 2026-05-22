@@ -73,6 +73,35 @@ export default function B99Layout() {
     nav(`/b99/search?q=${encodeURIComponent(searchQ.trim())}`);
   };
 
+  // ═══ Music Player (YouTube audio) ═══
+  const [musicQ, setMusicQ] = useState('');
+  const [musicLoading, setMusicLoading] = useState(false);
+  const [track, setTrack] = useState<any>(null);
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const ytRef = useRef<HTMLIFrameElement | null>(null);
+
+  const playMusic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!musicQ.trim() || musicLoading) return;
+    setMusicLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('b99-engine', {
+        body: { action: 'music_search', payload: { query: musicQ.trim() } },
+      });
+      if (error) throw error;
+      if (!data?.track) throw new Error('لم نجد الأغنية');
+      setTrack(data.track);
+      setMusicPlaying(true);
+      toast.success(`يشغّل: ${data.track.title}`);
+    } catch (e: any) { toast.error(e.message || 'تعذّر البحث'); }
+    finally { setMusicLoading(false); }
+  };
+
+  const toggleMusic = () => {
+    if (!track) return;
+    setMusicPlaying((p) => !p);
+  };
+
   return (
     <div dir="rtl" className="min-h-screen bg-white text-black">
       <header className="sticky top-0 z-40 bg-white border-b-2 border-black">
