@@ -592,7 +592,7 @@ function Info({ label, value, icon: Icon }: any) {
   );
 }
 
-/* ===== Playable Ad — real generated images + browser TTS voiceover ===== */
+/* ===== Playable Ad — صامت احترافي بدون صوت، نصوص شاشة واضحة فقط ===== */
 function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format: string; voiceoverScript?: string }) {
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -604,38 +604,21 @@ function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format
   const stop = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = null;
-    window.speechSynthesis?.cancel();
     setPlaying(false);
   };
 
   const playFrom = (start: number) => {
-    if (!('speechSynthesis' in window)) { toast.error('المتصفح لا يدعم تشغيل الصوت'); return; }
-    const voices = window.speechSynthesis.getVoices?.() || [];
-    const score = (v: SpeechSynthesisVoice) => {
-      const n = (v.name || '').toLowerCase(); let s = 0;
-      if (/ar.SA/i.test(v.lang)) s += 50; else if (/^ar/i.test(v.lang)) s += 30;
-      if (/google/.test(n)) s += 25; if (/natural|neural|online|premium|enhanced/.test(n)) s += 30;
-      return s;
-    };
-    const bestVoice = [...voices].sort((a, b) => score(b) - score(a))[0];
     setPlaying(true); setIdx(start);
     const runScene = (i: number) => {
       if (i >= scenes.length) { setPlaying(false); return; }
       setIdx(i);
       const s = scenes[i];
       const dur = Math.max(2, Number(s.duration_sec) || 4);
-      const text = s.voice || s.on_screen_text || '';
-      window.speechSynthesis.cancel();
-      if (text) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'ar-SA'; u.rate = 0.9; u.pitch = 1.05; u.volume = 1;
-        if (bestVoice) u.voice = bestVoice;
-        window.speechSynthesis.speak(u);
-      }
       timerRef.current = setTimeout(() => runScene(i + 1), dur * 1000);
     };
     runScene(start);
   };
+
 
   useEffect(() => () => stop(), []);
 
