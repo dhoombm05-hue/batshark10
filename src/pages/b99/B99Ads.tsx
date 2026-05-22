@@ -626,8 +626,11 @@ function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format
 
   return (
     <div className="bg-white border-2 border-black p-5 shadow-[4px_4px_0_0_#000]">
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm font-black text-black">▶ إعلانك جاهز — تشغيل فعلي</div>
+      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-black text-black">▶ إعلانك صامت احترافي</div>
+          <Badge className="bg-black text-white border-2 border-black rounded-none text-[10px] font-bold gap-1"><Mic className="w-3 h-3" /> صامت — نصوص بصرية فقط</Badge>
+        </div>
         <div className="flex items-center gap-2">
           {playing ? (
             <Button size="sm" onClick={stop} className="bg-red-600 hover:bg-red-700 text-white rounded-none border-2 border-black font-bold">إيقاف</Button>
@@ -645,38 +648,38 @@ function PlayableAd({ scenes, format, voiceoverScript }: { scenes: any[]; format
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-black" />
         )}
-        <div className="absolute inset-0 bg-black/35" />
-        <div className="absolute top-3 right-3 text-[10px] px-2 py-1 bg-black/70 text-white font-bold">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/40" />
+        <div className="absolute top-3 right-3 text-[10px] px-2 py-1 bg-black/80 text-white font-bold border border-white/40">
           مشهد {idx + 1} / {scenes.length}
         </div>
-        <div className="absolute inset-x-0 bottom-0 p-4 text-center">
-          <div className="text-2xl md:text-3xl font-black text-white drop-shadow-[2px_2px_0_#000] leading-tight">
-            {cur.on_screen_text || ''}
+        <div className="absolute inset-x-0 bottom-0 p-5 text-center">
+          <div className="text-2xl md:text-4xl font-black text-white drop-shadow-[3px_3px_0_#000] leading-tight">
+            {cur.on_screen_text || cur.voice || ''}
           </div>
         </div>
-        {/* progress bar */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-white/20">
-          <div className="h-full bg-blue-500 transition-all" style={{ width: `${((idx + 1) / scenes.length) * 100}%` }} />
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-white/20">
+          <div className="h-full bg-green-500 transition-all duration-300" style={{ width: `${((idx + 1) / scenes.length) * 100}%` }} />
         </div>
       </div>
 
-      {/* Scene thumbs */}
       <div className="mt-4 grid grid-cols-3 md:grid-cols-6 gap-2">
         {scenes.map((s: any, i: number) => (
           <button key={i} onClick={() => { stop(); setIdx(i); }}
-            className={cn('relative aspect-square overflow-hidden border-2', i === idx ? 'border-blue-600' : 'border-black')}>
+            className={cn('relative aspect-square overflow-hidden border-2', i === idx ? 'border-green-600 shadow-[2px_2px_0_0_#16a34a]' : 'border-black')}>
             {s.image_url
               ? <img src={s.image_url} alt="" className="w-full h-full object-cover" />
               : <div className="w-full h-full bg-black/80" />}
-            <div className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[9px] py-0.5 text-center font-bold">{i + 1}</div>
+            <div className="absolute bottom-0 inset-x-0 bg-black/80 text-white text-[9px] py-0.5 text-center font-bold">{i + 1}</div>
           </button>
         ))}
       </div>
 
-      <div className="mt-3 text-xs text-black/70">
-        <strong>الصوت:</strong> {cur.voice || '—'}
+      <div className="mt-3 text-[11px] text-black/60 leading-relaxed border-t-2 border-black pt-3">
+        <strong className="text-black">نص الشاشة الحالي:</strong> {cur.on_screen_text || cur.voice || '—'}
+        <div className="mt-1"><strong className="text-black">المدة:</strong> {cur.duration_sec || 4} ث</div>
       </div>
     </div>
   );
 }
+
 
