@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Sparkles, Megaphone, Layers, Home, Menu, X, Send, Bot, LogIn, ShieldCheck, Plug, Link2, Lightbulb } from 'lucide-react';
+import { Search, Sparkles, Megaphone, Layers, Home, Menu, X, Send, Bot, LogIn, ShieldCheck, Plug, Link2, Lightbulb, Music, Pause, Play, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
