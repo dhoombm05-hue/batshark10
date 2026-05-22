@@ -81,11 +81,12 @@ export default function BatSharkRobot() {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState<{ answer: string; route?: string } | null>(null);
   const [isThinking, setIsThinking] = useState(false);
+  const [visible, setVisible] = useState(false); // cinematic visibility cycle
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Only fly on dashboard (root path)
-  const isDashboard = location.pathname === '/';
+  // Hide robot completely on Batshark 99 + generated platform routes (they have their own assistant)
+  const isHidden = location.pathname.startsWith('/b99') || location.pathname.startsWith('/p/') || location.pathname === '/build';
 
   const posX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 400);
   const posY = useMotionValue(80);
@@ -93,30 +94,46 @@ export default function BatSharkRobot() {
   const springY = useSpring(posY, { stiffness: 18, damping: 12, mass: 1.5 });
   const [facingLeft, setFacingLeft] = useState(false);
   const waypointTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Free-fly only on dashboard
+  // ═══ CINEMATIC CYCLE: every 5 minutes, bat appears & flies for 1 minute, disappears 1 sec, repeat ═══
   useEffect(() => {
-    if (open || !isDashboard) {
-      // Reset to center-top when not on dashboard
-      if (!isDashboard) {
-        posX.set(typeof window !== 'undefined' ? window.innerWidth / 2 : 400);
-        posY.set(40);
-        setFacingLeft(false);
-      }
+    if (isHidden) { setVisible(false); return; }
+    let mounted = true;
+    const showFor = 60_000; // 1 minute visible
+    const hideFor = 5 * 60_000; // 5 minutes hidden
+    const initialDelay = 4_000; // first appearance after 4 sec
+
+    const tick = () => {
+      if (!mounted) return;
+      setVisible(true);
+      cycleTimer.current = setTimeout(() => {
+        if (!mounted) return;
+        setVisible(false);
+        cycleTimer.current = setTimeout(tick, hideFor);
+      }, showFor);
+    };
+
+    cycleTimer.current = setTimeout(tick, initialDelay);
+    return () => { mounted = false; if (cycleTimer.current) clearTimeout(cycleTimer.current); };
+  }, [isHidden]);
+
+  // Fly around the WHOLE page while visible
+  useEffect(() => {
+    if (!visible || open || isHidden) {
+      if (waypointTimer.current) clearTimeout(waypointTimer.current);
       return;
     }
-
     const fly = () => {
       const wp = getRandomWaypoint();
       setFacingLeft(wp.x < posX.get());
       posX.set(wp.x);
       posY.set(wp.y);
-      waypointTimer.current = setTimeout(fly, 3000 + Math.random() * 3000);
+      waypointTimer.current = setTimeout(fly, 2200 + Math.random() * 2000);
     };
-
-    waypointTimer.current = setTimeout(fly, 1500);
+    waypointTimer.current = setTimeout(fly, 300);
     return () => { if (waypointTimer.current) clearTimeout(waypointTimer.current); };
-  }, [open, posX, posY]);
+  }, [visible, open, isHidden, posX, posY]);
 
   useEffect(() => {
     if (open) {
