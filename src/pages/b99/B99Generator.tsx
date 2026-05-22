@@ -108,6 +108,16 @@ const LEVEL_CONFIG: Record<Level, { title: string; short: string; route: string;
 
 const LEVELS = Object.keys(LEVEL_CONFIG) as Level[];
 
+const BUILD_STEPS = [
+  { id: 'analyze', label: 'تحليل متطلباتك وفهم النشاط', detail: 'يقرأ إجاباتك ويستخرج هوية المنصة والجمهور المستهدف' },
+  { id: 'research', label: 'بحث عميق عن مرجعيات السوق', detail: 'يجمع أنماط منصات شبيهة محلياً وعالمياً' },
+  { id: 'blueprint', label: 'كتابة المخطط الكامل (Blueprint)', detail: 'صفحات + أقسام + هوية بصرية + ميزات' },
+  { id: 'content', label: 'كتابة محتوى احترافي لكل صفحة', detail: 'عناوين، أوصاف، باقات، أسئلة شائعة، شهادات' },
+  { id: 'brand', label: 'توليد هوية بصرية واختيار الألوان', detail: 'لوحة ألوان، شعار رمزي، مزاج بصري متناسق' },
+  { id: 'wire', label: 'ربط قاعدة بيانات وحساب مالك', detail: 'بناء حسابك، كلمة السر، وصلاحيات التعديل' },
+  { id: 'publish', label: 'نشر المنصة على رابط مستقل', detail: 'إصدار رابط /p/slug جاهز للزيارة المباشرة' },
+];
+
 export default function B99Generator() {
   const { level: routeLevel } = useParams();
   const navigate = useNavigate();
@@ -117,6 +127,8 @@ export default function B99Generator() {
   const [answers, setAnswers] = useState<Record<string, any>>({ payment: 'كاش فقط' });
   const [loading, setLoading] = useState(false);
   const [platform, setPlatform] = useState<any>(null);
+  const [buildStep, setBuildStep] = useState(0);
+  const [buildLog, setBuildLog] = useState<string[]>([]);
 
   const progress = useMemo(() => {
     if (!config) return 0;
@@ -137,6 +149,19 @@ export default function B99Generator() {
     if (missing) return toast.error(`أكمل: ${missing.label}`);
     setLoading(true);
     setPlatform(null);
+    setBuildStep(0);
+    setBuildLog([`▶ بدء البناء — ${new Date().toLocaleTimeString('ar-SA')}`]);
+
+    // Live progressive build steps while AI works
+    let stepIdx = 0;
+    const stepTimer = setInterval(() => {
+      if (stepIdx < BUILD_STEPS.length - 1) {
+        stepIdx++;
+        setBuildStep(stepIdx);
+        setBuildLog((l) => [...l, `✓ ${BUILD_STEPS[stepIdx - 1].label}`]);
+      }
+    }, 1800);
+
     try {
       const enriched = {
         ...answers,
@@ -148,17 +173,23 @@ export default function B99Generator() {
       const { data, error } = await supabase.functions.invoke('b99-engine', {
         body: { action: 'generate_platform', userId: identity?.userId, payload: { level: levelNumber(level), answers: enriched } },
       });
+      clearInterval(stepTimer);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.platform) throw new Error('لم يتم بناء المنصة');
+      setBuildStep(BUILD_STEPS.length - 1);
+      setBuildLog((l) => [...l, `✓ نشر المنصة على /p/${data.platform.slug}`, `✅ تم بناء منصة مستقلة فعلية — ${data.platform.name}`]);
       setPlatform(data.platform);
       toast.success('تم بناء منصة فعلية ورابط مستقل');
     } catch (e: any) {
+      clearInterval(stepTimer);
+      setBuildLog((l) => [...l, `✗ خطأ: ${e.message || 'فشل البناء'}`]);
       toast.error(e.message || 'تعذر البناء');
     } finally {
       setLoading(false);
     }
   };
+
 
 
   if (!config) {
