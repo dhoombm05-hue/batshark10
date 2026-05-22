@@ -277,6 +277,42 @@ export default function B99Generator() {
         </Card>
 
         <aside className="space-y-3">
+          {/* شاشة بناء حية بخطوات مرئية */}
+          {(loading || buildLog.length > 0) && (
+            <Card className="border-2 border-cyan-400/40 bg-slate-950/90 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`w-2 h-2 rounded-full ${loading ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+                <h3 className="font-black text-sm text-white">شاشة البناء الحية</h3>
+                {loading && <Badge className="bg-cyan-500/20 border-cyan-400/40 text-cyan-300 text-[10px]">جاري...</Badge>}
+              </div>
+              <div className="space-y-1.5 mb-3 max-h-64 overflow-y-auto">
+                {BUILD_STEPS.map((s, i) => {
+                  const done = i < buildStep || (!loading && platform);
+                  const active = i === buildStep && loading;
+                  return (
+                    <div key={s.id} className={`flex items-start gap-2 p-2 rounded-md text-[11px] ${active ? 'bg-cyan-500/15 border border-cyan-400/30' : done ? 'opacity-60' : 'opacity-30'}`}>
+                      <div className="mt-0.5">
+                        {done ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                          : active ? <RefreshCw className="h-3.5 w-3.5 text-cyan-300 animate-spin" />
+                          : <div className="h-3.5 w-3.5 rounded-full border border-slate-600" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className={`font-bold ${active ? 'text-cyan-200' : 'text-slate-300'}`}>{s.label}</div>
+                        <div className="text-[10px] text-slate-500 leading-snug">{s.detail}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {buildLog.length > 0 && (
+                <div className="border-t border-white/10 pt-2 bg-black/50 p-2 rounded font-mono text-[10px] text-emerald-300 max-h-32 overflow-y-auto">
+                  {buildLog.map((l, i) => <div key={i}>{l}</div>)}
+                </div>
+              )}
+            </Card>
+          )}
+
+
           <Card className="border-white/10 bg-slate-950/80 p-5">
             <ClipboardList className="mb-3 h-6 w-6 text-cyan-300" />
             <h3 className="font-black">آلية هذا المستوى</h3>
