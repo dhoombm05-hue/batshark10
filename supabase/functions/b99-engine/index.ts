@@ -292,6 +292,14 @@ Deno.serve(async (req) => {
       return ok(v);
     }
 
+    if (action === 'music_search') {
+      const q = (payload.query || payload.topic || '').toString().trim();
+      if (!q) return ok({ error: 'empty_query' }, 400);
+      const vids = await fetchVideos(`${q} أغنية official audio`, 4);
+      const first = vids[0] || null;
+      return ok({ query: q, track: first, alternatives: vids.slice(1) });
+    }
+
     if (action === 'inspirations') {
       const ins = await fetchInspirations(payload.topic || '', payload.focus || 'overall');
       return ok(ins);

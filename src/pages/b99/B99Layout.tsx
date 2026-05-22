@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Sparkles, Megaphone, Layers, Home, Menu, X, Send, Bot, LogIn, ShieldCheck, Plug, Link2, Lightbulb } from 'lucide-react';
+import { Search, Sparkles, Megaphone, Layers, Home, Menu, X, Send, Bot, LogIn, ShieldCheck, Plug, Link2, Lightbulb, Music, Pause, Play, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,6 +73,35 @@ export default function B99Layout() {
     nav(`/b99/search?q=${encodeURIComponent(searchQ.trim())}`);
   };
 
+  // ═══ Music Player (YouTube audio) ═══
+  const [musicQ, setMusicQ] = useState('');
+  const [musicLoading, setMusicLoading] = useState(false);
+  const [track, setTrack] = useState<any>(null);
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const ytRef = useRef<HTMLIFrameElement | null>(null);
+
+  const playMusic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!musicQ.trim() || musicLoading) return;
+    setMusicLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('b99-engine', {
+        body: { action: 'music_search', payload: { query: musicQ.trim() } },
+      });
+      if (error) throw error;
+      if (!data?.track) throw new Error('لم نجد الأغنية');
+      setTrack(data.track);
+      setMusicPlaying(true);
+      toast.success(`يشغّل: ${data.track.title}`);
+    } catch (e: any) { toast.error(e.message || 'تعذّر البحث'); }
+    finally { setMusicLoading(false); }
+  };
+
+  const toggleMusic = () => {
+    if (!track) return;
+    setMusicPlaying((p) => !p);
+  };
+
   return (
     <div dir="rtl" className="min-h-screen bg-white text-black">
       <header className="sticky top-0 z-40 bg-white border-b-2 border-black">
@@ -142,9 +171,46 @@ export default function B99Layout() {
         </AnimatePresence>
       </header>
 
+      {/* ═══ MUSIC BAR: search YouTube + autoplay ═══ */}
+      <div className="sticky top-16 z-30 bg-black text-white border-b-2 border-black">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 flex-wrap">
+          <Music className="w-4 h-4 text-green-400 shrink-0" />
+          <form onSubmit={playMusic} className="flex-1 flex items-center gap-2 min-w-[200px]">
+            <Input
+              value={musicQ}
+              onChange={(e) => setMusicQ(e.target.value)}
+              placeholder="اكتب اسم الأغنية وسيتم تشغيلها مباشرة..."
+              className="flex-1 h-8 rounded-none bg-white text-black border-2 border-white text-xs placeholder:text-black/40"
+            />
+            <Button type="submit" size="sm" disabled={musicLoading} className="h-8 rounded-none bg-green-500 hover:bg-green-600 text-black border-2 border-white font-bold text-xs px-3">
+              {musicLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'شغّل'}
+            </Button>
+          </form>
+          {track && (
+            <div className="flex items-center gap-2">
+              <button onClick={toggleMusic} className="h-7 px-2 bg-white text-black border-2 border-white text-xs font-bold flex items-center gap-1">
+                {musicPlaying ? <><Pause className="w-3 h-3" /> إيقاف</> : <><Play className="w-3 h-3" /> تشغيل</>}
+              </button>
+              <span className="text-[11px] truncate max-w-[180px] text-green-300">{track.title}</span>
+            </div>
+          )}
+        </div>
+        {/* Hidden YouTube audio iframe */}
+        {track && (
+          <iframe
+            ref={ytRef}
+            title="bs99-music"
+            src={`${track.embed}?autoplay=${musicPlaying ? 1 : 0}&controls=0&modestbranding=1`}
+            allow="autoplay; encrypted-media"
+            className="absolute -bottom-1 left-0 w-1 h-1 opacity-0 pointer-events-none"
+          />
+        )}
+      </div>
+
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Outlet context={{ identity }} />
       </main>
+
 
       <button onClick={() => setAssistantOpen(true)} aria-label="مساعد بات شارك"
         className="fixed bottom-5 left-5 z-40 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white border-2 border-black shadow-[4px_4px_0_0_#000] flex items-center justify-center transition-colors">

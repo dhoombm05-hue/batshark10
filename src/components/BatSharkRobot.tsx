@@ -81,11 +81,12 @@ export default function BatSharkRobot() {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState<{ answer: string; route?: string } | null>(null);
   const [isThinking, setIsThinking] = useState(false);
+  const [visible, setVisible] = useState(false); // cinematic visibility cycle
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Only fly on dashboard (root path)
-  const isDashboard = location.pathname === '/';
+  // Hide robot completely on Batshark 99 + generated platform routes (they have their own assistant)
+  const isHidden = location.pathname.startsWith('/b99') || location.pathname.startsWith('/p/') || location.pathname === '/build';
 
   const posX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 400);
   const posY = useMotionValue(80);
@@ -93,30 +94,46 @@ export default function BatSharkRobot() {
   const springY = useSpring(posY, { stiffness: 18, damping: 12, mass: 1.5 });
   const [facingLeft, setFacingLeft] = useState(false);
   const waypointTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Free-fly only on dashboard
+  // ═══ CINEMATIC CYCLE: every 5 minutes, bat appears & flies for 1 minute, disappears 1 sec, repeat ═══
   useEffect(() => {
-    if (open || !isDashboard) {
-      // Reset to center-top when not on dashboard
-      if (!isDashboard) {
-        posX.set(typeof window !== 'undefined' ? window.innerWidth / 2 : 400);
-        posY.set(40);
-        setFacingLeft(false);
-      }
+    if (isHidden) { setVisible(false); return; }
+    let mounted = true;
+    const showFor = 60_000; // 1 minute visible
+    const hideFor = 5 * 60_000; // 5 minutes hidden
+    const initialDelay = 4_000; // first appearance after 4 sec
+
+    const tick = () => {
+      if (!mounted) return;
+      setVisible(true);
+      cycleTimer.current = setTimeout(() => {
+        if (!mounted) return;
+        setVisible(false);
+        cycleTimer.current = setTimeout(tick, hideFor);
+      }, showFor);
+    };
+
+    cycleTimer.current = setTimeout(tick, initialDelay);
+    return () => { mounted = false; if (cycleTimer.current) clearTimeout(cycleTimer.current); };
+  }, [isHidden]);
+
+  // Fly around the WHOLE page while visible
+  useEffect(() => {
+    if (!visible || open || isHidden) {
+      if (waypointTimer.current) clearTimeout(waypointTimer.current);
       return;
     }
-
     const fly = () => {
       const wp = getRandomWaypoint();
       setFacingLeft(wp.x < posX.get());
       posX.set(wp.x);
       posY.set(wp.y);
-      waypointTimer.current = setTimeout(fly, 3000 + Math.random() * 3000);
+      waypointTimer.current = setTimeout(fly, 2200 + Math.random() * 2000);
     };
-
-    waypointTimer.current = setTimeout(fly, 1500);
+    waypointTimer.current = setTimeout(fly, 300);
     return () => { if (waypointTimer.current) clearTimeout(waypointTimer.current); };
-  }, [open, posX, posY]);
+  }, [visible, open, isHidden, posX, posY]);
 
   useEffect(() => {
     if (open) {
@@ -151,46 +168,56 @@ export default function BatSharkRobot() {
     window.speechSynthesis.speak(u);
   }, []);
 
+  if (isHidden) return null;
+
   return (
     <>
-      {/* ═══════ BAT: flies on dashboard, fixed top-center elsewhere ═══════ */}
-      <motion.div
-        className="fixed z-50 print:hidden"
-        style={isDashboard ? { left: springX, top: springY, x: '-50%', y: '-50%', pointerEvents: 'none' } : { left: '50%', top: '16px', x: '-50%', y: '0%', pointerEvents: 'none' }}
-      >
-        <motion.button
-          onClick={() => setOpen(!open)}
-          className="relative flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
-          style={{ pointerEvents: 'auto', scaleX: facingLeft && !open && isDashboard ? -1 : 1 }}
-          whileTap={{ scale: 0.88 }}
-          animate={!isDashboard && !open ? { y: [0, -8, 0] } : undefined}
-          transition={!isDashboard ? { repeat: Infinity, duration: 3, ease: 'easeInOut' } : undefined}
-        >
-          <motion.span
-            className="absolute bottom-[-12px] w-8 h-2 rounded-full bg-foreground/6 blur-md"
-            animate={{ scaleX: [1, 0.6, 1], opacity: [0.2, 0.08, 0.2] }}
-            transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-          />
-          <AnimatePresence mode="wait">
-            {open ? (
-              <motion.div
-                key="close"
-                initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
-                animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
-                transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
-                className="w-12 h-12 rounded-2xl bg-card border border-border/60 shadow-xl flex items-center justify-center backdrop-blur-sm"
-              >
-                <X className="w-5 h-5 text-primary" />
-              </motion.div>
-            ) : (
-              <motion.div key="bat" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
-                <FlyingBatIcon size={58} isActive={true} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      </motion.div>
+      {/* ═══════ Cinematic cycle: appears 1 min, disappears 5 min ═══════ */}
+      <AnimatePresence>
+        {(visible || open) && (
+          <motion.div
+            key="bat-wrap"
+            initial={{ opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.5 } }}
+            className="fixed z-50 print:hidden"
+            style={open
+              ? { left: '50%', top: '16px', x: '-50%', pointerEvents: 'none' }
+              : { left: springX, top: springY, x: '-50%', y: '-50%', pointerEvents: 'none' }}
+          >
+            <motion.button
+              onClick={() => setOpen(!open)}
+              className="relative flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
+              style={{ pointerEvents: 'auto', scaleX: facingLeft && !open ? -1 : 1 }}
+              whileTap={{ scale: 0.88 }}
+            >
+              <motion.span
+                className="absolute bottom-[-12px] w-8 h-2 rounded-full bg-foreground/6 blur-md"
+                animate={{ scaleX: [1, 0.6, 1], opacity: [0.2, 0.08, 0.2] }}
+                transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+              />
+              <AnimatePresence mode="wait">
+                {open ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                    animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                    exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
+                    className="w-12 h-12 rounded-2xl bg-card border border-border/60 shadow-xl flex items-center justify-center backdrop-blur-sm"
+                  >
+                    <X className="w-5 h-5 text-primary" />
+                  </motion.div>
+                ) : (
+                  <motion.div key="bat" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
+                    <FlyingBatIcon size={58} isActive={true} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════ CHAT PANEL ═══════ */}
       <AnimatePresence>
