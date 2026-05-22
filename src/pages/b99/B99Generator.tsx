@@ -116,9 +116,7 @@ export default function B99Generator() {
   const config = level ? LEVEL_CONFIG[level] : null;
   const [answers, setAnswers] = useState<Record<string, any>>({ payment: 'كاش فقط' });
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
   const [platform, setPlatform] = useState<any>(null);
-  const [buildLoading, setBuildLoading] = useState(false);
 
   const progress = useMemo(() => {
     if (!config) return 0;
@@ -131,60 +129,37 @@ export default function B99Generator() {
 
   const update = (key: string, value: any) => setAnswers((a) => ({ ...a, [key]: value }));
 
+  const levelNumber = (l: Level) => ({ beginner: 1, intermediate: 2, advanced: 3, analyst: 4 }[l]);
+
   const generate = async () => {
     if (!config || !level) return;
     const missing = config.questions.find((q) => q.required && !String(answers[q.key] ?? '').trim());
     if (missing) return toast.error(`أكمل: ${missing.label}`);
     setLoading(true);
-    setResult(null);
     setPlatform(null);
     try {
+      const enriched = {
+        ...answers,
+        level_track: level,
+        owner_email: identity?.email || answers.owner_email,
+        platform_type_hint: inferPlatformType(String(answers.business_request || '')),
+        access_code: answers.access_code || '',
+      };
       const { data, error } = await supabase.functions.invoke('b99-engine', {
-        body: { action: 'generator_step', payload: { level, answers, mode: 'final', build_intent: true } },
+        body: { action: 'generate_platform', userId: identity?.userId, payload: { level: levelNumber(level), answers: enriched } },
       });
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      setResult(data);
-      toast.success('تم توليد مخطط المنصة حسب المستوى');
+      if (data?.error) throw new Error(data.error);
+      if (!data?.platform) throw new Error('لم يتم بناء المنصة');
+      setPlatform(data.platform);
+      toast.success('تم بناء منصة فعلية ورابط مستقل');
     } catch (e: any) {
-      toast.error(e.message || 'تعذر التوليد');
+      toast.error(e.message || 'تعذر البناء');
     } finally {
       setLoading(false);
     }
   };
 
-  const buildPlatform = async () => {
-    if (!config || !level || !result) return;
-    setBuildLoading(true);
-    try {
-      const brief = result.generated_platform_brief || {};
-      const name = brief.name || result.idea_name || answers.business_request?.slice(0, 40) || 'منصة جديدة';
-      const { data, error } = await supabase.functions.invoke('b99-engine', {
-        body: {
-          action: 'generate_platform',
-          userId: identity?.userId,
-          payload: {
-            name,
-            purpose: brief.purpose || result.description || answers.business_request,
-            platformType: brief.platform_type || inferPlatformType(String(answers.business_request || '')),
-            accessCode: answers.access_code || '',
-            ownerEmail: identity?.email || '',
-            buildLevel: level,
-            buildMode: 'step-by-step',
-            requirements: { level, answers, ai_result: result, requested_payment: answers.payment || 'كاش فقط' },
-          },
-        },
-      });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      setPlatform(data.platform);
-      toast.success('تم إنشاء منصة كاملة ورابط مستقل');
-    } catch (e: any) {
-      toast.error(e.message || 'تعذر بناء المنصة');
-    } finally {
-      setBuildLoading(false);
-    }
-  };
 
   if (!config) {
     return (
