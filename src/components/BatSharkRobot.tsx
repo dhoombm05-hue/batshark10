@@ -168,46 +168,56 @@ export default function BatSharkRobot() {
     window.speechSynthesis.speak(u);
   }, []);
 
+  if (isHidden) return null;
+
   return (
     <>
-      {/* ═══════ BAT: flies on dashboard, fixed top-center elsewhere ═══════ */}
-      <motion.div
-        className="fixed z-50 print:hidden"
-        style={isDashboard ? { left: springX, top: springY, x: '-50%', y: '-50%', pointerEvents: 'none' } : { left: '50%', top: '16px', x: '-50%', y: '0%', pointerEvents: 'none' }}
-      >
-        <motion.button
-          onClick={() => setOpen(!open)}
-          className="relative flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
-          style={{ pointerEvents: 'auto', scaleX: facingLeft && !open && isDashboard ? -1 : 1 }}
-          whileTap={{ scale: 0.88 }}
-          animate={!isDashboard && !open ? { y: [0, -8, 0] } : undefined}
-          transition={!isDashboard ? { repeat: Infinity, duration: 3, ease: 'easeInOut' } : undefined}
-        >
-          <motion.span
-            className="absolute bottom-[-12px] w-8 h-2 rounded-full bg-foreground/6 blur-md"
-            animate={{ scaleX: [1, 0.6, 1], opacity: [0.2, 0.08, 0.2] }}
-            transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-          />
-          <AnimatePresence mode="wait">
-            {open ? (
-              <motion.div
-                key="close"
-                initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
-                animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
-                transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
-                className="w-12 h-12 rounded-2xl bg-card border border-border/60 shadow-xl flex items-center justify-center backdrop-blur-sm"
-              >
-                <X className="w-5 h-5 text-primary" />
-              </motion.div>
-            ) : (
-              <motion.div key="bat" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
-                <FlyingBatIcon size={58} isActive={true} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      </motion.div>
+      {/* ═══════ Cinematic cycle: appears 1 min, disappears 5 min ═══════ */}
+      <AnimatePresence>
+        {(visible || open) && (
+          <motion.div
+            key="bat-wrap"
+            initial={{ opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.5 } }}
+            className="fixed z-50 print:hidden"
+            style={open
+              ? { left: '50%', top: '16px', x: '-50%', pointerEvents: 'none' }
+              : { left: springX, top: springY, x: '-50%', y: '-50%', pointerEvents: 'none' }}
+          >
+            <motion.button
+              onClick={() => setOpen(!open)}
+              className="relative flex items-center justify-center cursor-pointer border-0 bg-transparent p-0"
+              style={{ pointerEvents: 'auto', scaleX: facingLeft && !open ? -1 : 1 }}
+              whileTap={{ scale: 0.88 }}
+            >
+              <motion.span
+                className="absolute bottom-[-12px] w-8 h-2 rounded-full bg-foreground/6 blur-md"
+                animate={{ scaleX: [1, 0.6, 1], opacity: [0.2, 0.08, 0.2] }}
+                transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+              />
+              <AnimatePresence mode="wait">
+                {open ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                    animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                    exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
+                    className="w-12 h-12 rounded-2xl bg-card border border-border/60 shadow-xl flex items-center justify-center backdrop-blur-sm"
+                  >
+                    <X className="w-5 h-5 text-primary" />
+                  </motion.div>
+                ) : (
+                  <motion.div key="bat" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
+                    <FlyingBatIcon size={58} isActive={true} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════ CHAT PANEL ═══════ */}
       <AnimatePresence>
