@@ -87,7 +87,22 @@ async function callAI(messages: any[], schema?: any, opts: { tools?: any[]; mode
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
     body: JSON.stringify(body),
   });
-  if (!r.ok) throw new Error(`AI ${r.status}: ${await r.text()}`);
+  if (!r.ok) {
+    const txt = await r.text();
+    if (r.status === 402) {
+      const err: any = new Error('AI_CREDITS_EXHAUSTED');
+      err.code = 'credits_exhausted';
+      err.status = 402;
+      throw err;
+    }
+    if (r.status === 429) {
+      const err: any = new Error('AI_RATE_LIMITED');
+      err.code = 'rate_limited';
+      err.status = 429;
+      throw err;
+    }
+    throw new Error(`AI ${r.status}: ${txt}`);
+  }
   const data = await r.json();
   if (schema) {
     const args = data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
@@ -519,6 +534,15 @@ Deno.serve(async (req) => {
     return ok({ error: 'unknown action' }, 400);
   } catch (e: any) {
     console.error(e);
-    return ok({ error: e.message }, 500);
+    if (e?.code === 'credits_exhausted' || e?.status === 402 || /AI 402/.test(e?.message || '')) {
+      return ok({
+        error: 'نفد رصيد محرك الذكاء الاصطناعي (Lovable AI Credits). أعد شحن الرصيد من إعدادات Lovable Cloud → AI Gateway حتى يعمل كل شيء: بناء المنصات، الإعلانات، البحث، الموسيقى.',
+        code: 'credits_exhausted',
+      }, 402);
+    }
+    if (e?.code === 'rate_limited' || e?.status === 429) {
+      return ok({ error: 'تم تجاوز الحد المؤقت لطلبات الذكاء الاصطناعي. حاول بعد دقيقة.', code: 'rate_limited' }, 429);
+    }
+    return ok({ error: e.message || 'حدث خطأ غير متوقع' }, 500);
   }
 });
