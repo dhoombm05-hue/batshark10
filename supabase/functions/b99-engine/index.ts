@@ -87,7 +87,22 @@ async function callAI(messages: any[], schema?: any, opts: { tools?: any[]; mode
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
     body: JSON.stringify(body),
   });
-  if (!r.ok) throw new Error(`AI ${r.status}: ${await r.text()}`);
+  if (!r.ok) {
+    const txt = await r.text();
+    if (r.status === 402) {
+      const err: any = new Error('AI_CREDITS_EXHAUSTED');
+      err.code = 'credits_exhausted';
+      err.status = 402;
+      throw err;
+    }
+    if (r.status === 429) {
+      const err: any = new Error('AI_RATE_LIMITED');
+      err.code = 'rate_limited';
+      err.status = 429;
+      throw err;
+    }
+    throw new Error(`AI ${r.status}: ${txt}`);
+  }
   const data = await r.json();
   if (schema) {
     const args = data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
