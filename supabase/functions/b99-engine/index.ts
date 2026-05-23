@@ -534,6 +534,15 @@ Deno.serve(async (req) => {
     return ok({ error: 'unknown action' }, 400);
   } catch (e: any) {
     console.error(e);
-    return ok({ error: e.message }, 500);
+    if (e?.code === 'credits_exhausted' || e?.status === 402 || /AI 402/.test(e?.message || '')) {
+      return ok({
+        error: 'نفد رصيد محرك الذكاء الاصطناعي (Lovable AI Credits). أعد شحن الرصيد من إعدادات Lovable Cloud → AI Gateway حتى يعمل كل شيء: بناء المنصات، الإعلانات، البحث، الموسيقى.',
+        code: 'credits_exhausted',
+      }, 402);
+    }
+    if (e?.code === 'rate_limited' || e?.status === 429) {
+      return ok({ error: 'تم تجاوز الحد المؤقت لطلبات الذكاء الاصطناعي. حاول بعد دقيقة.', code: 'rate_limited' }, 429);
+    }
+    return ok({ error: e.message || 'حدث خطأ غير متوقع' }, 500);
   }
 });
