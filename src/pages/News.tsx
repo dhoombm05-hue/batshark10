@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import NewsCard from '@/components/NewsCard';
+import NewsMusicBar from '@/components/NewsMusicBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -42,6 +43,7 @@ export default function News() {
   const [mediaUrl, setMediaUrl] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('none');
   const [category, setCategory] = useState('update');
+  const [scheduleAt, setScheduleAt] = useState<string>(''); // local datetime input value
   const [uploading, setUploading] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -114,6 +116,12 @@ export default function News() {
       toast({ title: 'أدخل العنوان والمحتوى', variant: 'destructive' });
       return;
     }
+    // scheduleAt comes from <input type="datetime-local"> in user's local tz
+    const scheduledISO = scheduleAt ? new Date(scheduleAt).toISOString() : undefined;
+    if (scheduledISO && new Date(scheduledISO).getTime() < Date.now() - 60_000) {
+      toast({ title: 'تاريخ النشر في الماضي — اختَر وقتًا مستقبليًا', variant: 'destructive' });
+      return;
+    }
     try {
       await createNews.mutateAsync({
         title,
@@ -121,11 +129,18 @@ export default function News() {
         content_type: contentType,
         media_url: mediaUrl || undefined,
         project_id: selectedProject && selectedProject !== 'none' ? selectedProject : undefined,
+        scheduled_at: scheduledISO,
       });
-      toast({ title: '✅ تم نشر الخبر بنجاح' });
+      const isFuture = scheduledISO && new Date(scheduledISO).getTime() > Date.now() + 30_000;
+      toast({
+        title: isFuture
+          ? `🕒 تم جدولة الخبر — سينشر تلقائيًا في ${new Date(scheduledISO!).toLocaleString('ar')}`
+          : '✅ تم نشر الخبر بنجاح',
+      });
       setShowCreate(false);
       setTitle(''); setContent(''); setMediaUrl(''); setContentType('text');
       setSelectedProject('none'); setCategory('update'); setMediaPreview(null);
+      setScheduleAt('');
     } catch {
       toast({ title: 'خطأ في النشر', variant: 'destructive' });
     }
