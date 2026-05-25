@@ -256,6 +256,48 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
             {showComments ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </Button>
           <div className="flex-1" />
+
+          {/* engagement summary chip */}
+          {viewersCount > 0 && (
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground bg-muted/40 rounded-md px-1.5 py-0.5">
+              <Eye className="w-3 h-3" /> {viewersCount}
+              <span className="opacity-60">•</span>
+              {formatViewDuration(totalEngagementSec)}
+            </span>
+          )}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
+            onClick={handleCopyLink}
+            title="نسخ الرابط"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
+            onClick={handleShare}
+            title="مشاركة"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-8 w-8 rounded-xl transition-colors ${
+              saved
+                ? 'text-[hsl(var(--gold))] bg-[hsl(var(--gold))]/10 hover:bg-[hsl(var(--gold))]/15'
+                : 'text-muted-foreground hover:text-[hsl(var(--gold))] hover:bg-[hsl(var(--gold))]/5'
+            }`}
+            onClick={toggleSaved}
+            title={saved ? 'إلغاء الحفظ' : 'حفظ'}
+          >
+            <Bookmark className={`w-3.5 h-3.5 ${saved ? 'fill-current' : ''}`} />
+          </Button>
+
           <Link to={`/news/${item.id}`}>
             <Button
               variant="ghost"
@@ -263,7 +305,7 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
               className="gap-1.5 text-xs rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
             >
               <ExternalLink className="w-4 h-4" />
-              عرض المنشور
+              <span className="hidden sm:inline">عرض</span>
             </Button>
           </Link>
         </div>
