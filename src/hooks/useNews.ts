@@ -52,11 +52,14 @@ export function useNews(projectId?: string) {
   const newsQuery = useQuery({
     queryKey: ['news', projectId],
     queryFn: async () => {
+      // Only published items whose scheduled time has arrived
       let q = supabase
         .from('news')
         .select('*')
+        .eq('is_published', true)
+        .lte('scheduled_at', new Date().toISOString())
         .order('is_pinned', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('scheduled_at', { ascending: false });
       if (projectId) q = q.eq('project_id', projectId);
 
       const { data, error } = await q;
