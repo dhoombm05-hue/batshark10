@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send, ChevronDown, ChevronUp,
-  Image, Video, FileText, Twitter, Eye, ExternalLink, Crown, User
+  Image, Video, FileText, Twitter, Eye, ExternalLink, Crown, User, Share2, Bookmark, Copy
 } from 'lucide-react';
 import { useNewsReactions, useNewsComments, type NewsItem } from '@/hooks/useNews';
+import { useNewsViewTracker, useNewsViewers, formatViewDuration } from '@/hooks/useNewsViews';
+import NewsViewersDialog from '@/components/NewsViewersDialog';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
