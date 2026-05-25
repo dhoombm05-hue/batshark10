@@ -169,6 +169,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
                   </>
                 )}
                 <span className="text-muted-foreground/40 font-mono">#{item.news_number}</span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <NewsViewersDialog newsId={item.id} />
               </div>
             </div>
           </div>
