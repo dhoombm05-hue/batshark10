@@ -1982,6 +1982,39 @@ export type Database = {
           },
         ]
       }
+      news_views: {
+        Row: {
+          first_viewed_at: string
+          id: string
+          last_viewed_at: string
+          news_id: string
+          total_seconds: number
+          user_avatar: string | null
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          first_viewed_at?: string
+          id?: string
+          last_viewed_at?: string
+          news_id: string
+          total_seconds?: number
+          user_avatar?: string | null
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          first_viewed_at?: string
+          id?: string
+          last_viewed_at?: string
+          news_id?: string
+          total_seconds?: number
+          user_avatar?: string | null
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
