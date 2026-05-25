@@ -87,12 +87,43 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
     toast({ title: '🗑️ تم حذف الخبر' });
   };
 
+  const handleShare = async () => {
+    const url = `${window.location.origin}/news/${item.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: item.title, text: item.content.slice(0, 120), url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast({ title: '✅ تم نسخ رابط الخبر' });
+      }
+    } catch { /* user cancelled */ }
+  };
+
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}/news/${item.id}`;
+    await navigator.clipboard.writeText(url);
+    toast({ title: '🔗 تم نسخ الرابط' });
+  };
+
+  const toggleSaved = () => {
+    const next = !saved;
+    setSaved(next);
+    try {
+      if (next) localStorage.setItem(`news-saved-${item.id}`, '1');
+      else localStorage.removeItem(`news-saved-${item.id}`);
+    } catch {}
+    toast({ title: next ? '🔖 تم حفظ الخبر' : 'تم إلغاء الحفظ' });
+  };
+
   const timeAgo = formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: ar });
 
   return (
-    <Card className={`group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 border overflow-hidden ${
-      !isRead ? 'border-primary/30 bg-gradient-to-l from-primary/[0.03] to-transparent' : 'border-border'
-    }`}>
+    <Card
+      ref={trackerRef as any}
+      className={`group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 border overflow-hidden ${
+        !isRead ? 'border-primary/30 bg-gradient-to-l from-primary/[0.03] to-transparent' : 'border-border'
+      }`}
+    >
       <CardContent className={`${compact ? 'p-4' : 'p-5 sm:p-6'} space-y-3`} dir="rtl">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
