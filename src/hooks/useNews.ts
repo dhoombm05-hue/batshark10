@@ -21,6 +21,8 @@ export interface NewsItem {
   dislikes_count: number;
   comments_count: number;
   is_pinned: boolean;
+  scheduled_at: string;
+  is_published: boolean;
   created_at: string;
   updated_at: string;
 }
