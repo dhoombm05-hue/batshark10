@@ -328,6 +328,38 @@ export default function News() {
                       </div>
                     </div>
 
+                    {/* ─── Schedule publishing ─── */}
+                    <div className="space-y-1.5 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] p-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-primary" />
+                          جدولة النشر (اختياري)
+                        </label>
+                        {scheduleAt && (
+                          <button
+                            type="button"
+                            onClick={() => setScheduleAt('')}
+                            className="text-[10px] text-destructive font-bold hover:underline"
+                          >
+                            إلغاء الجدولة
+                          </button>
+                        )}
+                      </div>
+                      <Input
+                        type="datetime-local"
+                        value={scheduleAt}
+                        min={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)}
+                        onChange={(e) => setScheduleAt(e.target.value)}
+                        className="text-xs h-9"
+                        dir="ltr"
+                      />
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        {scheduleAt
+                          ? `🕒 سيُنشر تلقائيًا في ${new Date(scheduleAt).toLocaleString('ar')} ويظهر بانر إعلامي لكل المستخدمين فور النشر.`
+                          : 'اتركه فارغًا للنشر الفوري، أو اختر تاريخًا ووقتًا مستقبليًا لينشر تلقائيًا.'}
+                      </p>
+                    </div>
+
                     <Button onClick={handleCreate} disabled={createNews.isPending} className="w-full h-11 font-bold text-sm gap-2">
                       {createNews.isPending ? (
                         <span className="flex items-center gap-2">
