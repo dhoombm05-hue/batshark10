@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ThumbsUp, ThumbsDown, MessageCircle, Pin, Trash2, Send, ChevronDown, ChevronUp,
-  Image, Video, FileText, Twitter, Eye, ExternalLink, Crown, User
+  Image, Video, FileText, Twitter, Eye, ExternalLink, Crown, User, Share2, Bookmark, Copy
 } from 'lucide-react';
 import { useNewsReactions, useNewsComments, type NewsItem } from '@/hooks/useNews';
+import { useNewsViewTracker, useNewsViewers, formatViewDuration } from '@/hooks/useNewsViews';
+import NewsViewersDialog from '@/components/NewsViewersDialog';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -38,6 +40,10 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
   const { deleteNews } = useNews();
   const { data: reactions = [], toggleReaction } = useNewsReactions(item.id);
   const { data: comments = [], addComment, deleteComment } = useNewsComments(item.id);
+  const { data: viewersData = [] } = useNewsViewers(item.id);
+
+  // Engagement tracking — counts only while card is on-screen & tab focused
+  const trackerRef = useNewsViewTracker(item.id, !!user?.id);
 
   const authorName = item.author_name;
   const authorAvatar = item.author_avatar;
@@ -45,6 +51,9 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
   
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [saved, setSaved] = useState(() => {
+    try { return localStorage.getItem(`news-saved-${item.id}`) === '1'; } catch { return false; }
+  });
 
   const markedRef = useRef(false);
   useEffect(() => {
@@ -59,6 +68,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
   const dislikesCount = reactions.filter(r => r.reaction_type === 'dislike').length;
   const projectName = item.project_id ? projects.find(p => p.id === item.project_id)?.name : null;
   const type = typeConfig[item.content_type] || typeConfig.text;
+  const viewersCount = viewersData.length;
+  const totalEngagementSec = viewersData.reduce((a, b) => a + (b.total_seconds || 0), 0);
 
   const handleComment = async () => {
     if (!commentText.trim()) return;
@@ -76,12 +87,43 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
     toast({ title: '🗑️ تم حذف الخبر' });
   };
 
+  const handleShare = async () => {
+    const url = `${window.location.origin}/news/${item.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: item.title, text: item.content.slice(0, 120), url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast({ title: '✅ تم نسخ رابط الخبر' });
+      }
+    } catch { /* user cancelled */ }
+  };
+
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}/news/${item.id}`;
+    await navigator.clipboard.writeText(url);
+    toast({ title: '🔗 تم نسخ الرابط' });
+  };
+
+  const toggleSaved = () => {
+    const next = !saved;
+    setSaved(next);
+    try {
+      if (next) localStorage.setItem(`news-saved-${item.id}`, '1');
+      else localStorage.removeItem(`news-saved-${item.id}`);
+    } catch {}
+    toast({ title: next ? '🔖 تم حفظ الخبر' : 'تم إلغاء الحفظ' });
+  };
+
   const timeAgo = formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: ar });
 
   return (
-    <Card className={`group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 border overflow-hidden ${
-      !isRead ? 'border-primary/30 bg-gradient-to-l from-primary/[0.03] to-transparent' : 'border-border'
-    }`}>
+    <Card
+      ref={trackerRef as any}
+      className={`group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 border overflow-hidden ${
+        !isRead ? 'border-primary/30 bg-gradient-to-l from-primary/[0.03] to-transparent' : 'border-border'
+      }`}
+    >
       <CardContent className={`${compact ? 'p-4' : 'p-5 sm:p-6'} space-y-3`} dir="rtl">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
@@ -127,6 +169,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
                   </>
                 )}
                 <span className="text-muted-foreground/40 font-mono">#{item.news_number}</span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <NewsViewersDialog newsId={item.id} />
               </div>
             </div>
           </div>
@@ -212,6 +256,48 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
             {showComments ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </Button>
           <div className="flex-1" />
+
+          {/* engagement summary chip */}
+          {viewersCount > 0 && (
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground bg-muted/40 rounded-md px-1.5 py-0.5">
+              <Eye className="w-3 h-3" /> {viewersCount}
+              <span className="opacity-60">•</span>
+              {formatViewDuration(totalEngagementSec)}
+            </span>
+          )}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
+            onClick={handleCopyLink}
+            title="نسخ الرابط"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
+            onClick={handleShare}
+            title="مشاركة"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-8 w-8 rounded-xl transition-colors ${
+              saved
+                ? 'text-[hsl(var(--gold))] bg-[hsl(var(--gold))]/10 hover:bg-[hsl(var(--gold))]/15'
+                : 'text-muted-foreground hover:text-[hsl(var(--gold))] hover:bg-[hsl(var(--gold))]/5'
+            }`}
+            onClick={toggleSaved}
+            title={saved ? 'إلغاء الحفظ' : 'حفظ'}
+          >
+            <Bookmark className={`w-3.5 h-3.5 ${saved ? 'fill-current' : ''}`} />
+          </Button>
+
           <Link to={`/news/${item.id}`}>
             <Button
               variant="ghost"
@@ -219,7 +305,7 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
               className="gap-1.5 text-xs rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5"
             >
               <ExternalLink className="w-4 h-4" />
-              عرض المنشور
+              <span className="hidden sm:inline">عرض</span>
             </Button>
           </Link>
         </div>
