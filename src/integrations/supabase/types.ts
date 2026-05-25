@@ -1824,11 +1824,13 @@ export type Database = {
           dislikes_count: number
           id: string
           is_pinned: boolean
+          is_published: boolean
           likes_count: number
           media_file_name: string | null
           media_url: string | null
           news_number: number
           project_id: string | null
+          scheduled_at: string
           title: string
           updated_at: string
         }
@@ -1843,11 +1845,13 @@ export type Database = {
           dislikes_count?: number
           id?: string
           is_pinned?: boolean
+          is_published?: boolean
           likes_count?: number
           media_file_name?: string | null
           media_url?: string | null
           news_number?: number
           project_id?: string | null
+          scheduled_at?: string
           title?: string
           updated_at?: string
         }
@@ -1862,11 +1866,13 @@ export type Database = {
           dislikes_count?: number
           id?: string
           is_pinned?: boolean
+          is_published?: boolean
           likes_count?: number
           media_file_name?: string | null
           media_url?: string | null
           news_number?: number
           project_id?: string | null
+          scheduled_at?: string
           title?: string
           updated_at?: string
         }

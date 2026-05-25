@@ -21,6 +21,8 @@ export interface NewsItem {
   dislikes_count: number;
   comments_count: number;
   is_pinned: boolean;
+  scheduled_at: string;
+  is_published: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -50,11 +52,14 @@ export function useNews(projectId?: string) {
   const newsQuery = useQuery({
     queryKey: ['news', projectId],
     queryFn: async () => {
+      // Only published items whose scheduled time has arrived
       let q = supabase
         .from('news')
         .select('*')
+        .eq('is_published', true)
+        .lte('scheduled_at', new Date().toISOString())
         .order('is_pinned', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('scheduled_at', { ascending: false });
       if (projectId) q = q.eq('project_id', projectId);
 
       const { data, error } = await q;
@@ -135,8 +140,12 @@ export function useNews(projectId?: string) {
       media_url?: string;
       media_file_name?: string;
       project_id?: string;
+      scheduled_at?: string; // ISO; if in future → starts hidden, auto-publishes when due
     }) => {
       if (!user?.id) throw new Error('يجب تسجيل الدخول قبل نشر خبر');
+
+      const when = params.scheduled_at ? new Date(params.scheduled_at) : new Date();
+      const isFuture = when.getTime() > Date.now() + 30_000; // >30s in the future
 
       const { data, error } = await supabase.from('news').insert({
         author_id: user.id,
@@ -146,6 +155,8 @@ export function useNews(projectId?: string) {
         media_url: params.media_url || null,
         media_file_name: params.media_file_name || null,
         project_id: params.project_id || null,
+        scheduled_at: when.toISOString(),
+        is_published: !isFuture,
       } as any).select().single();
       if (error) throw error;
       return data;

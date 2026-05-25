@@ -58,6 +58,7 @@ import PlatformEditor from "./pages/PlatformEditor";
 import NotFound from "./pages/NotFound";
 import BatSharkRobot from "./components/BatSharkRobot";
 import BatSharkGuide from "./components/BatSharkGuide";
+import NewsAnnouncementBanner from "./components/NewsAnnouncementBanner";
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,7 @@ const App = () => (
           </Routes>
           <BatSharkRobot />
           <BatSharkGuide />
+          <NewsAnnouncementBanner />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

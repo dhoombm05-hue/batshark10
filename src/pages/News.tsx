@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import NewsCard from '@/components/NewsCard';
+import NewsMusicBar from '@/components/NewsMusicBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -42,6 +43,7 @@ export default function News() {
   const [mediaUrl, setMediaUrl] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('none');
   const [category, setCategory] = useState('update');
+  const [scheduleAt, setScheduleAt] = useState<string>(''); // local datetime input value
   const [uploading, setUploading] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -114,6 +116,12 @@ export default function News() {
       toast({ title: 'أدخل العنوان والمحتوى', variant: 'destructive' });
       return;
     }
+    // scheduleAt comes from <input type="datetime-local"> in user's local tz
+    const scheduledISO = scheduleAt ? new Date(scheduleAt).toISOString() : undefined;
+    if (scheduledISO && new Date(scheduledISO).getTime() < Date.now() - 60_000) {
+      toast({ title: 'تاريخ النشر في الماضي — اختَر وقتًا مستقبليًا', variant: 'destructive' });
+      return;
+    }
     try {
       await createNews.mutateAsync({
         title,
@@ -121,11 +129,18 @@ export default function News() {
         content_type: contentType,
         media_url: mediaUrl || undefined,
         project_id: selectedProject && selectedProject !== 'none' ? selectedProject : undefined,
+        scheduled_at: scheduledISO,
       });
-      toast({ title: '✅ تم نشر الخبر بنجاح' });
+      const isFuture = scheduledISO && new Date(scheduledISO).getTime() > Date.now() + 30_000;
+      toast({
+        title: isFuture
+          ? `🕒 تم جدولة الخبر — سينشر تلقائيًا في ${new Date(scheduledISO!).toLocaleString('ar')}`
+          : '✅ تم نشر الخبر بنجاح',
+      });
       setShowCreate(false);
       setTitle(''); setContent(''); setMediaUrl(''); setContentType('text');
       setSelectedProject('none'); setCategory('update'); setMediaPreview(null);
+      setScheduleAt('');
     } catch {
       toast({ title: 'خطأ في النشر', variant: 'destructive' });
     }
@@ -313,6 +328,38 @@ export default function News() {
                       </div>
                     </div>
 
+                    {/* ─── Schedule publishing ─── */}
+                    <div className="space-y-1.5 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] p-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-primary" />
+                          جدولة النشر (اختياري)
+                        </label>
+                        {scheduleAt && (
+                          <button
+                            type="button"
+                            onClick={() => setScheduleAt('')}
+                            className="text-[10px] text-destructive font-bold hover:underline"
+                          >
+                            إلغاء الجدولة
+                          </button>
+                        )}
+                      </div>
+                      <Input
+                        type="datetime-local"
+                        value={scheduleAt}
+                        min={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)}
+                        onChange={(e) => setScheduleAt(e.target.value)}
+                        className="text-xs h-9"
+                        dir="ltr"
+                      />
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        {scheduleAt
+                          ? `🕒 سيُنشر تلقائيًا في ${new Date(scheduleAt).toLocaleString('ar')} ويظهر بانر إعلامي لكل المستخدمين فور النشر.`
+                          : 'اتركه فارغًا للنشر الفوري، أو اختر تاريخًا ووقتًا مستقبليًا لينشر تلقائيًا.'}
+                      </p>
+                    </div>
+
                     <Button onClick={handleCreate} disabled={createNews.isPending} className="w-full h-11 font-bold text-sm gap-2">
                       {createNews.isPending ? (
                         <span className="flex items-center gap-2">
@@ -363,6 +410,9 @@ export default function News() {
             </div>
           </div>
         </motion.div>
+
+        {/* Music search bar (independent — not part of Batshark99) */}
+        <NewsMusicBar />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
