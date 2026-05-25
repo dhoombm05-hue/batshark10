@@ -40,6 +40,10 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
   const { deleteNews } = useNews();
   const { data: reactions = [], toggleReaction } = useNewsReactions(item.id);
   const { data: comments = [], addComment, deleteComment } = useNewsComments(item.id);
+  const { data: viewersData = [] } = useNewsViewers(item.id);
+
+  // Engagement tracking — counts only while card is on-screen & tab focused
+  const trackerRef = useNewsViewTracker(item.id, !!user?.id);
 
   const authorName = item.author_name;
   const authorAvatar = item.author_avatar;
@@ -47,6 +51,9 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
   
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [saved, setSaved] = useState(() => {
+    try { return localStorage.getItem(`news-saved-${item.id}`) === '1'; } catch { return false; }
+  });
 
   const markedRef = useRef(false);
   useEffect(() => {
@@ -61,6 +68,8 @@ export default function NewsCard({ item, isRead, onMarkRead, projects, compact }
   const dislikesCount = reactions.filter(r => r.reaction_type === 'dislike').length;
   const projectName = item.project_id ? projects.find(p => p.id === item.project_id)?.name : null;
   const type = typeConfig[item.content_type] || typeConfig.text;
+  const viewersCount = viewersData.length;
+  const totalEngagementSec = viewersData.reduce((a, b) => a + (b.total_seconds || 0), 0);
 
   const handleComment = async () => {
     if (!commentText.trim()) return;
