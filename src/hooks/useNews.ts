@@ -140,8 +140,12 @@ export function useNews(projectId?: string) {
       media_url?: string;
       media_file_name?: string;
       project_id?: string;
+      scheduled_at?: string; // ISO; if in future → starts hidden, auto-publishes when due
     }) => {
       if (!user?.id) throw new Error('يجب تسجيل الدخول قبل نشر خبر');
+
+      const when = params.scheduled_at ? new Date(params.scheduled_at) : new Date();
+      const isFuture = when.getTime() > Date.now() + 30_000; // >30s in the future
 
       const { data, error } = await supabase.from('news').insert({
         author_id: user.id,
@@ -151,6 +155,8 @@ export function useNews(projectId?: string) {
         media_url: params.media_url || null,
         media_file_name: params.media_file_name || null,
         project_id: params.project_id || null,
+        scheduled_at: when.toISOString(),
+        is_published: !isFuture,
       } as any).select().single();
       if (error) throw error;
       return data;
