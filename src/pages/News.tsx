@@ -411,6 +411,9 @@ export default function News() {
           </div>
         </motion.div>
 
+        {/* Music search bar (independent — not part of Batshark99) */}
+        <NewsMusicBar />
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
           <div className="flex items-center justify-between gap-3 flex-wrap">
