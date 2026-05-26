@@ -146,7 +146,7 @@ export default function News() {
     }
   };
 
-  // Filter & sort
+  // Filter & sort — always guarantee newest-first when in "latest" mode
   let filtered = [...news];
   if (activeTab === 'by-project' && filterProject !== 'all') {
     filtered = filtered.filter(n => n.project_id === filterProject);
@@ -155,6 +155,15 @@ export default function News() {
   }
   if (sortBy === 'popular') {
     filtered.sort((a, b) => (b.likes_count + b.comments_count) - (a.likes_count + a.comments_count));
+  } else {
+    // Pinned first, then most recent (scheduled_at, then created_at as tiebreaker)
+    filtered.sort((a, b) => {
+      if (!!b.is_pinned !== !!a.is_pinned) return b.is_pinned ? 1 : -1;
+      const ta = new Date(a.scheduled_at || a.created_at).getTime();
+      const tb = new Date(b.scheduled_at || b.created_at).getTime();
+      if (tb !== ta) return tb - ta;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
   }
 
   const typeFilterButtons: { value: ContentFilter; label: string; icon: React.ReactNode }[] = [
