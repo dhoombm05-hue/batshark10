@@ -199,7 +199,18 @@ export default function NotificationBell(props: NotificationBellProps) {
       <motion.button
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
-        onClick={() => { setOpen(!open); if (!open) setSeen(true); }}
+        onClick={() => {
+          const next = !open;
+          setOpen(next);
+          if (next) {
+            // Mark as seen and auto-dismiss everything currently visible so the
+            // bell becomes clear the moment the user actually looks at it.
+            setSeen(true);
+            if (visibleAlerts.length > 0) {
+              setDismissed(d => [...d, ...visibleAlerts.map(a => a.id)]);
+            }
+          }
+        }}
         className={`relative p-2.5 rounded-xl bg-card border border-border/50 hover:border-border transition-all ${bellColor}`}
         title="التنبيهات"
       >
