@@ -1,0 +1,4 @@
+
+ALTER TABLE public.music_control
+  ADD COLUMN IF NOT EXISTS target_all BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS target_user_ids UUID[] NOT NULL DEFAULT '{}';

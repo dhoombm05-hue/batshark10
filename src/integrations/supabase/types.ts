@@ -1816,6 +1816,8 @@ export type Database = {
         Row: {
           id: number
           is_playing: boolean
+          target_all: boolean
+          target_user_ids: string[]
           track_title: string | null
           track_url: string | null
           updated_at: string
@@ -1824,6 +1826,8 @@ export type Database = {
         Insert: {
           id?: number
           is_playing?: boolean
+          target_all?: boolean
+          target_user_ids?: string[]
           track_title?: string | null
           track_url?: string | null
           updated_at?: string
@@ -1832,6 +1836,8 @@ export type Database = {
         Update: {
           id?: number
           is_playing?: boolean
+          target_all?: boolean
+          target_user_ids?: string[]
           track_title?: string | null
           track_url?: string | null
           updated_at?: string
