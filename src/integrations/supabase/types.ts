@@ -1812,6 +1812,33 @@ export type Database = {
         }
         Relationships: []
       }
+      music_control: {
+        Row: {
+          id: number
+          is_playing: boolean
+          track_title: string | null
+          track_url: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: number
+          is_playing?: boolean
+          track_title?: string | null
+          track_url?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: number
+          is_playing?: boolean
+          track_title?: string | null
+          track_url?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       news: {
         Row: {
           author_avatar: string | null
