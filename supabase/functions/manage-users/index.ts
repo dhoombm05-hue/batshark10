@@ -127,10 +127,9 @@ serve(async (req) => {
         await supabaseAdmin.from("employee_monthly_performance").insert({
           employee_id: employee.id,
           month: monthKey,
-          performance: 50,
-          kpi_achievement: 50,
-          rating: 5,
-        }).select();
+          month_order: now.getFullYear() * 12 + now.getMonth(),
+          score: 50,
+        });
       }
 
       return new Response(
