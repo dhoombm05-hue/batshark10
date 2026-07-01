@@ -84,7 +84,6 @@ serve(async (req) => {
           name: display_name,
           position: position || job_title || "موظف",
           department: department || "الإدارة العامة",
-          job_title: job_title || position || null,
           age: age ?? 30,
           experience: experience || "1 سنة",
           salary: salary ?? 0,
