@@ -1022,6 +1022,282 @@ export type Database = {
           },
         ]
       }
+      contract_activity: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          contract_id: string
+          created_at: string
+          details: Json | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          contract_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          contract_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_activity_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_attachments: {
+        Row: {
+          category: string
+          contract_id: string
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          contract_id: string
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          contract_id?: string
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_attachments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_templates: {
+        Row: {
+          created_at: string
+          default_clauses: Json
+          description: string | null
+          id: string
+          name: string
+          required_documents: Json
+          required_fields: Json
+          type: Database["public"]["Enums"]["contract_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_clauses?: Json
+          description?: string | null
+          id?: string
+          name: string
+          required_documents?: Json
+          required_fields?: Json
+          type: Database["public"]["Enums"]["contract_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_clauses?: Json
+          description?: string | null
+          id?: string
+          name?: string
+          required_documents?: Json
+          required_fields?: Json
+          type?: Database["public"]["Enums"]["contract_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      contracts: {
+        Row: {
+          auto_renew: boolean
+          ceo_signature_data: string | null
+          ceo_signed_at: string | null
+          clauses: Json
+          commercial_registration: string | null
+          company_address: string | null
+          company_name: string | null
+          company_website: string | null
+          contract_number: string
+          contract_value: number | null
+          created_at: string
+          created_by: string | null
+          credentials_pdf_url: string | null
+          credentials_sent_at: string | null
+          currency: string
+          custom_clauses: Json
+          documents_submitted_at: string | null
+          end_date: string | null
+          equity_percentage: number | null
+          generated_user_id: string | null
+          granted_permissions: Json
+          id: string
+          monthly_bonus: number | null
+          monthly_salary: number | null
+          notes: string | null
+          notice_period_days: number | null
+          party_address: string | null
+          party_dob: string | null
+          party_email: string | null
+          party_name: string
+          party_national_id: string | null
+          party_nationality: string | null
+          party_phone: string | null
+          party_signature_data: string | null
+          party_signed_at: string | null
+          payment_terms: string | null
+          project_id: string | null
+          requested_info: Json
+          required_documents: Json
+          revenue_share_percentage: number | null
+          signature_method: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          submitted_info: Json
+          tax_number: string | null
+          title: string
+          type: Database["public"]["Enums"]["contract_type"]
+          updated_at: string
+        }
+        Insert: {
+          auto_renew?: boolean
+          ceo_signature_data?: string | null
+          ceo_signed_at?: string | null
+          clauses?: Json
+          commercial_registration?: string | null
+          company_address?: string | null
+          company_name?: string | null
+          company_website?: string | null
+          contract_number: string
+          contract_value?: number | null
+          created_at?: string
+          created_by?: string | null
+          credentials_pdf_url?: string | null
+          credentials_sent_at?: string | null
+          currency?: string
+          custom_clauses?: Json
+          documents_submitted_at?: string | null
+          end_date?: string | null
+          equity_percentage?: number | null
+          generated_user_id?: string | null
+          granted_permissions?: Json
+          id?: string
+          monthly_bonus?: number | null
+          monthly_salary?: number | null
+          notes?: string | null
+          notice_period_days?: number | null
+          party_address?: string | null
+          party_dob?: string | null
+          party_email?: string | null
+          party_name: string
+          party_national_id?: string | null
+          party_nationality?: string | null
+          party_phone?: string | null
+          party_signature_data?: string | null
+          party_signed_at?: string | null
+          payment_terms?: string | null
+          project_id?: string | null
+          requested_info?: Json
+          required_documents?: Json
+          revenue_share_percentage?: number | null
+          signature_method?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["contract_status"]
+          submitted_info?: Json
+          tax_number?: string | null
+          title: string
+          type: Database["public"]["Enums"]["contract_type"]
+          updated_at?: string
+        }
+        Update: {
+          auto_renew?: boolean
+          ceo_signature_data?: string | null
+          ceo_signed_at?: string | null
+          clauses?: Json
+          commercial_registration?: string | null
+          company_address?: string | null
+          company_name?: string | null
+          company_website?: string | null
+          contract_number?: string
+          contract_value?: number | null
+          created_at?: string
+          created_by?: string | null
+          credentials_pdf_url?: string | null
+          credentials_sent_at?: string | null
+          currency?: string
+          custom_clauses?: Json
+          documents_submitted_at?: string | null
+          end_date?: string | null
+          equity_percentage?: number | null
+          generated_user_id?: string | null
+          granted_permissions?: Json
+          id?: string
+          monthly_bonus?: number | null
+          monthly_salary?: number | null
+          notes?: string | null
+          notice_period_days?: number | null
+          party_address?: string | null
+          party_dob?: string | null
+          party_email?: string | null
+          party_name?: string
+          party_national_id?: string | null
+          party_nationality?: string | null
+          party_phone?: string | null
+          party_signature_data?: string | null
+          party_signed_at?: string | null
+          payment_terms?: string | null
+          project_id?: string | null
+          requested_info?: Json
+          required_documents?: Json
+          revenue_share_percentage?: number | null
+          signature_method?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["contract_status"]
+          submitted_info?: Json
+          tax_number?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["contract_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_table_cells: {
         Row: {
           cell_value: Json | null
@@ -3108,6 +3384,17 @@ export type Database = {
         | "strategic_director"
         | "marketing_director"
         | "tech_director"
+      contract_status:
+        | "draft"
+        | "sent"
+        | "awaiting_documents"
+        | "awaiting_signature"
+        | "signed"
+        | "active"
+        | "expired"
+        | "terminated"
+        | "cancelled"
+      contract_type: "partnership" | "service" | "sponsorship" | "employment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3242,6 +3529,18 @@ export const Constants = {
         "marketing_director",
         "tech_director",
       ],
+      contract_status: [
+        "draft",
+        "sent",
+        "awaiting_documents",
+        "awaiting_signature",
+        "signed",
+        "active",
+        "expired",
+        "terminated",
+        "cancelled",
+      ],
+      contract_type: ["partnership", "service", "sponsorship", "employment"],
     },
   },
 } as const
