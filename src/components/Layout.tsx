@@ -50,6 +50,7 @@ const navGroups: { groupLabel: string; groupIcon: React.ElementType; groupColor:
       { path: '/batshare99', label: '🚀 Batshare 99 - مولد البزنس', icon: Rocket, color: 'section-ai' },
       { path: '/linked-platforms', label: '🔗 المنصات المربوطة', icon: Layers, color: 'section-finance' },
       { path: '/quizzes', label: 'الاختبارات الأسبوعية', icon: GraduationCap, color: 'section-strategic' },
+      { path: '/contracts', label: '📜 العقود والشراكات', icon: FileText, color: 'section-invest' },
     ],
   },
   {
