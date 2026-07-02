@@ -123,6 +123,7 @@ const App = () => (
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/batshare99" element={<ProtectedRoute><Batshare99 /></ProtectedRoute>} />
             <Route path="/linked-platforms" element={<ProtectedRoute><LinkedPlatforms /></ProtectedRoute>} />
+            <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />
