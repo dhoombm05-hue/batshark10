@@ -38,6 +38,7 @@ import BusinessFeasibility from "./pages/BusinessFeasibility";
 import Quizzes from "./pages/Quizzes";
 import Invoices from "./pages/Invoices";
 import Batshare99 from "./pages/Batshare99";
+import Contracts from "./pages/Contracts";
 import LinkedPlatforms from "./pages/LinkedPlatforms";
 import BuildBusiness from "./pages/BuildBusiness";
 import B99Showcase from "./pages/B99Showcase";
@@ -122,6 +123,7 @@ const App = () => (
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/batshare99" element={<ProtectedRoute><Batshare99 /></ProtectedRoute>} />
             <Route path="/linked-platforms" element={<ProtectedRoute><LinkedPlatforms /></ProtectedRoute>} />
+            <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BatSharkRobot />
