@@ -71,7 +71,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<B99Showcase />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/showcase" element={<B99Showcase />} />
             <Route path="/login" element={<Login />} />
             <Route path="/build" element={<BuildBusiness />} />
             <Route path="/p/:slug" element={<PlatformView />} />
