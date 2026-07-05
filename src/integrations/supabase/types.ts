@@ -1739,6 +1739,8 @@ export type Database = {
           id: string
           improvements: string[] | null
           kpi_achievement: number | null
+          login_email: string | null
+          login_password: string | null
           monthly_rating: number | null
           name: string
           performance: number | null
@@ -1763,6 +1765,8 @@ export type Database = {
           id?: string
           improvements?: string[] | null
           kpi_achievement?: number | null
+          login_email?: string | null
+          login_password?: string | null
           monthly_rating?: number | null
           name: string
           performance?: number | null
@@ -1787,6 +1791,8 @@ export type Database = {
           id?: string
           improvements?: string[] | null
           kpi_achievement?: number | null
+          login_email?: string | null
+          login_password?: string | null
           monthly_rating?: number | null
           name?: string
           performance?: number | null
