@@ -97,6 +97,8 @@ serve(async (req) => {
           projects: [],
           admin_notes: admin_notes || null,
           avatar_url: avatar_url || null,
+          login_email: email,
+          login_password: password,
         })
         .select()
         .single();
