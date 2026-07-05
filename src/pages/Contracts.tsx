@@ -87,41 +87,70 @@ export default function Contracts() {
   };
   useEffect(() => { load(); }, []);
 
+  const activeCount = contracts.filter(c => c.status === 'active' || c.status === 'signed').length;
+  const draftCount = contracts.filter(c => c.status === 'draft').length;
+  const pendingCount = contracts.filter(c => ['sent','awaiting_documents','awaiting_signature'].includes(c.status)).length;
+  const totalValue = contracts.reduce((s, c) => s + (Number(c.contract_value) || 0), 0);
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-              <FileText className="w-7 h-7 text-primary" />
-              العقود والشراكات
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              إدارة احترافية للتعاقدات: شراكات، خدمات، رعايات، وعقود العمل — مع طباعة رسمية، توقيع رقمي، وتفعيل حساب الطرف تلقائياً.
-            </p>
+        {/* Executive Header */}
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-3xl border border-amber-500/25 bg-gradient-to-br from-[hsl(222,47%,11%)] via-[hsl(222,47%,14%)] to-[hsl(43,60%,18%)] p-6 md:p-8 shadow-2xl">
+          <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-24 -right-16 w-72 h-72 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <FileText className="w-7 h-7 text-[hsl(222,47%,11%)]" />
+              </div>
+              <div>
+                <div className="text-[11px] tracking-[0.35em] text-amber-300/80 font-bold">BATSHARK · LEGAL SUITE</div>
+                <h1 className="text-2xl md:text-3xl font-black text-white mt-0.5">مركز العقود والشراكات</h1>
+                <p className="text-sm text-white/60 mt-1 max-w-xl">
+                  إصدار وتوقيع رقمي، أرشفة رسمية، وتفعيل حسابات الأطراف تلقائياً — بمعايير مؤسسية.
+                </p>
+              </div>
+            </div>
+            {isCEO && (
+              <Button onClick={() => setOpenNew(true)} size="lg"
+                className="gap-2 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-[hsl(222,47%,11%)] font-bold shadow-lg shadow-amber-500/20 rounded-xl h-12 px-6">
+                <Plus className="w-5 h-5" /> إصدار عقد جديد
+              </Button>
+            )}
           </div>
-          {isCEO && (
-            <Button onClick={() => setOpenNew(true)} size="lg" className="gap-2">
-              <Plus className="w-4 h-4" /> عقد جديد
-            </Button>
-          )}
+
+          {/* KPI strip */}
+          <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+            {[
+              { label: 'إجمالي العقود', value: contracts.length, tint: 'from-blue-500/20 to-blue-500/5', ring: 'ring-blue-400/30', text: 'text-blue-200' },
+              { label: 'نشطة / موقّعة', value: activeCount, tint: 'from-emerald-500/20 to-emerald-500/5', ring: 'ring-emerald-400/30', text: 'text-emerald-200' },
+              { label: 'قيد المعالجة', value: pendingCount, tint: 'from-amber-500/20 to-amber-500/5', ring: 'ring-amber-400/30', text: 'text-amber-200' },
+              { label: 'إجمالي القيمة', value: `${totalValue.toLocaleString('ar')} ر.س`, tint: 'from-purple-500/20 to-purple-500/5', ring: 'ring-purple-400/30', text: 'text-purple-200', small: true },
+            ].map((k, i) => (
+              <div key={i} className={`rounded-2xl p-4 bg-gradient-to-br ${k.tint} ring-1 ${k.ring} backdrop-blur-sm`}>
+                <div className="text-[10px] uppercase tracking-widest text-white/50 font-bold">{k.label}</div>
+                <div className={`mt-1 font-black text-white ${k.small ? 'text-lg' : 'text-2xl'}`}>{k.value}</div>
+              </div>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Stats */}
+        {/* Type breakdown */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(TYPE_META).map(([k, m]) => {
             const count = contracts.filter(c => c.type === k).length;
             const Icon = m.icon;
             return (
-              <motion.div key={k} whileHover={{ y: -2 }}
-                className="rounded-xl border bg-card p-4 flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg bg-muted flex items-center justify-center ${m.color}`}>
+              <motion.div key={k} whileHover={{ y: -3, scale: 1.01 }}
+                className="relative overflow-hidden rounded-2xl border bg-card p-4 flex items-center gap-3 shadow-sm hover:shadow-md transition-all">
+                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center ${m.color} ring-1 ring-border`}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">{m.label}</div>
-                  <div className="text-2xl font-bold">{count}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-muted-foreground font-medium">{m.label}</div>
+                  <div className="text-2xl font-black text-foreground leading-tight">{count}</div>
                 </div>
               </motion.div>
             );
@@ -129,15 +158,21 @@ export default function Contracts() {
         </div>
 
         {/* List */}
-        <div className="rounded-xl border bg-card">
-          <div className="p-4 border-b flex items-center justify-between">
-            <h2 className="font-semibold">جميع العقود ({contracts.length})</h2>
+        <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+          <div className="p-4 border-b bg-gradient-to-l from-muted/50 to-transparent flex items-center justify-between">
+            <h2 className="font-bold flex items-center gap-2">
+              <FileText className="w-4 h-4 text-amber-500" />
+              سجل العقود <span className="text-muted-foreground font-normal">({contracts.length})</span>
+            </h2>
           </div>
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">جاري التحميل...</div>
           ) : contracts.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">
-              لا توجد عقود بعد. {isCEO && 'ابدأ بإنشاء عقد جديد.'}
+            <div className="p-16 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-muted mx-auto flex items-center justify-center mb-3">
+                <FileText className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground">لا توجد عقود بعد. {isCEO && 'ابدأ بإصدار عقد جديد.'}</p>
             </div>
           ) : (
             <div className="divide-y">
@@ -147,22 +182,22 @@ export default function Contracts() {
                 const Icon = meta?.icon || FileText;
                 return (
                   <button key={c.id} onClick={() => setDetail(c)}
-                    className="w-full text-right p-4 hover:bg-muted/40 transition flex items-center gap-4">
-                    <div className={`w-11 h-11 rounded-lg bg-muted flex items-center justify-center ${meta?.color}`}>
+                    className="w-full text-right p-4 hover:bg-muted/40 transition flex items-center gap-4 group">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center ${meta?.color} ring-1 ring-border group-hover:scale-105 transition`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold truncate">{c.title}</span>
-                        <Badge variant="outline" className="text-[10px]">{c.contract_number}</Badge>
+                        <span className="font-bold truncate">{c.title}</span>
+                        <Badge variant="outline" className="text-[10px] font-mono">{c.contract_number}</Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap gap-x-3 gap-y-1">
+                      <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1">
                         <span>👤 {c.party_name}</span>
                         {c.company_name && <span>🏢 {c.company_name}</span>}
-                        {c.contract_value && <span>💰 {Number(c.contract_value).toLocaleString('ar')} {c.currency}</span>}
+                        {c.contract_value && <span className="font-semibold text-foreground">💰 {Number(c.contract_value).toLocaleString('ar')} {c.currency}</span>}
                       </div>
                     </div>
-                    <Badge className={st.cls}>{st.label}</Badge>
+                    <Badge className={`${st.cls} font-bold`}>{st.label}</Badge>
                   </button>
                 );
               })}

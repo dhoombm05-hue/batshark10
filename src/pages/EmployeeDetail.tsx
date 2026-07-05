@@ -396,6 +396,40 @@ export default function EmployeeDetail() {
           onChange={v => setProfileData(p => ({ ...p, salary: v }))} />
       </motion.div>
 
+      {/* CEO-only: Login credentials */}
+      {isCEO && ((emp as any).login_email || (emp as any).login_password) && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
+          className="mb-6 rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-transparent p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <ShieldCheck className="w-5 h-5 text-amber-500" />
+            <h3 className="font-heading font-black text-foreground">بيانات الدخول</h3>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 font-bold">مرئي للرئيس فقط</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl bg-background/60 border border-border">
+              <p className="text-[10px] text-muted-foreground mb-1">البريد الإلكتروني</p>
+              <div className="flex items-center justify-between gap-2">
+                <code dir="ltr" className="text-sm font-mono text-foreground truncate">{(emp as any).login_email || '—'}</code>
+                {(emp as any).login_email && (
+                  <button onClick={() => { navigator.clipboard.writeText((emp as any).login_email); toast({ title: 'تم النسخ' }); }}
+                    className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/70">نسخ</button>
+                )}
+              </div>
+            </div>
+            <div className="p-3 rounded-xl bg-background/60 border border-border">
+              <p className="text-[10px] text-muted-foreground mb-1">كلمة المرور</p>
+              <div className="flex items-center justify-between gap-2">
+                <code dir="ltr" className="text-sm font-mono text-foreground truncate">{(emp as any).login_password || '—'}</code>
+                {(emp as any).login_password && (
+                  <button onClick={() => { navigator.clipboard.writeText((emp as any).login_password); toast({ title: 'تم النسخ' }); }}
+                    className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/70">نسخ</button>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Evaluation Form */}
       <AnimatePresence>
         {showForm && (
