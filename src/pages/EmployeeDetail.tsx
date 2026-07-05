@@ -397,7 +397,7 @@ export default function EmployeeDetail() {
       </motion.div>
 
       {/* CEO-only: Login credentials */}
-      {isCEO && (emp.login_email || emp.login_password) && (
+      {isCEO && ((emp as any).login_email || (emp as any).login_password) && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
           className="mb-6 rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-transparent p-5">
           <div className="flex items-center gap-2 mb-3">
@@ -409,9 +409,9 @@ export default function EmployeeDetail() {
             <div className="p-3 rounded-xl bg-background/60 border border-border">
               <p className="text-[10px] text-muted-foreground mb-1">البريد الإلكتروني</p>
               <div className="flex items-center justify-between gap-2">
-                <code dir="ltr" className="text-sm font-mono text-foreground truncate">{emp.login_email || '—'}</code>
-                {emp.login_email && (
-                  <button onClick={() => { navigator.clipboard.writeText(emp.login_email); toast({ title: 'تم النسخ' }); }}
+                <code dir="ltr" className="text-sm font-mono text-foreground truncate">{(emp as any).login_email || '—'}</code>
+                {(emp as any).login_email && (
+                  <button onClick={() => { navigator.clipboard.writeText((emp as any).login_email); toast({ title: 'تم النسخ' }); }}
                     className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/70">نسخ</button>
                 )}
               </div>
@@ -419,9 +419,9 @@ export default function EmployeeDetail() {
             <div className="p-3 rounded-xl bg-background/60 border border-border">
               <p className="text-[10px] text-muted-foreground mb-1">كلمة المرور</p>
               <div className="flex items-center justify-between gap-2">
-                <code dir="ltr" className="text-sm font-mono text-foreground truncate">{emp.login_password || '—'}</code>
-                {emp.login_password && (
-                  <button onClick={() => { navigator.clipboard.writeText(emp.login_password); toast({ title: 'تم النسخ' }); }}
+                <code dir="ltr" className="text-sm font-mono text-foreground truncate">{(emp as any).login_password || '—'}</code>
+                {(emp as any).login_password && (
+                  <button onClick={() => { navigator.clipboard.writeText((emp as any).login_password); toast({ title: 'تم النسخ' }); }}
                     className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/70">نسخ</button>
                 )}
               </div>
