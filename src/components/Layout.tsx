@@ -14,6 +14,7 @@ import ThemeSettings from '@/components/ThemeSettings';
 import logo from '@/assets/batshark-logo-main.png';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import BackgroundMusic from '@/components/BackgroundMusic';
+import WelcomeModal from '@/components/WelcomeModal';
 
 const ROLE_LABELS: Record<string, string> = {
   ceo: '👑 عبدالرحمن CEO',
@@ -369,6 +370,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+      <WelcomeModal />
     </div>
   );
 }
