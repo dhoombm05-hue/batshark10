@@ -66,7 +66,6 @@ serve(async (req) => {
         throw new Error("البريد الإلكتروني، الاسم وكلمة المرور مطلوبة");
       }
 
-      // 1) create auth user
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -76,7 +75,6 @@ serve(async (req) => {
       if (createError) throw createError;
       const userId = newUser.user!.id;
 
-      // 2) create employee record (full profile in HR system)
       const { data: employee, error: empErr } = await supabaseAdmin
         .from("employees")
         .insert({
@@ -88,10 +86,10 @@ serve(async (req) => {
           experience: experience || "1 سنة",
           salary: salary ?? 0,
           bonus: bonus ?? 0,
-          performance: 50,
-          kpi_achievement: 50,
+          performance: 0,
+          kpi_achievement: 0,
           profit_contribution: 0,
-          monthly_rating: 5,
+          monthly_rating: 0,
           achievements: [],
           improvements: [],
           projects: [],
@@ -104,7 +102,6 @@ serve(async (req) => {
         .single();
       if (empErr) console.error("employee insert", empErr);
 
-      // 3) upsert profile (trigger creates it, but we enrich it)
       await supabaseAdmin.from("profiles").upsert(
         {
           user_id: userId,
@@ -117,21 +114,8 @@ serve(async (req) => {
         { onConflict: "user_id" },
       );
 
-      // 4) assign role
       if (role) {
         await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
-      }
-
-      // 5) seed baseline monthly performance row (current month)
-      if (employee?.id) {
-        const now = new Date();
-        const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-        await supabaseAdmin.from("employee_monthly_performance").insert({
-          employee_id: employee.id,
-          month: monthKey,
-          month_order: now.getFullYear() * 12 + now.getMonth(),
-          score: 50,
-        });
       }
 
       return new Response(
@@ -140,10 +124,31 @@ serve(async (req) => {
       );
     }
 
+    if (action === "reset_password") {
+      const { user_id, employee_id, new_password } = body;
+      if (!user_id || !new_password) throw new Error("user_id and new_password required");
+      if (String(new_password).length < 6) throw new Error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+
+      const { error: updErr } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
+        password: new_password,
+      });
+      if (updErr) throw updErr;
+
+      if (employee_id) {
+        await supabaseAdmin
+          .from("employees")
+          .update({ login_password: new_password })
+          .eq("id", employee_id);
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "delete") {
       const { user_id } = body;
       if (!user_id) throw new Error("user_id required");
-      // unlink employee then delete auth user (cascades profile & roles)
       const { data: prof } = await supabaseAdmin
         .from("profiles").select("employee_id").eq("user_id", user_id).maybeSingle();
       if (prof?.employee_id) {
