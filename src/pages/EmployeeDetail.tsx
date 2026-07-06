@@ -626,3 +626,120 @@ export default function EmployeeDetail() {
     </Layout>
   );
 }
+
+// ============================================================
+// CEO-only: Login credentials card with password reset dialog
+// ============================================================
+function CredentialsCard({ emp }: { emp: any }) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('employee_id', emp.id)
+        .maybeSingle();
+      if (data) setUserId((data as any).user_id);
+    })();
+  }, [emp.id]);
+
+  const resetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast({ title: 'كلمة المرور قصيرة', description: '6 أحرف على الأقل', variant: 'destructive' });
+      return;
+    }
+    if (!userId) {
+      toast({ title: 'لا يوجد حساب مرتبط بهذا الموظف', variant: 'destructive' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase.functions.invoke('manage-users', {
+        body: { action: 'reset_password', user_id: userId, employee_id: emp.id, new_password: newPassword },
+      });
+      if (error) throw error;
+      toast({ title: '✅ تم تحديث كلمة المرور بنجاح' });
+      setOpen(false);
+      setNewPassword('');
+      // Reload to refresh displayed password
+      window.location.reload();
+    } catch (e: any) {
+      toast({ title: '❌ فشل التحديث', description: e?.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const generateStrong = () => {
+    const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$';
+    let out = '';
+    for (let i = 0; i < 12; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    setNewPassword(out);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
+      className="mb-6 rounded-2xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-transparent p-5">
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <ShieldCheck className="w-5 h-5 text-amber-500" />
+        <h3 className="font-heading font-black text-foreground">بيانات الدخول</h3>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 font-bold">مرئي للرئيس فقط</span>
+        <div className="mr-auto">
+          <Button size="sm" variant="outline" onClick={() => setOpen(!open)}
+            className="border-amber-500/30 text-amber-500 hover:bg-amber-500/10">
+            <Pencil className="w-3.5 h-3.5 ml-1" /> تغيير كلمة المرور
+          </Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="p-3 rounded-xl bg-background/60 border border-border">
+          <p className="text-[10px] text-muted-foreground mb-1">البريد الإلكتروني</p>
+          <div className="flex items-center justify-between gap-2">
+            <code dir="ltr" className="text-sm font-mono text-foreground truncate">{emp.login_email || '—'}</code>
+            {emp.login_email && (
+              <button onClick={() => { navigator.clipboard.writeText(emp.login_email); toast({ title: 'تم النسخ' }); }}
+                className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/70">نسخ</button>
+            )}
+          </div>
+        </div>
+        <div className="p-3 rounded-xl bg-background/60 border border-border">
+          <p className="text-[10px] text-muted-foreground mb-1">كلمة المرور</p>
+          <div className="flex items-center justify-between gap-2">
+            <code dir="ltr" className="text-sm font-mono text-foreground truncate">{emp.login_password || '—'}</code>
+            {emp.login_password && (
+              <button onClick={() => { navigator.clipboard.writeText(emp.login_password); toast({ title: 'تم النسخ' }); }}
+                className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/70">نسخ</button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {open && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+          className="mt-4 p-4 rounded-xl border-2 border-amber-500/40 bg-background/70">
+          <p className="text-xs text-muted-foreground mb-2">أدخل كلمة مرور جديدة (6 أحرف على الأقل):</p>
+          <div className="flex gap-2 flex-wrap">
+            <input dir="ltr" type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+              placeholder="كلمة المرور الجديدة"
+              className="flex-1 min-w-[200px] bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground font-mono" />
+            <Button size="sm" variant="outline" onClick={generateStrong}>توليد قوية</Button>
+            <Button size="sm" onClick={resetPassword} disabled={saving}
+              className="bg-amber-500 hover:bg-amber-600 text-black">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Save className="w-4 h-4 ml-1" />}
+              حفظ
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => { setOpen(false); setNewPassword(''); }}>إلغاء</Button>
+          </div>
+          {!userId && (
+            <p className="text-[11px] text-destructive mt-2">⚠️ هذا الموظف غير مرتبط بحساب دخول في النظام.</p>
+          )}
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
