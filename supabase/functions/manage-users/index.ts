@@ -15,6 +15,10 @@ function slugify(name: string) {
   return `${base}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function normalizePassword(value: unknown) {
+  return String(value ?? "").trim();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -24,6 +28,49 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    const body = await req.json();
+    const { action } = body;
+
+    if (action === "employee_login") {
+      const password = normalizePassword(body.password);
+      if (!password || password.length > 128) throw new Error("كلمة المرور غير صحيحة");
+
+      const { data: matches, error: matchError } = await supabaseAdmin
+        .from("employees")
+        .select("id, login_email")
+        .eq("login_password", password)
+        .limit(2);
+      if (matchError) throw matchError;
+      if (!matches?.length) throw new Error("كلمة المرور غير صحيحة");
+      if (matches.length > 1) throw new Error("كلمة المرور مكررة، يرجى تغييرها من صفحة الموظف");
+
+      const employee = matches[0];
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id")
+        .eq("employee_id", employee.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      if (!profile?.user_id) throw new Error("لا يوجد حساب دخول مرتبط بهذا الموظف");
+
+      const { data: authUser, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+      if (authUserError || !authUser?.user?.email) throw authUserError ?? new Error("تعذر قراءة حساب الموظف");
+
+      const email = authUser.user.email;
+      const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
+        password,
+      });
+      if (updateAuthError) throw updateAuthError;
+
+      if (employee.login_email !== email) {
+        await supabaseAdmin.from("employees").update({ login_email: email }).eq("id", employee.id);
+      }
+
+      return new Response(JSON.stringify({ success: true, email }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
@@ -41,9 +88,6 @@ serve(async (req) => {
       _role: "ceo",
     });
     if (!isCeo) throw new Error("Only CEO can manage users");
-
-    const body = await req.json();
-    const { action } = body;
 
     if (action === "create") {
       const {
@@ -125,11 +169,25 @@ serve(async (req) => {
     }
 
     if (action === "reset_password") {
-      const { user_id, employee_id, new_password } = body;
-      if (!user_id || !new_password) throw new Error("user_id and new_password required");
-      if (String(new_password).length < 6) throw new Error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+      const { user_id, employee_id } = body;
+      const new_password = normalizePassword(body.new_password);
+      if (!employee_id && !user_id) throw new Error("employee_id or user_id required");
+      if (!new_password) throw new Error("كلمة المرور الجديدة مطلوبة");
+      if (new_password.length < 6) throw new Error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
 
-      const { error: updErr } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
+      let targetUserId = user_id as string | undefined;
+      if (!targetUserId && employee_id) {
+        const { data: profile, error: profileError } = await supabaseAdmin
+          .from("profiles")
+          .select("user_id")
+          .eq("employee_id", employee_id)
+          .maybeSingle();
+        if (profileError) throw profileError;
+        targetUserId = profile?.user_id;
+      }
+      if (!targetUserId) throw new Error("لا يوجد حساب مرتبط بهذا الموظف");
+
+      const { data: authUser, error: updErr } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
         password: new_password,
       });
       if (updErr) throw updErr;
@@ -137,11 +195,11 @@ serve(async (req) => {
       if (employee_id) {
         await supabaseAdmin
           .from("employees")
-          .update({ login_password: new_password })
+          .update({ login_password: new_password, login_email: authUser.user?.email ?? null })
           .eq("id", employee_id);
       }
 
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ success: true, email: authUser.user?.email ?? null }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
