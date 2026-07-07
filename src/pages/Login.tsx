@@ -47,13 +47,16 @@ export default function Login() {
     setSubmitting(true);
 
     let email: string | null = null;
+    let tokenHash: string | null = null;
     let lookupMessage = '';
     try {
       const { data, error: lookupError } = await supabase.functions.invoke('manage-users', {
         body: { action: 'employee_login', password: pwd },
       });
       if (lookupError) throw lookupError;
-      email = (data as { email?: string } | null)?.email ?? null;
+      const loginData = data as { email?: string; token_hash?: string } | null;
+      email = loginData?.email ?? null;
+      tokenHash = loginData?.token_hash ?? null;
     } catch (err: any) {
       lookupMessage = err?.message || '';
     }
@@ -66,9 +69,11 @@ export default function Login() {
       return;
     }
 
-    let { error: authError } = await signIn(email, pwd);
-    if (authError) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+    let authError: any = null;
+    if (tokenHash) {
+      const { error } = await supabase.auth.verifyOtp({ type: 'magiclink', token_hash: tokenHash });
+      authError = error;
+    } else {
       ({ error: authError } = await signIn(email, pwd));
     }
     setSubmitting(false);
