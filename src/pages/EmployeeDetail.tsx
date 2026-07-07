@@ -634,8 +634,15 @@ function CredentialsCard({ emp }: { emp: any }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [displayedPassword, setDisplayedPassword] = useState(emp.login_password || '');
+  const [displayedEmail, setDisplayedEmail] = useState(emp.login_email || '');
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDisplayedPassword(emp.login_password || '');
+    setDisplayedEmail(emp.login_email || '');
+  }, [emp.login_password, emp.login_email]);
 
   useEffect(() => {
     (async () => {
@@ -663,11 +670,10 @@ function CredentialsCard({ emp }: { emp: any }) {
         body: { action: 'reset_password', user_id: userId, employee_id: emp.id, new_password: newPassword },
       });
       if (error) throw error;
+      setDisplayedPassword(newPassword);
       toast({ title: '✅ تم تحديث كلمة المرور بنجاح' });
       setOpen(false);
       setNewPassword('');
-      // Reload to refresh displayed password
-      window.location.reload();
     } catch (e: any) {
       toast({ title: '❌ فشل التحديث', description: e?.message, variant: 'destructive' });
     } finally {
@@ -700,9 +706,9 @@ function CredentialsCard({ emp }: { emp: any }) {
         <div className="p-3 rounded-xl bg-background/60 border border-border">
           <p className="text-[10px] text-muted-foreground mb-1">البريد الإلكتروني</p>
           <div className="flex items-center justify-between gap-2">
-            <code dir="ltr" className="text-sm font-mono text-foreground truncate">{emp.login_email || '—'}</code>
-            {emp.login_email && (
-              <button onClick={() => { navigator.clipboard.writeText(emp.login_email); toast({ title: 'تم النسخ' }); }}
+            <code dir="ltr" className="text-sm font-mono text-foreground truncate">{displayedEmail || '—'}</code>
+            {displayedEmail && (
+              <button onClick={() => { navigator.clipboard.writeText(displayedEmail); toast({ title: 'تم النسخ' }); }}
                 className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/70">نسخ</button>
             )}
           </div>
@@ -710,9 +716,9 @@ function CredentialsCard({ emp }: { emp: any }) {
         <div className="p-3 rounded-xl bg-background/60 border border-border">
           <p className="text-[10px] text-muted-foreground mb-1">كلمة المرور</p>
           <div className="flex items-center justify-between gap-2">
-            <code dir="ltr" className="text-sm font-mono text-foreground truncate">{emp.login_password || '—'}</code>
-            {emp.login_password && (
-              <button onClick={() => { navigator.clipboard.writeText(emp.login_password); toast({ title: 'تم النسخ' }); }}
+            <code dir="ltr" className="text-sm font-mono text-foreground truncate">{displayedPassword || '—'}</code>
+            {displayedPassword && (
+              <button onClick={() => { navigator.clipboard.writeText(displayedPassword); toast({ title: 'تم النسخ' }); }}
                 className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/70">نسخ</button>
             )}
           </div>
