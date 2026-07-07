@@ -42,15 +42,27 @@ export default function Login() {
       return;
     }
 
-    const mapped = PASSWORD_MAP[password.trim()];
-    if (!mapped) {
+    const pwd = password.trim();
+    setError('');
+    setSubmitting(true);
+
+    // 1) Try DB lookup for any registered employee
+    let email: string | null = null;
+    try {
+      const { data } = await supabase.rpc('resolve_login_email', { _password: pwd });
+      if (data) email = data as string;
+    } catch { /* ignore, fallback below */ }
+
+    // 2) Fallback to legacy hardcoded map
+    if (!email) email = FALLBACK_PASSWORD_MAP[pwd] ?? null;
+
+    if (!email) {
+      setSubmitting(false);
       setError('كلمة المرور غير صحيحة');
       return;
     }
 
-    setError('');
-    setSubmitting(true);
-    const { error: authError } = await signIn(mapped.email, password.trim());
+    const { error: authError } = await signIn(email, pwd);
     setSubmitting(false);
     if (authError) {
       setError('كلمة المرور غير صحيحة أو الحساب غير مفعّل');
