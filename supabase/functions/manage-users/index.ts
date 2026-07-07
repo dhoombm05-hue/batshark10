@@ -78,16 +78,21 @@ serve(async (req) => {
       if (authUserError || !authUser?.user?.email) throw authUserError ?? new Error("تعذر قراءة حساب الموظف");
 
       const email = authUser.user.email;
-      const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
-        password,
-      });
-      if (updateAuthError) throw updateAuthError;
+      await supabaseAdmin.auth.admin.updateUserById(profile.user_id, { password });
 
       if (employee.login_email !== email || legacyEmail) {
         await supabaseAdmin.from("employees").update({ login_email: email, login_password: password }).eq("id", employee.id);
       }
 
-      return new Response(JSON.stringify({ success: true, email }), {
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+      });
+      if (linkError || !linkData?.properties?.hashed_token) {
+        throw linkError ?? new Error("تعذر تجهيز جلسة الدخول");
+      }
+
+      return new Response(JSON.stringify({ success: true, email, token_hash: linkData.properties.hashed_token }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
