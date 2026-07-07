@@ -46,23 +46,31 @@ export default function Login() {
     setError('');
     setSubmitting(true);
 
-    // 1) Try DB lookup for any registered employee
     let email: string | null = null;
+    let lookupMessage = '';
     try {
-      const { data } = await supabase.rpc('resolve_login_email', { _password: pwd });
-      if (data) email = data as string;
-    } catch { /* ignore, fallback below */ }
+      const { data, error: lookupError } = await supabase.functions.invoke('manage-users', {
+        body: { action: 'employee_login', password: pwd },
+      });
+      if (lookupError) throw lookupError;
+      email = (data as { email?: string } | null)?.email ?? null;
+    } catch (err: any) {
+      lookupMessage = err?.message || '';
+    }
 
-    // 2) Fallback to legacy hardcoded map
     if (!email) email = FALLBACK_PASSWORD_MAP[pwd] ?? null;
 
     if (!email) {
       setSubmitting(false);
-      setError('كلمة المرور غير صحيحة');
+      setError(lookupMessage.includes('مكررة') ? lookupMessage : 'كلمة المرور غير صحيحة');
       return;
     }
 
-    const { error: authError } = await signIn(email, pwd);
+    let { error: authError } = await signIn(email, pwd);
+    if (authError) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      ({ error: authError } = await signIn(email, pwd));
+    }
     setSubmitting(false);
     if (authError) {
       setError('كلمة المرور غير صحيحة أو الحساب غير مفعّل');
