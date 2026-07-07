@@ -2,29 +2,43 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/batshark-logo-main.png';
 
 /**
- * One-time welcome greeting after signup. Uses localStorage keyed by user_id
- * so each employee sees it once on first login only.
+ * One-time welcome. Uses profiles.welcomed_at (DB) so it never re-appears,
+ * even after clearing browser storage or switching device.
  */
 export default function WelcomeModal() {
   const { user, profile } = useAuthContext();
   const [open, setOpen] = useState(false);
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (!user || !profile) return;
-    const key = `welcomed:${user.id}`;
-    if (!localStorage.getItem(key)) {
-      const t = setTimeout(() => setOpen(true), 600);
-      return () => clearTimeout(t);
-    }
-  }, [user, profile]);
+    if (!user || !profile || checked) return;
+    setChecked(true);
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('welcomed_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!data?.welcomed_at) {
+        setTimeout(() => setOpen(true), 600);
+      }
+    })();
+  }, [user, profile, checked]);
 
-  const dismiss = () => {
-    if (user) localStorage.setItem(`welcomed:${user.id}`, '1');
+  const dismiss = async () => {
     setOpen(false);
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ welcomed_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+    }
   };
+
 
   const firstName = (profile?.display_name || '').trim().split(/\s+/)[0] || 'مرحباً';
 
