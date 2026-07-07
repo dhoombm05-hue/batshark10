@@ -2508,6 +2508,7 @@ export type Database = {
           job_title: string | null
           updated_at: string
           user_id: string
+          welcomed_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -2519,6 +2520,7 @@ export type Database = {
           job_title?: string | null
           updated_at?: string
           user_id: string
+          welcomed_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -2530,6 +2532,7 @@ export type Database = {
           job_title?: string | null
           updated_at?: string
           user_id?: string
+          welcomed_at?: string | null
         }
         Relationships: [
           {
@@ -3374,6 +3377,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      resolve_login_email: { Args: { _password: string }; Returns: string }
       verify_platform_access: {
         Args: { _access_code: string; _slug: string }
         Returns: boolean

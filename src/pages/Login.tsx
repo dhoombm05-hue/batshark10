@@ -5,16 +5,17 @@ import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/batshark-logo-main.png';
 
-// Password -> email mapping for password-only login
-const PASSWORD_MAP: Record<string, { email: string; name: string }> = {
-  'messi19': { email: 'ceo@batshark.com', name: 'الرئيس' },
-  'MESSIBAT10': { email: 'ceo@batshark.com', name: 'الرئيس' },
-  'SAM19': { email: 'mohammed@batshark.com', name: 'محمد' },
-  'VACANCY': { email: 'fahad@batshark.com', name: 'فهد' },
-  'LEO30': { email: 'saad@batshark.com', name: 'سعد' },
-  'USA20': { email: 'naif@batshark.com', name: 'نايف' },
+// Fallback for legacy accounts not stored in employees.login_password
+const FALLBACK_PASSWORD_MAP: Record<string, string> = {
+  'messi19': 'ceo@batshark.com',
+  'MESSIBAT10': 'ceo@batshark.com',
+  'SAM19': 'mohammed@batshark.com',
+  'VACANCY': 'fahad@batshark.com',
+  'LEO30': 'saad@batshark.com',
+  'USA20': 'naif@batshark.com',
 };
 
 export default function Login() {
@@ -41,15 +42,27 @@ export default function Login() {
       return;
     }
 
-    const mapped = PASSWORD_MAP[password.trim()];
-    if (!mapped) {
+    const pwd = password.trim();
+    setError('');
+    setSubmitting(true);
+
+    // 1) Try DB lookup for any registered employee
+    let email: string | null = null;
+    try {
+      const { data } = await supabase.rpc('resolve_login_email', { _password: pwd });
+      if (data) email = data as string;
+    } catch { /* ignore, fallback below */ }
+
+    // 2) Fallback to legacy hardcoded map
+    if (!email) email = FALLBACK_PASSWORD_MAP[pwd] ?? null;
+
+    if (!email) {
+      setSubmitting(false);
       setError('كلمة المرور غير صحيحة');
       return;
     }
 
-    setError('');
-    setSubmitting(true);
-    const { error: authError } = await signIn(mapped.email, password.trim());
+    const { error: authError } = await signIn(email, pwd);
     setSubmitting(false);
     if (authError) {
       setError('كلمة المرور غير صحيحة أو الحساب غير مفعّل');
