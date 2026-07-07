@@ -19,6 +19,15 @@ function normalizePassword(value: unknown) {
   return String(value ?? "").trim();
 }
 
+const LEGACY_PASSWORD_EMAILS: Record<string, string> = {
+  messi19: "ceo@batshark.com",
+  MESSIBAT10: "ceo@batshark.com",
+  SAM19: "mohammed@batshark.com",
+  VACANCY: "fahad@batshark.com",
+  LEO30: "saad@batshark.com",
+  USA20: "naif@batshark.com",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -42,10 +51,21 @@ serve(async (req) => {
         .eq("login_password", password)
         .limit(2);
       if (matchError) throw matchError;
-      if (!matches?.length) throw new Error("كلمة المرور غير صحيحة");
-      if (matches.length > 1) throw new Error("كلمة المرور مكررة، يرجى تغييرها من صفحة الموظف");
+      if ((matches?.length ?? 0) > 1) throw new Error("كلمة المرور مكررة، يرجى تغييرها من صفحة الموظف");
 
-      const employee = matches[0];
+      let employee = matches?.[0] ?? null;
+      const legacyEmail = LEGACY_PASSWORD_EMAILS[password];
+      if (!employee && legacyEmail) {
+        const { data: legacyEmployee, error: legacyError } = await supabaseAdmin
+          .from("employees")
+          .select("id, login_email")
+          .eq("login_email", legacyEmail)
+          .maybeSingle();
+        if (legacyError) throw legacyError;
+        employee = legacyEmployee;
+      }
+
+      if (!employee) throw new Error("كلمة المرور غير صحيحة");
       const { data: profile, error: profileError } = await supabaseAdmin
         .from("profiles")
         .select("user_id")
@@ -63,8 +83,8 @@ serve(async (req) => {
       });
       if (updateAuthError) throw updateAuthError;
 
-      if (employee.login_email !== email) {
-        await supabaseAdmin.from("employees").update({ login_email: email }).eq("id", employee.id);
+      if (employee.login_email !== email || legacyEmail) {
+        await supabaseAdmin.from("employees").update({ login_email: email, login_password: password }).eq("id", employee.id);
       }
 
       return new Response(JSON.stringify({ success: true, email }), {
