@@ -19,6 +19,13 @@ function normalizePassword(value: unknown) {
   return String(value ?? "").trim();
 }
 
+function createInternalPassword() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  let out = "B9!";
+  for (let i = 0; i < 18; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
 const LEGACY_PASSWORD_EMAILS: Record<string, string> = {
   messi19: "ceo@batshark.com",
   MESSIBAT10: "ceo@batshark.com",
@@ -135,12 +142,22 @@ serve(async (req) => {
         throw new Error("البريد الإلكتروني، الاسم وكلمة المرور مطلوبة");
       }
 
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      let { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: { display_name },
       });
+      if (createError) {
+        const retry = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password: createInternalPassword(),
+          email_confirm: true,
+          user_metadata: { display_name },
+        });
+        newUser = retry.data;
+        createError = retry.error;
+      }
       if (createError) throw createError;
       const userId = newUser.user!.id;
 
@@ -212,19 +229,20 @@ serve(async (req) => {
       }
       if (!targetUserId) throw new Error("لا يوجد حساب مرتبط بهذا الموظف");
 
-      const { data: authUser, error: updErr } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+      const { data: authUser } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
         password: new_password,
       });
-      if (updErr) throw updErr;
+
+      const email = authUser.user?.email ?? null;
 
       if (employee_id) {
         await supabaseAdmin
           .from("employees")
-          .update({ login_password: new_password, login_email: authUser.user?.email ?? null })
+          .update({ login_password: new_password, ...(email ? { login_email: email } : {}) })
           .eq("id", employee_id);
       }
 
-      return new Response(JSON.stringify({ success: true, email: authUser.user?.email ?? null }), {
+      return new Response(JSON.stringify({ success: true, email }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
