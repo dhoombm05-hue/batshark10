@@ -145,6 +145,15 @@ export default function EmployeeDetail() {
     if (emp) fetchHistory();
   }, [emp?.id]);
 
+  // Look up the auth user_id linked to this employee (for real activity-based scoring)
+  useEffect(() => {
+    if (!emp?.id) return;
+    (async () => {
+      const { data } = await supabase.from('profiles').select('user_id').eq('employee_id', emp.id).maybeSingle();
+      if (data) setEmpUserId((data as any).user_id);
+    })();
+  }, [emp?.id]);
+
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !emp) return;
