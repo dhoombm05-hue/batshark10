@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployee, useEmployeeMonthlyPerformance, useUpdateEmployee, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
 import { useEmployeeEngine } from '@/hooks/useEmployeeEngine';
+import { usePerformanceScoring } from '@/hooks/usePerformanceScoring';
 import EmployeeGovernanceTab from '@/components/EmployeeGovernanceTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
@@ -83,6 +84,8 @@ export default function EmployeeDetail() {
   const [history, setHistory] = useState<EvalRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [empUserId, setEmpUserId] = useState<string | null>(null);
+  const { data: perfScores } = usePerformanceScoring();
 
   // Editable profile fields - initialized from DB
   const [profileData, setProfileData] = useState({
@@ -140,6 +143,15 @@ export default function EmployeeDetail() {
 
   useEffect(() => {
     if (emp) fetchHistory();
+  }, [emp?.id]);
+
+  // Look up the auth user_id linked to this employee (for real activity-based scoring)
+  useEffect(() => {
+    if (!emp?.id) return;
+    (async () => {
+      const { data } = await supabase.from('profiles').select('user_id').eq('employee_id', emp.id).maybeSingle();
+      if (data) setEmpUserId((data as any).user_id);
+    })();
   }, [emp?.id]);
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -541,39 +553,59 @@ export default function EmployeeDetail() {
         </TabsList>
 
         <TabsContent value="profile">
-          {/* Stats from DB */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {[
-              { title: 'الأداء العام', value: `${emp.performance}%`, icon: Target, color: emp.performance >= 85 ? 'text-success' : 'text-section-employees' },
-              { title: 'تحقيق الأهداف', value: `${emp.kpi_achievement}%`, icon: CheckCircle, color: 'text-primary' },
-              { title: 'مساهمة في الربح', value: `${emp.profit_contribution}%`, icon: TrendingUp, color: 'text-success' },
-              { title: 'التقييم الشهري', value: `${emp.monthly_rating}/10`, icon: Star, color: 'text-gold' },
-            ].map((stat, i) => (
-              <motion.div key={stat.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.08 }}
-                className="bg-card rounded-xl border border-border p-4 shadow-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                  <span className="text-[10px] text-muted-foreground">{stat.title}</span>
-                </div>
-                <p className={`text-xl font-heading font-bold ${stat.color}`}>{stat.value}</p>
-              </motion.div>
-            ))}
-          </div>
+          {/* Real stats — derived exclusively from tracked activity + saved evaluations */}
+          {(() => {
+            const myScore = perfScores?.find(s => s.userId === empUserId);
+            const realPerformance = myScore?.score ?? 0;
+            const completedOps = myScore?.completedActions ?? 0;
+            const financialImpact = myScore?.financialImpact ?? 0;
+            const evalAvg = history.length > 0
+              ? Number((history.reduce((s, e) => s + Number(e.overall_score || 0), 0) / history.length).toFixed(1))
+              : 0;
+            const fmtSAR = (n: number) => n >= 1000 ? `${(n/1000).toFixed(1)}K` : `${Math.round(n)}`;
+            const stats = [
+              { title: 'الأداء الفعلي (نشاط)', value: `${realPerformance}%`, icon: Target, color: realPerformance >= 70 ? 'text-success' : realPerformance >= 40 ? 'text-section-employees' : 'text-muted-foreground' },
+              { title: 'عمليات منجزة', value: `${completedOps}`, icon: CheckCircle, color: completedOps > 0 ? 'text-primary' : 'text-muted-foreground' },
+              { title: 'أثر مالي مسجل (ر.س)', value: fmtSAR(financialImpact), icon: TrendingUp, color: financialImpact > 0 ? 'text-success' : 'text-muted-foreground' },
+              { title: `متوسط التقييم (${history.length})`, value: history.length > 0 ? `${evalAvg}/10` : '—', icon: Star, color: evalAvg >= 7 ? 'text-gold' : evalAvg > 0 ? 'text-warning' : 'text-muted-foreground' },
+            ];
+            return (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {stats.map((stat, i) => (
+                  <motion.div key={stat.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.08 }}
+                    className="bg-card rounded-xl border border-border p-4 shadow-card">
+                    <div className="flex items-center gap-2 mb-2">
+                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                      <span className="text-[10px] text-muted-foreground">{stat.title}</span>
+                    </div>
+                    <p className={`text-xl font-heading font-bold ${stat.color}`}>{stat.value}</p>
+                  </motion.div>
+                ))}
+              </div>
+            );
+          })()}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Performance Chart from DB */}
+            {/* Real evaluation history chart (from employee_evaluations) */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
               className="bg-card rounded-xl border border-border p-5 shadow-card">
-              <h3 className="text-sm font-heading text-foreground mb-4">📈 الأداء الشهري</h3>
-              <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 88%)" />
-                  <XAxis dataKey="month" tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
-                  <YAxis domain={[50, 100]} tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
-                  <Tooltip contentStyle={{ background: 'hsl(0 0% 100%)', border: '1px solid hsl(220 15% 88%)', borderRadius: 12 }} />
-                  <Line type="monotone" dataKey="score" name="الأداء" stroke="hsl(25, 85%, 52%)" strokeWidth={2.5} dot={{ fill: 'hsl(25, 85%, 52%)', r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <h3 className="text-sm font-heading text-foreground mb-4">📈 سجل التقييمات الفعلية</h3>
+              {history.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-[240px] text-muted-foreground">
+                  <Star className="w-10 h-10 opacity-30 mb-2" />
+                  <p className="text-xs">لا توجد تقييمات مسجلة بعد</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <LineChart data={[...history].reverse().map(h => ({ month: `${h.evaluation_month.slice(0,3)} ${String(h.evaluation_year).slice(-2)}`, score: Number(h.overall_score) }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 88%)" />
+                    <XAxis dataKey="month" tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
+                    <YAxis domain={[0, 10]} tick={{ fill: 'hsl(220, 10%, 48%)', fontSize: 10 }} />
+                    <Tooltip contentStyle={{ background: 'hsl(0 0% 100%)', border: '1px solid hsl(220 15% 88%)', borderRadius: 12 }} />
+                    <Line type="monotone" dataKey="score" name="التقييم" stroke="hsl(25, 85%, 52%)" strokeWidth={2.5} dot={{ fill: 'hsl(25, 85%, 52%)', r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </motion.div>
 
             {/* Feedback & Achievements from DB */}
