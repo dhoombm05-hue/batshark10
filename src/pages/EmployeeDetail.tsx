@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployee, useEmployeeMonthlyPerformance, useUpdateEmployee, useUploadEmployeeAvatar } from '@/hooks/useEmployees';
 import { useEmployeeEngine } from '@/hooks/useEmployeeEngine';
+import { usePerformanceScoring } from '@/hooks/usePerformanceScoring';
 import EmployeeGovernanceTab from '@/components/EmployeeGovernanceTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
