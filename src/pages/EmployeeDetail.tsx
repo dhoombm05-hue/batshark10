@@ -84,6 +84,8 @@ export default function EmployeeDetail() {
   const [history, setHistory] = useState<EvalRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [empUserId, setEmpUserId] = useState<string | null>(null);
+  const { data: perfScores } = usePerformanceScoring();
 
   // Editable profile fields - initialized from DB
   const [profileData, setProfileData] = useState({
