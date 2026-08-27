@@ -1,73 +1,319 @@
-# Welcome to your Lovable project
+# Sharkfin Insights
 
-## Project info
+أولاً: ما هو BatShark Economy؟
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+هو:
 
-## How can I edit this code?
+منصة إدارة مالية وتحليل مشاريع وتوقعات أرباح مبنية على بيانات فعلية
 
-There are several ways of editing your application.
+لوحات تحكم
 
-**Use Lovable**
+رسوم بيانية
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+تقييم أداء موظفين
 
-Changes made via Lovable will be committed automatically to this repo.
+توقعات ربح وخسارة (تحليل شبه اكتواري)
 
-**Use your preferred IDE**
+يعني نظام يجمع:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+محاسبة
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+تحليل مالي
 
-Follow these steps:
+ذكاء أعمال (Business Intelligence)
+
+توقعات مستقبلية
+
+إدارة أداء الموظفين
+
+ثانياً: الهيكل الكامل للموقع
+1️⃣ الصفحة الرئيسية (Dashboard)
+
+اسم كبير في الأعلى:
+BatShark Economy
+
+تحتها رؤية احترافية مثل:
+
+"قيادة مالية مبنية على البيانات، وتحليل استراتيجي يقود النمو المستدام."
+
+تحتوي على:
+
+إجمالي المصروفات
+
+إجمالي الإيرادات
+
+صافي الربح / الخسارة
+
+نسبة النمو الشهرية
+
+رسم بياني عام لكل المشاريع
+
+مؤشر صحة الشركة (Financial Health Score)
+
+2️⃣ قسم المشاريع
+المشاريع الحالية عندك:
+
+مشروع البادل
+
+مشروع الشاشات
+
+مشروع Umbrex (الاومبركس)
+
+كل مشروع له صفحة خاصة فيها:
+
+📌 البيانات المدخلة:
+
+المصروفات (أرض – معدات – رواتب – إعلانات – صيانة…)
+
+الإيرادات اليومية / الأسبوعية / الشهرية
+
+عدد العملاء
+
+عدد الحملات الإعلانية
+
+نسبة الإشغال (في البادل مثلاً)
+
+📊 يعرض:
+
+رسم بياني أرباح شهرية
+
+رسم بياني مقارنة مصروفات مقابل إيرادات
+
+نقطة التعادل (Break-even point)
+
+تحليل سبب الربح أو الخسارة
+
+مثلاً يقول:
+
+الربح ارتفع بنسبة 12% بسبب:
+
+زيادة الحملات الإعلانية
+
+ارتفاع نسبة الإشغال إلى 78%
+
+تقليل المصروفات التشغيلية
+
+أو:
+
+الخسارة بسبب:
+
+ضعف الإعلانات
+
+انخفاض العملاء 22%
+
+ارتفاع تكاليف الصيانة
+
+3️⃣ نظام التوقعات (الجزء الأقوى 🔥)
+
+هذا أهم جزء تبيه أنت.
+
+النظام يعتمد على:
+
+متوسط الإيرادات السابقة
+
+معدل النمو
+
+المصروفات الثابتة
+
+المصروفات المتغيرة
+
+عدد الحملات الإعلانية
+
+معدل التحويل
+
+نسبة الإشغال
+
+ويعطيك:
+
+📈 توقع بعد شهر
+📈 توقع بعد 3 شهور
+📈 توقع بعد سنة
+
+مع تحليل:
+
+بناءً على معدل النمو الحالي 8% شهريًا، يتوقع تحقيق فائض قدره 240,000 ريال خلال 6 أشهر.
+
+أو:
+
+في حال استمرار انخفاض نسبة الإشغال تحت 50%، سيسجل المشروع خسارة خلال 45 يوم.
+
+هذا يكون أقرب لتحليل العلوم الاكتوارية لكن بطريقة عملية.
+
+4️⃣ قسم الموظفين 👥
+
+الموظفين:
+
+عبدالرحمن بن بندر بن محبوب (الرئيس)
+
+محمد بن تركي الداود
+
+فهد سلطان المحبوب
+
+نايف بن محمد المطيري
+
+سعد سلطان المحبوب
+
+لكل موظف صفحة فيها:
+
+📌 بيانات:
+
+المنصب
+
+المسؤوليات
+
+المشاريع التي يشرف عليها
+
+نسبة الأداء
+
+تقييم شهري
+
+إنجازات
+
+نقاط تحتاج تحسين
+
+📊 مؤشرات:
+
+KPI
+
+نسبة تحقيق الأهداف
+
+مساهمة في الربح
+
+النظام يكتب:
+
+الموظف محمد بن تركي الداود
+يستحق جائزة أفضل أداء هذا الشهر
+بسبب رفع أرباح مشروع البادل بنسبة 18%.
+
+أو:
+
+الموظف فهد سلطان يحتاج تركيز في إدارة المصروفات بسبب تجاوز الميزانية 12%.
+
+5️⃣ قسم التحليل الاستراتيجي
+
+يحتوي على:
+
+تحليل SWOT
+
+تحليل المخاطر
+
+تحليل العائد على الاستثمار ROI
+
+تحليل السيولة
+
+تحليل التدفق النقدي
+
+ثالثاً: شكل الموقع (احترافي جداً)
+
+الستايل:
+
+ألوان فخمة (كحلي داكن + ذهبي)
+
+شعار BatShark في الأعلى بخط قوي
+
+خلفية بسيطة نظيفة
+
+رسوم بيانية متحركة
+
+واجهة Dashboard مثل أنظمة الشركات العالمية
+
+اللوغو:
+
+سمكة قرش بأسلوب هندسي Minimal
+لون فضي أو ذهبي
+تحته كلمة:
+
+BATSHARK
+Economy Intelligence
+
+رابعاً: كيف تبنيه تقنياً (الخطة الاحترافية)
+🔹 Frontend:
+
+React أو Next.js
+
+Tailwind CSS
+
+Chart.js أو Recharts
+
+🔹 Backend:
+
+Node.js
+
+قاعدة بيانات PostgreSQL
+
+🔹 نظام دخول:
+
+حساب خاص بك
+
+صلاحيات للموظفين
+
+🔹 لوحة تحكم:
+
+إضافة مشروع
+
+تعديل مصروفات
+
+إضافة إيرادات
+
+رفع تقارير PDF
+
+خامساً: ماذا تدخل يومياً؟
+
+كل يوم تدخل:
+
+الإيرادات اليومية لكل مشروع
+
+المصروفات الجديدة
+
+عدد العملاء
+
+عدد الإعلانات
+
+ملاحظات الأداء
+
+النظام يحدث:
+
+الرسوم البيانية
+
+المؤشرات
+
+التوقعات
+
+سادساً: مستوى احترافي أعلى (إذا تبي نطوره أكثر 🔥)
+
+نضيف:
+
+ذكاء اصطناعي يحلل الأنماط
+
+مقارنة بين المشاريع
+
+اقتراحات تلقائية:
+
+زد الإعلانات 15%
+
+خفف المصروفات التشغيلية
+
+ارفع الأسعار 5%
+
+This project was built with [Lovable](https://lovable.dev).
+
+**Live app**: https://batshark10.lovable.app
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/7d743b2c-9485-459a-8e46-f526c506d10b).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
