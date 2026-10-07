@@ -59,13 +59,23 @@ export default function Login() {
       tokenHash = loginData?.token_hash ?? null;
     } catch (err: any) {
       lookupMessage = err?.message || '';
+      try {
+        const body = await err?.context?.json?.();
+        if (body?.error) lookupMessage = String(body.error);
+      } catch { /* ignore */ }
     }
 
-    if (!email) email = FALLBACK_PASSWORD_MAP[pwd] ?? null;
+    const serverDown = !!lookupMessage && !/[\u0600-\u06FF]/.test(lookupMessage);
+
+    if (!email && !serverDown) email = FALLBACK_PASSWORD_MAP[pwd] ?? null;
 
     if (!email) {
       setSubmitting(false);
-      setError(lookupMessage.includes('مكررة') ? lookupMessage : 'كلمة المرور غير صحيحة');
+      if (serverDown) {
+        setError('الخادم غير متاح مؤقتاً، يرجى المحاولة بعد دقيقة');
+      } else {
+        setError(lookupMessage.includes('مكررة') ? lookupMessage : 'كلمة المرور غير صحيحة');
+      }
       return;
     }
 
