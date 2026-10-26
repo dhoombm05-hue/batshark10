@@ -14,4 +14,10 @@ describe('actual invoice profitability', () => {
     const invoice = { invoice_type: 'customer', total_amount: 10000, purchase_cost: 5000, selling_expenses: 0 };
     expect(summarizeInvoices([{ ...invoice, status: 'paid' }, { ...invoice, status: 'draft' }, { ...invoice, status: 'cancelled' }])).toMatchObject({ revenue: 10000, expenses: 5000, profit: 5000 });
   });
+  it('keeps purchase invoices separate from costs already included in sales profit', () => {
+    expect(summarizeInvoices([
+      { invoice_type: 'customer', status: 'paid', total_amount: 10000, purchase_cost: 5000, selling_expenses: 0 },
+      { invoice_type: 'internal', status: 'paid', total_amount: 5000, purchase_cost: null, selling_expenses: 0 },
+    ])).toMatchObject({ revenue: 10000, expenses: 5000, profit: 5000, purchases: 5000 });
+  });
 });

@@ -21,12 +21,13 @@ export function invoiceFinancials(invoice: InvoiceFinancialInput) {
 export function summarizeInvoices(invoices: (InvoiceFinancialInput & { status: string })[]) {
   const paid = invoices.filter(invoice => invoice.status === 'paid');
   const sales = paid.filter(invoice => isSalesInvoice(invoice.invoice_type));
-  const results = paid.map(invoiceFinancials);
+  const results = sales.map(invoiceFinancials);
   const missingCosts = sales.filter(invoice => invoice.purchase_cost === null).length;
   return {
     revenue: results.reduce((sum, item) => sum + item.revenue, 0),
     expenses: results.reduce((sum, item) => sum + (item.expenses ?? 0), 0),
     profit: missingCosts ? null : results.reduce((sum, item) => sum + (item.profit ?? 0), 0),
     missingCosts,
+    purchases: paid.filter(invoice => !isSalesInvoice(invoice.invoice_type)).reduce((sum, invoice) => sum + Number(invoice.total_amount) + Number(invoice.selling_expenses || 0), 0),
   };
 }
