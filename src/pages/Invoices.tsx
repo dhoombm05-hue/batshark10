@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import logo from '@/assets/batshark-logo-main.png';
+import { invoiceFinancials, isSalesInvoice, summarizeInvoices } from '@/lib/invoice-financials';
 
 /* ═══════ Types ═══════ */
 interface InvoiceItem {
@@ -46,6 +47,10 @@ interface Invoice {
   status: string;
   payment_method: string | null;
   total_amount: number;
+  purchase_cost: number | null;
+  selling_expenses: number;
+  supplier_name: string | null;
+  purchase_reference: string | null;
   items: InvoiceItem[];
   created_by: string;
   created_at: string;
@@ -91,78 +96,9 @@ function useInvoices() {
   });
 }
 
-/* ═══════ Auto-link: Journal + News + Performance on finalize ═══════ */
+/* Invoice completion updates news and activity only; no journal posting. */
 async function finalizeInvoice(invoice: Invoice, projectName: string | null, userName: string) {
   const isCustomer = invoice.invoice_type === 'customer' || invoice.invoice_type === 'umbrex_customer';
-  const isInternal = invoice.invoice_type === 'internal' || invoice.invoice_type === 'umbrex_internal';
-
-  // 1. Create journal entry
-  const description = isCustomer
-    ? `فاتورة بيع #${invoice.invoice_number} — ${invoice.customer_name || 'عميل'}`
-    : `فاتورة شراء #${invoice.invoice_number} — ${invoice.customer_name || 'مورد'}`;
-
-  const { data: entry, error: entryErr } = await supabase
-    .from('journal_entries' as any)
-    .insert({
-      description,
-      project_id: invoice.project_id,
-      entry_date: invoice.invoice_date,
-      created_by: userName,
-      is_balanced: true,
-      notes: `تم الإنشاء تلقائياً من الفاتورة #${invoice.invoice_number}`,
-    } as any)
-    .select('id')
-    .single();
-  if (entryErr) throw entryErr;
-  const entryId = (entry as any).id;
-
-  // 2. Create journal lines
-  const lines: any[] = [];
-  if (isCustomer) {
-    // Revenue: credit revenue, debit cash
-    lines.push({
-      journal_entry_id: entryId,
-      account_name: 'النقدية / البنك',
-      account_type: 'asset',
-      debit: invoice.total_amount,
-      credit: 0,
-    });
-    lines.push({
-      journal_entry_id: entryId,
-      account_name: `إيراد مبيعات — فاتورة #${invoice.invoice_number}`,
-      account_type: 'revenue',
-      debit: 0,
-      credit: invoice.total_amount,
-    });
-  } else if (isInternal) {
-    // Expense: debit expense, credit cash
-    for (const item of invoice.items) {
-      if (item.total > 0) {
-        lines.push({
-          journal_entry_id: entryId,
-          account_name: item.name,
-          account_type: 'expense',
-          debit: item.total,
-          credit: 0,
-        });
-      }
-    }
-    lines.push({
-      journal_entry_id: entryId,
-      account_name: 'النقدية / البنك',
-      account_type: 'asset',
-      debit: 0,
-      credit: invoice.total_amount,
-    });
-  }
-
-  if (lines.length > 0) {
-    const { error: linesErr } = await supabase
-      .from('journal_lines' as any)
-      .insert(lines as any);
-    if (linesErr) throw linesErr;
-  }
-
   // 3. Post news
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
@@ -170,8 +106,8 @@ async function finalizeInvoice(invoice: Invoice, projectName: string | null, use
       ? `💰 تم إتمام بيع — فاتورة #${invoice.invoice_number}`
       : `📦 تم تسجيل مشتريات — فاتورة #${invoice.invoice_number}`;
     const newsContent = isCustomer
-      ? `تم إتمام عملية بيع بقيمة **${invoice.total_amount.toLocaleString()} ر.س** للعميل **${invoice.customer_name || 'غير محدد'}**${projectName ? ` في مشروع **${projectName}**` : ''}. تم تسجيل القيد المحاسبي تلقائياً.`
-      : `تم تسجيل فاتورة شراء بقيمة **${invoice.total_amount.toLocaleString()} ر.س** من **${invoice.customer_name || 'مورد'}**${projectName ? ` لمشروع **${projectName}**` : ''}. تم تسجيل المصروفات تلقائياً.`;
+      ? `تم إتمام عملية بيع بقيمة **${invoice.total_amount.toLocaleString()} ر.س** للعميل **${invoice.customer_name || 'غير محدد'}**${projectName ? ` في مشروع **${projectName}**` : ''}. تكلفة الشراء **${invoice.purchase_cost ?? "غير مسجلة"} ر.س**، المصاريف الإضافية **${invoice.selling_expenses || 0} ر.س**، صافي ربح العملية **${invoiceFinancials(invoice).profit?.toLocaleString() ?? "غير مكتمل"} ر.س**.`
+      : `تم تسجيل فاتورة شراء بقيمة **${invoice.total_amount.toLocaleString()} ر.س** من **${invoice.customer_name || 'مورد'}**${projectName ? ` لمشروع **${projectName}**` : ''}. تم حفظ تفاصيل عملية الشراء في سجل الفواتير.`;
 
     await supabase.from('news' as any).insert({
       title: newsTitle,
@@ -220,6 +156,11 @@ function InvoiceFormDialog({
   const [notes, setNotes] = useState(editInvoice?.notes || '');
   const [items, setItems] = useState<InvoiceItem[]>(editInvoice?.items || []);
   const [saving, setSaving] = useState(false);
+  const [purchaseCost, setPurchaseCost] = useState(editInvoice?.purchase_cost?.toString() ?? '');
+  const [sellingExpenses, setSellingExpenses] = useState(editInvoice?.selling_expenses?.toString() ?? '0');
+  const [supplierName, setSupplierName] = useState(editInvoice?.supplier_name || '');
+  const [purchaseReference, setPurchaseReference] = useState(editInvoice?.purchase_reference || '');
+  const salesInvoice = isSalesInvoice(invoiceType);
 
   const isEdit = !!editInvoice;
 
@@ -258,6 +199,10 @@ function InvoiceFormDialog({
       setProjectId(editInvoice.project_id || '');
       setPaymentMethod(editInvoice.payment_method || '');
       setNotes(editInvoice.notes || '');
+      setPurchaseCost(editInvoice.purchase_cost?.toString() ?? '');
+      setSellingExpenses(editInvoice.selling_expenses?.toString() ?? '0');
+      setSupplierName(editInvoice.supplier_name || '');
+      setPurchaseReference(editInvoice.purchase_reference || '');
       setItems(editInvoice.items || []);
     } else {
       setItems(getDefaultItems('internal'));
@@ -267,6 +212,8 @@ function InvoiceFormDialog({
 
   const handleSave = async () => {
     if (!profile) return;
+    if (!projectId) { toast.error('اختر المشروع المرتبط بالعملية'); return; }
+    if (items.some(item => !Number.isFinite(item.quantity) || item.quantity <= 0 || !Number.isFinite(item.unitPrice) || item.unitPrice < 0) || (purchaseCost !== '' && (!Number.isFinite(Number(purchaseCost)) || Number(purchaseCost) < 0)) || !Number.isFinite(Number(sellingExpenses)) || Number(sellingExpenses) < 0) { toast.error('أدخل مبالغ صحيحة غير سالبة'); return; }
     setSaving(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -281,6 +228,10 @@ function InvoiceFormDialog({
         payment_method: paymentMethod || null,
         notes: notes || null,
         total_amount: totalAmount,
+        purchase_cost: salesInvoice && purchaseCost !== '' ? Number(purchaseCost) : null,
+        selling_expenses: Number(sellingExpenses),
+        supplier_name: supplierName || null,
+        purchase_reference: purchaseReference || null,
         items: items as any,
       };
 
@@ -365,7 +316,7 @@ function InvoiceFormDialog({
                 <Select value={projectId || 'none'} onValueChange={v => setProjectId(v === 'none' ? '' : v)}>
                   <SelectTrigger><SelectValue placeholder="اختر مشروع" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">بدون مشروع</SelectItem>
+                    <SelectItem value="none">اختر المشروع</SelectItem>
                     {projects.map(p => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
@@ -434,6 +385,21 @@ function InvoiceFormDialog({
                 </div>
               </div>
             </div>
+
+            <section className="border-t border-border pt-5 space-y-4">
+              <h3 className="font-heading font-bold">{salesInvoice ? 'تفاصيل الشراء وربح البيع' : 'مصاريف الشراء الإضافية'}</h3>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {salesInvoice && <div><Label htmlFor="purchase-cost">تكلفة الشراء (ر.س)</Label><Input id="purchase-cost" type="number" min="0" step="0.01" value={purchaseCost} onChange={event => setPurchaseCost(event.target.value)} placeholder="التكلفة الفعلية للمنتج المباع" /></div>}
+                <div><Label htmlFor="selling-expenses">المصاريف الإضافية (ر.س)</Label><Input id="selling-expenses" type="number" min="0" step="0.01" value={sellingExpenses} onChange={event => setSellingExpenses(event.target.value)} /></div>
+                <div><Label htmlFor="supplier-name">المورد الذي تم الشراء منه</Label><Input id="supplier-name" value={supplierName} onChange={event => setSupplierName(event.target.value)} /></div>
+                <div><Label htmlFor="purchase-reference">مرجع فاتورة الشراء</Label><Input id="purchase-reference" value={purchaseReference} onChange={event => setPurchaseReference(event.target.value)} /></div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-y border-border py-4">
+                <div><p className="text-xs text-muted-foreground">{salesInvoice ? 'إيراد البيع' : 'مبلغ الشراء'}</p><p className="text-lg font-bold text-primary">{totalAmount.toLocaleString()} ر.س</p></div>
+                <div><p className="text-xs text-muted-foreground">إجمالي التكلفة والمصاريف</p><p className="text-lg font-bold">{salesInvoice && purchaseCost === '' ? 'غير مكتمل' : ((salesInvoice ? Number(purchaseCost) : totalAmount) + Number(sellingExpenses)).toLocaleString() + ' ر.س'}</p></div>
+                {salesInvoice && <div><p className="text-xs text-muted-foreground">صافي ربح البيع</p><p className="text-lg font-bold text-success">{purchaseCost === '' ? 'أدخل تكلفة الشراء' : (totalAmount - Number(purchaseCost) - Number(sellingExpenses)).toLocaleString() + ' ر.س'}</p></div>}
+              </div>
+            </section>
 
             <div>
               <Label>ملاحظات</Label>
@@ -524,6 +490,7 @@ function InvoicePreview({ invoice, onClose }: { invoice: Invoice; onClose: () =>
           </DialogTitle>
         </DialogHeader>
 
+        {!isInternal && <div className="grid sm:grid-cols-3 gap-3 border-y border-border py-4"><div><p className="text-xs text-muted-foreground">إيراد البيع</p><p className="font-bold">{invoice.total_amount.toLocaleString()} ر.س</p></div><div><p className="text-xs text-muted-foreground">التكلفة والمصاريف</p><p className="font-bold">{invoiceFinancials(invoice).expenses?.toLocaleString() ?? 'غير مكتمل'}</p></div><div><p className="text-xs text-muted-foreground">صافي الربح</p><p className="font-bold text-success">{invoiceFinancials(invoice).profit?.toLocaleString() ?? 'غير مكتمل'}</p></div></div>}
         <div ref={printRef} className="mt-4 p-6 bg-white rounded-xl border">
           <div className="flex items-center justify-between border-b-[3px] border-primary pb-5 mb-5">
             <div className="flex items-center gap-3">
@@ -602,7 +569,7 @@ function InvoicePreview({ invoice, onClose }: { invoice: Invoice; onClose: () =>
 /* ═══════ Main Page ═══════ */
 export default function Invoices() {
   const queryClient = useQueryClient();
-  const { profile } = useAuthContext();
+  const { profile, isCEO } = useAuthContext();
   const { data: invoices = [], isLoading } = useInvoices();
   const { data: projects = [] } = useProjects();
   const [activeTab, setActiveTab] = useState('all');
@@ -621,10 +588,11 @@ export default function Invoices() {
 
   const finalizeMutation = useMutation({
     mutationFn: async (invoice: Invoice) => {
-      // Update status to paid
+      if (isSalesInvoice(invoice.invoice_type) && invoice.purchase_cost === null) throw new Error('أضف تكلفة الشراء قبل إتمام البيع');
+      // Complete the operation without creating accounting entries
       const { error } = await supabase.from('invoices' as any)
         .update({ status: 'paid' } as any)
-        .eq('id', invoice.id);
+        .eq('id', invoice.id).neq('status', 'paid').select('id').single();
       if (error) throw error;
 
       // Run auto-linking
@@ -642,7 +610,7 @@ export default function Invoices() {
       queryClient.invalidateQueries({ queryKey: ['journal-derived-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['news'] });
-      toast.success('✅ تم إنهاء الفاتورة وتسجيل القيد المحاسبي والخبر تلقائياً');
+      toast.success('تم إتمام العملية وحفظها دون إنشاء قيد مالي');
     },
     onError: (err: any) => {
       toast.error('فشل في إنهاء الفاتورة: ' + err.message);
@@ -651,6 +619,8 @@ export default function Invoices() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const invoice = invoices.find(item => item.id === id);
+      if (status === 'paid' && invoice && isSalesInvoice(invoice.invoice_type) && invoice.purchase_cost === null) throw new Error('أضف تكلفة الشراء قبل إتمام البيع');
       const { error } = await supabase.from('invoices' as any).update({ status } as any).eq('id', id);
       if (error) throw error;
     },
@@ -658,16 +628,12 @@ export default function Invoices() {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast.success('تم تحديث الحالة');
     },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   const filtered = activeTab === 'all' ? invoices : invoices.filter(inv => inv.invoice_type === activeTab);
 
-  const stats = {
-    total: invoices.length,
-    totalAmount: invoices.filter(i => i.status !== 'cancelled').reduce((s, i) => s + i.total_amount, 0),
-    paid: invoices.filter(i => i.status === 'paid').length,
-    draft: invoices.filter(i => i.status === 'draft').length,
-  };
+  const stats = summarizeInvoices(invoices);
 
   return (
     <Layout>
@@ -684,12 +650,13 @@ export default function Invoices() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
           {[
-            { label: 'إجمالي الفواتير', value: stats.total, icon: Hash, color: 'text-primary' },
-            { label: 'المبلغ الإجمالي', value: `${stats.totalAmount.toLocaleString()} ر.س`, icon: CreditCard, color: 'text-section-revenue' },
-            { label: 'مدفوعة', value: stats.paid, icon: Building2, color: 'text-success' },
-            { label: 'مسودة', value: stats.draft, icon: FileText, color: 'text-muted-foreground' },
+            { label: 'إيرادات المبيعات المكتملة', value: `${stats.revenue.toLocaleString()} ر.س`, icon: CreditCard, color: 'text-primary' },
+            { label: 'تكاليف المبيعات المسجلة', value: `${stats.expenses.toLocaleString()} ر.س`, icon: Package, color: 'text-destructive' },
+            { label: 'صافي ربح المبيعات', value: stats.profit === null ? 'غير مكتمل' : `${stats.profit.toLocaleString()} ر.س`, icon: Building2, color: 'text-success' },
+            { label: 'فواتير الشراء المكتملة', value: `${stats.purchases.toLocaleString()} ر.س`, icon: Package, color: 'text-primary' },
+            { label: 'مبيعات تحتاج تكلفة شراء', value: stats.missingCosts, icon: FileText, color: 'text-muted-foreground' },
           ].map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <Card className="border-border/50 bg-card/80">
@@ -735,7 +702,9 @@ export default function Invoices() {
                       <TableHead className="text-right">النوع</TableHead>
                       <TableHead className="text-right">العميل/المورد</TableHead>
                       <TableHead className="text-right">التاريخ</TableHead>
-                      <TableHead className="text-right">المبلغ</TableHead>
+                      <TableHead className="text-right">مبلغ البيع / الشراء</TableHead>
+                      <TableHead className="text-right">التكلفة والمصاريف</TableHead>
+                      <TableHead className="text-right">صافي الربح</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
                       <TableHead className="text-right">الدفع</TableHead>
                       <TableHead className="text-right">إجراءات</TableHead>
@@ -753,6 +722,8 @@ export default function Invoices() {
                         <TableCell className="font-medium text-sm">{inv.customer_name || '—'}</TableCell>
                         <TableCell className="text-xs">{format(new Date(inv.invoice_date), 'd MMM yyyy', { locale: ar })}</TableCell>
                         <TableCell className="font-bold">{inv.total_amount.toLocaleString()} ر.س</TableCell>
+                        <TableCell>{invoiceFinancials(inv).expenses?.toLocaleString() ?? "غير مسجلة"} {invoiceFinancials(inv).expenses !== null && "ر.س"}</TableCell>
+                        <TableCell className="font-bold">{isSalesInvoice(inv.invoice_type) ? invoiceFinancials(inv).profit?.toLocaleString() ?? "غير مكتمل" : "—"}</TableCell>
                         <TableCell>
                           <Select
                             value={inv.status}
@@ -775,30 +746,30 @@ export default function Invoices() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreview(inv)}>
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
-                            <InvoiceFormDialog
+                            {isCEO && <InvoiceFormDialog
                               editInvoice={inv}
                               onSaved={() => queryClient.invalidateQueries({ queryKey: ['invoices'] })}
-                            />
-                            {inv.status !== 'paid' && (
+                            />}
+                            {inv.status !== 'paid' && inv.status !== 'cancelled' && (
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 text-success hover:text-success/80"
-                                title="إنهاء وتسجيل تلقائي"
+                                title="إتمام العملية دون قيد مالي"
                                 onClick={() => finalizeMutation.mutate(inv)}
                                 disabled={finalizeMutation.isPending}
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                               </Button>
                             )}
-                            <Button
+                            {isCEO && <Button
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-destructive"
                               onClick={() => deleteMutation.mutate(inv.id)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            </Button>}
                           </div>
                         </TableCell>
                       </TableRow>

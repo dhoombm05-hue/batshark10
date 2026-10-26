@@ -2,3 +2,4 @@
 - Document organization uses persisted `document_folders` parent links and `documents.folder_id`; existing business/section metadata remains intact so older files remain accessible.
 - DocumentBrowser owns presentation and browsing controls while DocumentCenter retains saved-file operations and dialogs; keep visual changes separate from persistence.
 - Browser-created documents are generated as real typed files and saved through the same Cloud storage and metadata path as imports; PDF pages render Arabic through canvas to preserve shaping.
+- Invoice profitability is calculated independently from persisted sale amount, purchase cost and selling expenses; completing invoices never writes journals, and journal financial reports remain separate to avoid double-counting existing postings.
