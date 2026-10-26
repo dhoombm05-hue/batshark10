@@ -1,0 +1,17 @@
+CREATE TABLE public.document_folders (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL CHECK (length(trim(name)) > 0), parent_id uuid REFERENCES public.document_folders(id) ON DELETE RESTRICT, keywords text[] NOT NULL DEFAULT '{}', created_by uuid DEFAULT auth.uid(), created_at timestamptz NOT NULL DEFAULT now(), CHECK (parent_id IS NULL OR parent_id <> id));
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.document_folders TO authenticated;
+GRANT ALL ON public.document_folders TO service_role;
+ALTER TABLE public.document_folders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "authenticated read folders" ON public.document_folders FOR SELECT TO authenticated USING (auth.uid() IS NOT NULL);
+CREATE POLICY "authenticated create folders" ON public.document_folders FOR INSERT TO authenticated WITH CHECK (created_by = auth.uid());
+CREATE POLICY "ceo update folders" ON public.document_folders FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'ceo')) WITH CHECK (public.has_role(auth.uid(), 'ceo'));
+CREATE POLICY "ceo delete folders" ON public.document_folders FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'ceo'));
+CREATE INDEX document_folders_parent_idx ON public.document_folders(parent_id);
+ALTER TABLE public.documents ADD COLUMN folder_id uuid REFERENCES public.document_folders(id) ON DELETE RESTRICT, ADD COLUMN keywords text[] NOT NULL DEFAULT '{}', ADD COLUMN content text, ADD COLUMN source text NOT NULL DEFAULT 'import', ADD COLUMN created_by uuid DEFAULT auth.uid();
+CREATE INDEX documents_folder_idx ON public.documents(folder_id);
+INSERT INTO public.document_folders(name) SELECT DISTINCT business_name FROM public.documents WHERE business_name IS NOT NULL AND trim(business_name) <> '';
+INSERT INTO public.document_folders(name,parent_id) SELECT DISTINCT d.section, f.id FROM public.documents d JOIN public.document_folders f ON f.name = d.business_name AND f.parent_id IS NULL WHERE d.section IS NOT NULL AND trim(d.section) <> '';
+UPDATE public.documents d SET folder_id = f.id FROM public.document_folders f JOIN public.document_folders p ON f.parent_id = p.id WHERE d.business_name = p.name AND d.section = f.name;
+UPDATE public.documents d SET folder_id = f.id FROM public.document_folders f WHERE d.folder_id IS NULL AND f.parent_id IS NULL AND d.business_name = f.name;
+CREATE FUNCTION public.prevent_document_folder_cycle() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$ BEGIN IF NEW.parent_id IS NOT NULL AND EXISTS (WITH RECURSIVE ancestors AS (SELECT id,parent_id FROM public.document_folders WHERE id = NEW.parent_id UNION SELECT f.id,f.parent_id FROM public.document_folders f JOIN ancestors a ON f.id = a.parent_id) SELECT 1 FROM ancestors WHERE id = NEW.id) THEN RAISE EXCEPTION 'A folder cannot contain itself'; END IF; RETURN NEW; END; $$;
+CREATE TRIGGER document_folder_cycle BEFORE INSERT OR UPDATE ON public.document_folders FOR EACH ROW EXECUTE FUNCTION public.prevent_document_folder_cycle();

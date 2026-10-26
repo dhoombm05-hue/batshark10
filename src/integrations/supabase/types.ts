@@ -1585,18 +1585,58 @@ export type Database = {
           },
         ]
       }
+      document_folders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          keywords: string[]
+          name: string
+          parent_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          keywords?: string[]
+          name: string
+          parent_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          keywords?: string[]
+          name?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "document_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           business_name: string | null
           category: string
+          content: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           file_name: string
           file_size: number | null
           file_type: string | null
           file_url: string
+          folder_id: string | null
           id: string
+          keywords: string[]
           section: string | null
+          source: string
           title: string
           updated_at: string
           uploaded_by: string
@@ -1604,14 +1644,19 @@ export type Database = {
         Insert: {
           business_name?: string | null
           category?: string
+          content?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           file_name: string
           file_size?: number | null
           file_type?: string | null
           file_url: string
+          folder_id?: string | null
           id?: string
+          keywords?: string[]
           section?: string | null
+          source?: string
           title: string
           updated_at?: string
           uploaded_by?: string
@@ -1619,19 +1664,32 @@ export type Database = {
         Update: {
           business_name?: string | null
           category?: string
+          content?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           file_name?: string
           file_size?: number | null
           file_type?: string | null
           file_url?: string
+          folder_id?: string | null
           id?: string
+          keywords?: string[]
           section?: string | null
+          source?: string
           title?: string
           updated_at?: string
           uploaded_by?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "document_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       employee_evaluations: {
         Row: {
