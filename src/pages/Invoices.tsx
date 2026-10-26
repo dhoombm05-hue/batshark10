@@ -106,7 +106,7 @@ async function finalizeInvoice(invoice: Invoice, projectName: string | null, use
       ? `💰 تم إتمام بيع — فاتورة #${invoice.invoice_number}`
       : `📦 تم تسجيل مشتريات — فاتورة #${invoice.invoice_number}`;
     const newsContent = isCustomer
-      ? `تم إتمام عملية بيع بقيمة **${invoice.total_amount.toLocaleString()} ر.س** للعميل **${invoice.customer_name || 'غير محدد'}**${projectName ? ` في مشروع **${projectName}**` : ''}. تكلفة الشراء **${invoice.purchase_cost ?? 0} ر.س**، المصاريف الإضافية **${invoice.selling_expenses || 0} ر.س**، صافي ربح العملية **${invoiceFinancials(invoice).profit?.toLocaleString() ?? "غير مكتمل"} ر.س**.`
+      ? `تم إتمام عملية بيع بقيمة **${invoice.total_amount.toLocaleString()} ر.س** للعميل **${invoice.customer_name || 'غير محدد'}**${projectName ? ` في مشروع **${projectName}**` : ''}. تكلفة الشراء **${invoice.purchase_cost ?? "غير مسجلة"} ر.س**، المصاريف الإضافية **${invoice.selling_expenses || 0} ر.س**، صافي ربح العملية **${invoiceFinancials(invoice).profit?.toLocaleString() ?? "غير مكتمل"} ر.س**.`
       : `تم تسجيل فاتورة شراء بقيمة **${invoice.total_amount.toLocaleString()} ر.س** من **${invoice.customer_name || 'مورد'}**${projectName ? ` لمشروع **${projectName}**` : ''}. تم حفظ تفاصيل عملية الشراء في سجل الفواتير.`;
 
     await supabase.from('news' as any).insert({
@@ -650,11 +650,12 @@ export default function Invoices() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
           {[
             { label: 'إيرادات المبيعات المكتملة', value: `${stats.revenue.toLocaleString()} ر.س`, icon: CreditCard, color: 'text-primary' },
-            { label: 'التكاليف والمصاريف المسجلة', value: `${stats.expenses.toLocaleString()} ر.س`, icon: Package, color: 'text-destructive' },
-            { label: 'صافي ربح العمليات المكتملة', value: stats.profit === null ? 'غير مكتمل' : `${stats.profit.toLocaleString()} ر.س`, icon: Building2, color: 'text-success' },
+            { label: 'تكاليف المبيعات المسجلة', value: `${stats.expenses.toLocaleString()} ر.س`, icon: Package, color: 'text-destructive' },
+            { label: 'صافي ربح المبيعات', value: stats.profit === null ? 'غير مكتمل' : `${stats.profit.toLocaleString()} ر.س`, icon: Building2, color: 'text-success' },
+            { label: 'فواتير الشراء المكتملة', value: `${stats.purchases.toLocaleString()} ر.س`, icon: Package, color: 'text-primary' },
             { label: 'مبيعات تحتاج تكلفة شراء', value: stats.missingCosts, icon: FileText, color: 'text-muted-foreground' },
           ].map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
