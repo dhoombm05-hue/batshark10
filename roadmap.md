@@ -1,4 +1,5 @@
 # Document center
+- [ ] Simplify the document page with clear folder navigation, calm file rows and consolidated add actions; verify with the signed-in account.
 - [x] Persistent nested folders and keyword search, preserving existing files.
 - [x] Separate import and document creation flows with genuine PDF, Word, text and spreadsheet files.
 - [x] Polished browsing, preview, rename and move controls.
