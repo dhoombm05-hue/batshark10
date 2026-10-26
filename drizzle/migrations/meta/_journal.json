@@ -8,6 +8,13 @@
       "when": 1793030394618,
       "tag": "0000_document_folders_and_keywords",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793031066395,
+      "tag": "0001_invoice_sales_costs",
+      "breakpoints": true
     }
   ]
 }

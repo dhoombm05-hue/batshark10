@@ -1975,7 +1975,11 @@ export type Database = {
           notes: string | null
           payment_method: string | null
           project_id: string | null
+          purchase_cost: number | null
+          purchase_reference: string | null
+          selling_expenses: number
           status: string
+          supplier_name: string | null
           total_amount: number
           updated_at: string
         }
@@ -1993,7 +1997,11 @@ export type Database = {
           notes?: string | null
           payment_method?: string | null
           project_id?: string | null
+          purchase_cost?: number | null
+          purchase_reference?: string | null
+          selling_expenses?: number
           status?: string
+          supplier_name?: string | null
           total_amount?: number
           updated_at?: string
         }
@@ -2011,7 +2019,11 @@ export type Database = {
           notes?: string | null
           payment_method?: string | null
           project_id?: string | null
+          purchase_cost?: number | null
+          purchase_reference?: string | null
+          selling_expenses?: number
           status?: string
+          supplier_name?: string | null
           total_amount?: number
           updated_at?: string
         }

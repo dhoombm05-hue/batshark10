@@ -1,0 +1,3 @@
+ALTER TABLE public.invoices ADD COLUMN purchase_cost numeric, ADD COLUMN selling_expenses numeric NOT NULL DEFAULT 0, ADD COLUMN supplier_name text, ADD COLUMN purchase_reference text;
+ALTER TABLE public.invoices ADD CONSTRAINT invoice_purchase_cost_nonnegative CHECK (purchase_cost IS NULL OR purchase_cost >= 0), ADD CONSTRAINT invoice_selling_expenses_nonnegative CHECK (selling_expenses >= 0);
+COMMENT ON COLUMN public.invoices.purchase_cost IS 'Actual purchase cost for a customer sale. NULL means unknown, not zero. Invoice profitability is independent of automatic journal postings.';
