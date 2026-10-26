@@ -1,5 +1,5 @@
 # Document center
-- [ ] Invoice correction: stop automatic journals, capture purchase cost and selling expenses, distinguish revenue from net profit, and verify calculations and saving.
+- [x] Invoice correction: stopped automatic journals, captured purchase cost and selling expenses, distinguished revenue from sales profit and separate purchases, passed five calculation tests and verified saving/read-back with a temporary draft that was removed.
 - [x] Simplify the document page with clear folder navigation, calm file rows and consolidated add actions; verified real folder/file browsing and the create dialog while signed in.
 - [x] Persistent nested folders and keyword search, preserving existing files.
 - [x] Separate import and document creation flows with genuine PDF, Word, text and spreadsheet files.
