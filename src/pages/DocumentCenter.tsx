@@ -1,387 +1,140 @@
-import { useState, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Upload, Trash2, Download, Pencil, Check, X, FolderOpen, Search, Loader2, Building2, FolderTree, Plus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Folder, FolderOpen, FolderPlus, FilePlus2, Upload, Search, ChevronLeft, Download, Eye, Pencil, Trash2, FileText, Loader2, Home, ArrowRight, LayoutGrid, List, Tag, RefreshCw, MoreHorizontal } from 'lucide-react';
 import Layout from '@/components/Layout';
-import PrintButton from '@/components/PrintButton';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useDocumentLibrary, type LibraryDocument } from '@/hooks/useDocumentLibrary';
+import { folderTrail, folderContains, matchesDocumentSearch, parseKeywords, type DocumentFolder } from '@/lib/document-utils';
+import DocumentComposer, { DOCUMENT_CATEGORIES } from '@/components/documents/DocumentComposer';
+import '@/components/documents/document-center.css';
 import { toast } from 'sonner';
 
-const CATEGORIES = [
-  { value: 'financial', label: '💰 مالي', color: 'bg-success/10 text-success border-success/20' },
-  { value: 'legal', label: '⚖️ قانوني', color: 'bg-primary/10 text-primary border-primary/20' },
-  { value: 'investment', label: '📈 استثماري', color: 'bg-gold/10 text-gold border-gold/20' },
-  { value: 'projects', label: '📂 مشاريع', color: 'bg-section-revenue/10 text-section-revenue border-section-revenue/20' },
-  { value: 'hr', label: '👥 موارد بشرية', color: 'bg-section-employees/10 text-section-employees border-section-employees/20' },
-  { value: 'operations', label: '⚙️ تشغيل', color: 'bg-warning/10 text-warning border-warning/20' },
-  { value: 'contracts', label: '📋 عقود', color: 'bg-purple/10 text-purple border-purple/20' },
-  { value: 'general', label: '📋 عام', color: 'bg-muted text-muted-foreground border-border' },
-];
-
-const DEFAULT_BUSINESSES = ['البادل', 'أومبركس', 'الشاشات'];
-const DEFAULT_SECTIONS = ['مالية', 'تشغيل', 'عقود', 'استثمارات', 'أخرى'];
-
-interface Doc {
-  id: string;
-  title: string;
-  description: string | null;
-  category: string;
-  file_url: string;
-  file_name: string;
-  file_size: number;
-  file_type: string | null;
-  uploaded_by: string;
-  created_at: string;
-  business_name: string | null;
-  section: string | null;
-}
-
-function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+function sizeLabel(size: number) { return size >= 1048576 ? `${(size / 1048576).toFixed(1)} MB` : `${(size / 1024).toFixed(1)} KB`; }
 
 export default function DocumentCenter() {
-  const { profile, isCEO } = useAuthContext();
-  const queryClient = useQueryClient();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [filter, setFilter] = useState('all');
+  const { user, isCEO } = useAuthContext();
+  const library = useDocumentLibrary();
+  const { docs, folders, refresh } = library;
+  const [folderId, setFolderId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDesc, setEditDesc] = useState('');
-  const [newCategory, setNewCategory] = useState('general');
-  const [newDescription, setNewDescription] = useState('');
-  const [newBusinessName, setNewBusinessName] = useState('');
-  const [newSection, setNewSection] = useState('');
-  const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null);
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  const [customBusiness, setCustomBusiness] = useState('');
-  const [showAddBusiness, setShowAddBusiness] = useState(false);
-
-  const { data: docs, isLoading } = useQuery({
-    queryKey: ['documents'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('documents' as any)
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as unknown as Doc[];
-    },
-  });
-
-  // Derive available businesses from DB + defaults
-  const businesses = useMemo(() => {
-    const fromDb = docs?.map(d => d.business_name).filter(Boolean) as string[] || [];
-    return [...new Set([...DEFAULT_BUSINESSES, ...fromDb])];
-  }, [docs]);
-
-  const deleteMutation = useMutation({
-    mutationFn: async (doc: Doc) => {
-      const path = doc.file_url.split('/documents/')[1];
-      if (path) await supabase.storage.from('documents').remove([path]);
-      const { error } = await supabase.from('documents' as any).delete().eq('id', doc.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      toast.success('تم حذف الملف');
-    },
-    onError: () => toast.error('فشل حذف الملف'),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, title, description }: { id: string; title: string; description: string }) => {
-      const { error } = await supabase.from('documents' as any).update({ title, description } as any).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      setEditingId(null);
-      toast.success('تم التحديث');
-    },
-  });
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage.from('documents').upload(path, file);
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
-
-      const { error: dbError } = await supabase.from('documents' as any).insert({
-        title: file.name.replace(/\.[^.]+$/, ''),
-        description: newDescription || null,
-        category: newCategory,
-        file_url: urlData.publicUrl,
-        file_name: file.name,
-        file_size: file.size,
-        file_type: file.type,
-        uploaded_by: profile?.display_name || 'مجهول',
-        business_name: newBusinessName || null,
-        section: newSection || null,
-      } as any);
-      if (dbError) throw dbError;
-
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      toast.success('تم رفع الملف بنجاح');
-      setNewDescription('');
-      setNewCategory('general');
-      setNewBusinessName('');
-      setNewSection('');
-    } catch (err) {
-      console.error(err);
-      toast.error('فشل رفع الملف');
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
-    }
+  const [category, setCategory] = useState('all');
+  const [fileType, setFileType] = useState('all');
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [composer, setComposer] = useState<'import' | 'create' | null>(null);
+  const [folderDialog, setFolderDialog] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<DocumentFolder | null>(null);
+  const [editingDoc, setEditingDoc] = useState<LibraryDocument | null>(null);
+  const [name, setName] = useState('');
+  const [keywords, setKeywords] = useState('');
+  const [description, setDescription] = useState('');
+  const [parent, setParent] = useState('root');
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<LibraryDocument | null>(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewText, setPreviewText] = useState('');
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; kind: 'folder' | 'doc' } | null>(null);
+  const trail = folderTrail(folders, folderId);
+  const extensions = useMemo(() => [...new Set(docs.map(doc => doc.file_name.split('.').pop()?.toLowerCase()).filter((value): value is string => Boolean(value)))].sort(), [docs]);
+  const visibleFolders = folders.filter(folder => search.trim() ? matchesDocumentSearch(folder, search) : folder.parent_id === folderId);
+  const visibleDocs = docs.filter(doc => (search.trim() ? matchesDocumentSearch(doc, search) : doc.folder_id === folderId) && (category === 'all' || doc.category === category) && (fileType === 'all' || doc.file_name.toLowerCase().endsWith(`.${fileType}`)));
+  const navigate = (id: string | null) => { setFolderId(id); setSearch(''); };
+  const openFolderDialog = (folder?: DocumentFolder) => {
+    setEditingFolder(folder || null); setName(folder?.name || ''); setKeywords(folder?.keywords.join('، ') || ''); setParent(folder?.parent_id || folderId || 'root'); setFolderDialog(true);
   };
+  const saveFolder = async () => {
+    if (!name.trim() || !user) return;
+    setBusy(true);
+    try {
+      const values = { name: name.trim(), keywords: parseKeywords(keywords), parent_id: parent === 'root' ? null : parent };
+      const response = editingFolder ? await supabase.from('document_folders').update(values).eq('id', editingFolder.id).select('id').single() : await supabase.from('document_folders').insert({ ...values, created_by: user.id }).select('id').single();
+      if (response.error) throw response.error;
+      await refresh(); setFolderDialog(false); toast.success(editingFolder ? 'تم تحديث المجلد' : 'تم إنشاء المجلد');
+    } catch { toast.error('تعذر حفظ المجلد؛ تحقق من الاتصال وأعد المحاولة'); } finally { setBusy(false); }
+  };
+  const openEdit = (doc: LibraryDocument) => { setEditingDoc(doc); setName(doc.title); setKeywords(doc.keywords.join('، ')); setDescription(doc.description || ''); setParent(doc.folder_id || 'root'); };
+  const saveEdit = async () => {
+    if (!editingDoc || !name.trim()) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('documents').update({ title: name.trim(), keywords: parseKeywords(keywords), description, folder_id: parent === 'root' ? null : parent }).eq('id', editingDoc.id).select('id').single();
+      if (error) throw error;
+      await refresh(); setEditingDoc(null); toast.success('تم تحديث الملف');
+    } catch { toast.error('تعذر تحديث الملف؛ أعد المحاولة'); } finally { setBusy(false); }
+  };
+  const remove = async () => {
+    if (!deleteTarget) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from(deleteTarget.kind === 'folder' ? 'document_folders' : 'documents').delete().eq('id', deleteTarget.id).select('id').single();
+      if (error) throw error;
+      await refresh(); setDeleteTarget(null); toast.success('تم الحذف');
+    } catch { toast.error(deleteTarget.kind === 'folder' ? 'انقل الملفات والمجلدات الفرعية أولاً قبل حذف هذا المجلد' : 'تعذر حذف الملف'); } finally { setBusy(false); }
+  };
+  const download = async (doc: LibraryDocument) => {
+    try {
+      const path = doc.file_url.split('/documents/')[1];
+      if (!path) throw new Error();
+      const { data, error } = await supabase.storage.from('documents').createSignedUrl(decodeURIComponent(path), 60, { download: doc.file_name });
+      if (error) throw error;
+      const link = document.createElement('a'); link.href = data.signedUrl; link.download = doc.file_name; document.body.appendChild(link); link.click(); link.remove();
+    } catch { toast.error('تعذر تحميل الملف؛ أعد المحاولة'); }
+  };
+  const closePreview = () => { if (previewUrl) URL.revokeObjectURL(previewUrl); setPreview(null); setPreviewUrl(''); setPreviewText(''); };
+  const openPreview = async (doc: LibraryDocument) => {
+    setPreview(doc); setPreviewLoading(true); setPreviewUrl(''); setPreviewText('');
+    try {
+      if (doc.content) { setPreviewText(doc.content); return; }
+      const response = await fetch(doc.file_url);
+      if (!response.ok) throw new Error();
+      const blob = await response.blob();
+      if (/\.(txt|md|csv)$/i.test(doc.file_name)) setPreviewText(await blob.text());
+      else if (doc.file_type?.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(doc.file_name)) setPreviewUrl(URL.createObjectURL(blob));
+    } catch { toast.error('تعذر فتح المعاينة؛ يمكنك إعادة المحاولة أو تحميل الملف'); } finally { setPreviewLoading(false); }
+  };
+  const destinations = (excluded?: string) => <><SelectItem value="root">المكتبة الرئيسية</SelectItem>{folders.filter(folder => !excluded || !folderContains(folders, excluded, folder.id)).map(folder => <SelectItem key={folder.id} value={folder.id}>{folderTrail(folders, folder.id).map(item => item.name).join(' / ')}</SelectItem>)}</>;
 
-  const filtered = docs?.filter(d => {
-    if (filter !== 'all' && d.category !== filter) return false;
-    if (selectedBusiness && d.business_name !== selectedBusiness) return false;
-    if (selectedSection && d.section !== selectedSection) return false;
-    if (search && !d.title.includes(search) && !d.file_name.includes(search)) return false;
-    return true;
-  }) || [];
-
-  const getCategoryStyle = (cat: string) => CATEGORIES.find(c => c.value === cat)?.color || CATEGORIES[7].color;
-  const getCategoryLabel = (cat: string) => CATEGORIES.find(c => c.value === cat)?.label || '📋 عام';
-
-  return (
-    <Layout>
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-primary/15">
-              <FolderOpen className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-heading font-bold text-foreground">مركز الملفات</h1>
-              <p className="text-sm text-muted-foreground">إدارة ورفع وتصنيف ملفات الشركة — بزنس {'>'} قسم {'>'} ملف</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <PrintButton title="طباعة مركز الملفات" />
-            <Button size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Upload className="w-4 h-4 ml-1" />}
-              رفع ملف
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Business Hierarchy Navigation */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Building2 className="w-4 h-4 text-primary" />
-          <span className="text-xs font-heading text-muted-foreground">البزنس</span>
-        </div>
-        <div className="flex flex-wrap gap-2 mb-3">
-          <button onClick={() => { setSelectedBusiness(null); setSelectedSection(null); }}
-            className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${!selectedBusiness ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
-            الكل
-          </button>
-          {businesses.map(b => {
-            const count = docs?.filter(d => d.business_name === b).length || 0;
-            return (
-              <button key={b} onClick={() => { setSelectedBusiness(b); setSelectedSection(null); }}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${selectedBusiness === b ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
-                🏢 {b} ({count})
-              </button>
-            );
-          })}
-          <button onClick={() => setShowAddBusiness(!showAddBusiness)}
-            className="text-xs px-2 py-1.5 rounded-lg border border-dashed border-border text-muted-foreground hover:text-primary">
-            <Plus className="w-3 h-3" />
-          </button>
-        </div>
-        {showAddBusiness && (
-          <div className="flex gap-2 mb-3">
-            <input value={customBusiness} onChange={e => setCustomBusiness(e.target.value)}
-              placeholder="اسم البزنس الجديد..."
-              className="bg-secondary/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground" />
-            <button onClick={() => {
-              if (customBusiness.trim()) {
-                setNewBusinessName(customBusiness.trim());
-                setShowAddBusiness(false);
-              }
-            }} className="text-xs px-2 py-1.5 bg-success/20 text-success rounded-lg">إضافة</button>
-          </div>
-        )}
-
-        {selectedBusiness && (
-          <div className="flex flex-wrap gap-2 mb-3">
-            <FolderTree className="w-4 h-4 text-muted-foreground mt-0.5" />
-            <button onClick={() => setSelectedSection(null)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${!selectedSection ? 'bg-gold/15 border-gold/30 text-gold' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
-              كل الأقسام
-            </button>
-            {DEFAULT_SECTIONS.map(s => {
-              const count = docs?.filter(d => d.business_name === selectedBusiness && d.section === s).length || 0;
-              return (
-                <button key={s} onClick={() => setSelectedSection(s)}
-                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${selectedSection === s ? 'bg-gold/15 border-gold/30 text-gold' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
-                  📁 {s} ({count})
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </motion.div>
-
-      {/* Upload config */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 bg-card rounded-xl border border-border p-4 shadow-card">
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[150px]">
-            <label className="text-xs text-muted-foreground mb-1 block">البزنس</label>
-            <select value={newBusinessName} onChange={e => setNewBusinessName(e.target.value)}
-              className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-              <option value="">بدون بزنس</option>
-              {businesses.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
-          </div>
-          <div className="flex-1 min-w-[150px]">
-            <label className="text-xs text-muted-foreground mb-1 block">القسم</label>
-            <select value={newSection} onChange={e => setNewSection(e.target.value)}
-              className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-              <option value="">بدون قسم</option>
-              {DEFAULT_SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div className="flex-1 min-w-[150px]">
-            <label className="text-xs text-muted-foreground mb-1 block">تصنيف الملف</label>
-            <select value={newCategory} onChange={e => setNewCategory(e.target.value)}
-              className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-              {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="text-xs text-muted-foreground mb-1 block">وصف (اختياري)</label>
-            <input value={newDescription} onChange={e => setNewDescription(e.target.value)}
-              placeholder="وصف مختصر للملف..."
-              className="w-full bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
-          </div>
-        </div>
-        <input ref={fileRef} type="file" className="hidden" onChange={handleUpload}
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg" />
-      </motion.div>
-
-      {/* Filter & Search */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <button onClick={() => setFilter('all')}
-          className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${filter === 'all' ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-secondary/30 border-border text-muted-foreground'}`}>
-          الكل ({docs?.length || 0})
-        </button>
-        {CATEGORIES.map(c => {
-          const count = docs?.filter(d => d.category === c.value).length || 0;
-          return (
-            <button key={c.value} onClick={() => setFilter(c.value)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${filter === c.value ? `${c.color}` : 'bg-secondary/30 border-border text-muted-foreground'}`}>
-              {c.label} ({count})
-            </button>
-          );
-        })}
-        <div className="flex-1 min-w-[200px]">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="بحث في الملفات..."
-              className="w-full bg-secondary/30 border border-border rounded-lg pr-10 pl-3 py-1.5 text-sm text-foreground" />
-          </div>
-        </div>
-      </div>
-
-      {/* Documents List */}
-      {isLoading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-16 bg-card rounded-xl border border-border">
-          <FileText className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-muted-foreground">لا توجد ملفات</p>
-          <p className="text-xs text-muted-foreground mt-1">اضغط على "رفع ملف" لإضافة ملف جديد</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filtered.map((doc, i) => (
-            <motion.div key={doc.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-              className="bg-card rounded-xl border border-border p-4 shadow-card hover:shadow-elevated transition-all group">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-primary/10 shrink-0">
-                  <FileText className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  {editingId === doc.id ? (
-                    <div className="space-y-2">
-                      <input value={editTitle} onChange={e => setEditTitle(e.target.value)}
-                        className="w-full bg-background border border-primary/30 rounded px-2 py-1 text-sm text-foreground" />
-                      <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                        placeholder="وصف..."
-                        className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground" />
-                      <div className="flex gap-1">
-                        <button onClick={() => updateMutation.mutate({ id: doc.id, title: editTitle, description: editDesc })}
-                          className="flex items-center gap-1 px-2 py-0.5 text-xs bg-success/20 text-success rounded">
-                          <Check className="w-3 h-3" /> حفظ
-                        </button>
-                        <button onClick={() => setEditingId(null)}
-                          className="flex items-center gap-1 px-2 py-0.5 text-xs bg-destructive/20 text-destructive rounded">
-                          <X className="w-3 h-3" /> إلغاء
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <h4 className="text-sm font-heading font-bold text-foreground truncate">{doc.title}</h4>
-                      {doc.description && <p className="text-xs text-muted-foreground truncate">{doc.description}</p>}
-                      <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground flex-wrap">
-                        <span className={`px-2 py-0.5 rounded-full border ${getCategoryStyle(doc.category)}`}>{getCategoryLabel(doc.category)}</span>
-                        {doc.business_name && <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">🏢 {doc.business_name}</span>}
-                        {doc.section && <span className="px-2 py-0.5 rounded-full bg-gold/10 text-gold border border-gold/20">📁 {doc.section}</span>}
-                        <span>{formatFileSize(doc.file_size)}</span>
-                        <span>{doc.uploaded_by}</span>
-                        <span>{new Date(doc.created_at).toLocaleDateString('ar-SA')}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-                {editingId !== doc.id && (
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <a href={doc.file_url} target="_blank" rel="noopener noreferrer"
-                      className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors" title="تحميل">
-                      <Download className="w-4 h-4" />
-                    </a>
-                    {isCEO && (
-                      <>
-                        <button onClick={() => { setEditingId(doc.id); setEditTitle(doc.title); setEditDesc(doc.description || ''); }}
-                          className="p-2 rounded-lg hover:bg-accent/10 text-accent transition-colors" title="تعديل">
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => { if (confirm('هل أنت متأكد من حذف هذا الملف؟')) deleteMutation.mutate(doc); }}
-                          className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors" title="حذف">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </Layout>
-  );
+  return <Layout><div dir="rtl" className="space-y-6 min-w-0">
+    <header className="flex flex-wrap gap-4 justify-between items-center border-b border-border pb-6">
+      <div className="flex items-center gap-3"><div className="bg-primary/10 text-primary p-3 rounded-lg"><FolderOpen className="size-7" /></div><div><h1 className="text-2xl font-heading font-bold">مركز الملفات</h1><p className="text-sm text-muted-foreground mt-1">{folders.length} مجلد · {docs.length} ملف · {sizeLabel(docs.reduce((sum, doc) => sum + (doc.file_size || 0), 0))}</p></div></div>
+      <div className="flex gap-2 flex-wrap"><Button variant="outline" onClick={() => openFolderDialog()}><FolderPlus />مجلد جديد</Button><Button variant="outline" onClick={() => setComposer('import')}><Upload />استيراد ملف</Button><Button onClick={() => setComposer('create')}><FilePlus2 />إنشاء مستند</Button></div>
+    </header>
+    <div className="flex flex-wrap gap-3 items-center">
+      <div className="relative flex-1 min-w-[180px]"><Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" /><Input aria-label="البحث في الملفات" className="pr-10 bg-card" placeholder="ابحث بالاسم أو الكلمات المفتاحية..." value={search} onChange={event => setSearch(event.target.value)} /></div>
+      <Select value={category} onValueChange={setCategory}><SelectTrigger className="w-36" aria-label="تصفية حسب التصنيف"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل التصنيفات</SelectItem>{DOCUMENT_CATEGORIES.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
+      <Select value={fileType} onValueChange={setFileType}><SelectTrigger className="w-32" aria-label="تصفية حسب النوع"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الأنواع</SelectItem>{extensions.map(ext => <SelectItem key={ext} value={ext}>{ext.toUpperCase()}</SelectItem>)}</SelectContent></Select>
+      <div className="flex border border-border rounded-md"><Button variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" aria-label="عرض شبكي" onClick={() => setView('grid')}><LayoutGrid /></Button><Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" aria-label="عرض قائمة" onClick={() => setView('list')}><List /></Button></div>
+    </div>
+    <nav aria-label="مسار المجلد" className="flex flex-wrap items-center gap-1 text-sm"><Button variant="ghost" size="sm" onClick={() => navigate(null)}><Home />المكتبة</Button>{trail.map(folder => <span key={folder.id} className="flex items-center gap-1 min-w-0"><ChevronLeft className="size-4 text-muted-foreground shrink-0" /><Button variant="ghost" size="sm" className="whitespace-normal h-auto py-2 text-right break-words" onClick={() => navigate(folder.id)}>{folder.name}</Button></span>)}{search.trim() && <Badge variant="secondary">نتائج البحث في المكتبة</Badge>}</nav>
+    {library.error ? <div className="py-16 text-center space-y-3"><p>تعذر جلب الملفات؛ ملفاتك المحفوظة لم تتغير.</p><Button variant="outline" onClick={() => refresh()}><RefreshCw />إعادة المحاولة</Button></div> : library.isLoading ? <div className="py-20 flex justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div> : <>
+      {visibleFolders.length > 0 && <section className="space-y-3"><div className="flex items-center gap-2"><Folder className="size-4 text-primary" /><h2 className="font-heading font-bold text-sm">المجلدات</h2><span className="text-xs text-muted-foreground">{visibleFolders.length}</span></div><div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">{visibleFolders.map(folder => {
+        const count = docs.filter(doc => doc.folder_id && folderContains(folders, folder.id, doc.folder_id)).length;
+        const children = folders.filter(item => item.parent_id === folder.id).length;
+        return <div key={folder.id} className="border border-border bg-card rounded-lg flex items-center p-4 gap-3 hover:border-primary/50 transition-colors">
+          <Button variant="ghost" className="flex-1 min-w-0 h-auto justify-start p-0 hover:bg-transparent gap-3 text-right" onClick={() => navigate(folder.id)}><Folder className="size-8 text-primary shrink-0" /><span className="min-w-0 flex-1"><span className="block font-bold truncate">{folder.name}</span><span className="block text-xs text-muted-foreground mt-1 font-normal">{count} ملف · {children} مجلد فرعي</span>{folder.keywords.length > 0 && <span className="block text-xs text-primary truncate mt-2">{folder.keywords.join(' · ')}</span>}</span></Button>
+          {isCEO && <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label={`خيارات مجلد ${folder.name}`}><MoreHorizontal /></Button></DropdownMenuTrigger><DropdownMenuContent><DropdownMenuItem onSelect={() => openFolderDialog(folder)}><Pencil className="size-4 ml-2" />تسمية ونقل المجلد</DropdownMenuItem><DropdownMenuItem className="text-destructive" onSelect={() => setDeleteTarget({ id: folder.id, name: folder.name, kind: 'folder' })}><Trash2 className="size-4 ml-2" />حذف المجلد</DropdownMenuItem></DropdownMenuContent></DropdownMenu>}
+        </div>;
+      })}</div></section>}
+      <section className="space-y-3"><div className="flex items-center justify-between"><h2 className="font-heading font-bold text-sm">الملفات <span className="text-muted-foreground font-normal">({visibleDocs.length})</span></h2>{folderId && <Button variant="ghost" size="sm" onClick={() => navigate(trail.at(-1)?.parent_id || null)}><ArrowRight />المجلد السابق</Button>}</div>
+        {visibleDocs.length === 0 ? <div className="py-14 text-center border-t border-border"><FileText className="size-10 text-muted-foreground mx-auto mb-3" /><p className="font-semibold">{search || category !== 'all' || fileType !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا توجد ملفات في هذا المجلد'}</p></div> : <div className={view === 'grid' ? 'grid sm:grid-cols-2 xl:grid-cols-3 gap-3' : 'space-y-2'}>{visibleDocs.map(doc => <article key={doc.id} className={`border border-border bg-card rounded-lg p-4 min-w-0 ${view === 'list' ? 'sm:flex sm:items-center sm:gap-4' : ''}`}>
+          <div className={`flex items-start gap-3 min-w-0 ${view === 'list' ? 'flex-1' : ''}`}><div className="bg-secondary p-3 rounded-md text-primary shrink-0"><FileText className="size-6" /></div><div className="min-w-0 flex-1"><Button variant="link" className="h-auto p-0 font-bold text-foreground whitespace-normal text-right justify-start break-words max-w-full" onClick={() => openPreview(doc)}>{doc.title}</Button><p className="text-xs text-muted-foreground truncate mt-1">{doc.file_name}</p><div className="flex gap-2 mt-2 text-xs items-center"><Badge variant="secondary">{doc.file_name.split('.').pop()?.toUpperCase()}</Badge><span className="text-muted-foreground">{sizeLabel(doc.file_size || 0)}</span></div></div></div>
+          <div className={view === 'list' ? 'sm:w-64 mt-3 sm:mt-0 min-w-0' : 'mt-4 min-w-0'}>{doc.description && <p className="text-sm text-muted-foreground line-clamp-2 mb-2 break-words">{doc.description}</p>}<div className="flex gap-1 flex-wrap">{doc.keywords.map(word => <Badge key={word} variant="outline" className="font-normal gap-1 max-w-full break-all"><Tag className="size-3 shrink-0" />{word}</Badge>)}</div>{search.trim() && doc.folder_id && <p className="text-xs text-primary mt-2 truncate">{folderTrail(folders, doc.folder_id).map(item => item.name).join(' / ')}</p>}</div>
+          <div className={`flex items-center gap-1 ${view === 'list' ? 'sm:shrink-0 mt-3 sm:mt-0' : 'mt-4 border-t border-border pt-3'}`}><span className="text-xs text-muted-foreground flex-1 min-w-0 truncate">{doc.uploaded_by}<span className="block mt-1">{new Date(doc.created_at).toLocaleDateString('ar-SA')}</span></span><Button size="icon" variant="ghost" title="معاينة" aria-label={`معاينة ${doc.title}`} onClick={() => openPreview(doc)}><Eye /></Button><Button size="icon" variant="ghost" title="تحميل" aria-label={`تحميل ${doc.title}`} onClick={() => download(doc)}><Download /></Button>{isCEO && <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`خيارات ${doc.title}`}><MoreHorizontal /></Button></DropdownMenuTrigger><DropdownMenuContent><DropdownMenuItem onSelect={() => openEdit(doc)}><Pencil className="size-4 ml-2" />تعديل ونقل الملف</DropdownMenuItem><DropdownMenuItem className="text-destructive" onSelect={() => setDeleteTarget({ id: doc.id, name: doc.title, kind: 'doc' })}><Trash2 className="size-4 ml-2" />حذف</DropdownMenuItem></DropdownMenuContent></DropdownMenu>}</div>
+        </article>)}</div>}
+      </section>
+    </>}
+    {composer && <DocumentComposer mode={composer} folders={folders} folderId={folderId} onClose={() => setComposer(null)} onSaved={refresh} saveFile={library.saveFile} />}
+    <Dialog open={folderDialog} onOpenChange={open => { if (!busy) setFolderDialog(open); }}><DialogContent dir="rtl"><DialogHeader><DialogTitle>{editingFolder ? 'تعديل المجلد' : 'مجلد جديد'}</DialogTitle><DialogDescription>{trail.map(folder => folder.name).join(' / ') || 'المكتبة الرئيسية'}</DialogDescription></DialogHeader><div className="space-y-4"><div className="space-y-2"><Label htmlFor="folder-name">اسم المجلد</Label><Input id="folder-name" autoFocus value={name} disabled={busy} onChange={event => setName(event.target.value)} /></div><div className="space-y-2"><Label>داخل المجلد</Label><Select value={parent} onValueChange={setParent} disabled={busy}><SelectTrigger aria-label="المجلد الأب"><SelectValue /></SelectTrigger><SelectContent>{destinations(editingFolder?.id)}</SelectContent></Select></div><div className="space-y-2"><Label htmlFor="folder-keywords">كلمات مفتاحية</Label><Input id="folder-keywords" value={keywords} disabled={busy} onChange={event => setKeywords(event.target.value)} placeholder="عقود، مالية، مشروع" /></div></div><Button onClick={saveFolder} disabled={busy || !name.trim()}>{busy ? <Loader2 className="animate-spin" /> : <FolderPlus />}حفظ المجلد</Button></DialogContent></Dialog>
+    <Dialog open={Boolean(editingDoc)} onOpenChange={open => { if (!open && !busy) setEditingDoc(null); }}><DialogContent dir="rtl"><DialogHeader><DialogTitle>تنظيم الملف</DialogTitle><DialogDescription>{editingDoc?.file_name}</DialogDescription></DialogHeader><div className="space-y-4"><div className="space-y-2"><Label htmlFor="edit-name">اسم الملف</Label><Input id="edit-name" value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div><div className="space-y-2"><Label htmlFor="edit-description">الوصف</Label><Textarea id="edit-description" value={description} onChange={event => setDescription(event.target.value)} disabled={busy} /></div><div className="space-y-2"><Label htmlFor="edit-keywords">كلمات مفتاحية</Label><Input id="edit-keywords" value={keywords} onChange={event => setKeywords(event.target.value)} disabled={busy} /></div><Select value={parent} onValueChange={setParent} disabled={busy}><SelectTrigger aria-label="نقل إلى مجلد"><SelectValue /></SelectTrigger><SelectContent>{destinations()}</SelectContent></Select></div><Button onClick={saveEdit} disabled={busy || !name.trim()}>حفظ التغييرات</Button></DialogContent></Dialog>
+    <Dialog open={Boolean(preview)} onOpenChange={open => { if (!open) closePreview(); }}><DialogContent dir="rtl" className="max-w-3xl max-h-[85dvh] overflow-y-auto"><DialogHeader><DialogTitle className="break-words">{preview?.title}</DialogTitle><DialogDescription>{preview?.file_name}</DialogDescription></DialogHeader>{previewLoading ? <Loader2 className="mx-auto animate-spin" /> : previewText ? <article className="document-paper p-6 rounded-md border border-border whitespace-pre-wrap break-words leading-8">{previewText}</article> : previewUrl ? <img src={previewUrl} alt={preview?.title} className="max-h-[60dvh] object-contain w-full" /> : <div className="py-8 text-center"><FileText className="size-10 mx-auto text-primary mb-3" /><p className="text-muted-foreground">معاينة هذا النوع متاحة بعد فتح الملف</p>{preview && <Button asChild variant="link"><a href={preview.file_url} target="_blank" rel="noopener noreferrer">فتح الملف</a></Button>}</div>}<Button onClick={() => { if (preview) download(preview); }}><Download />تحميل الملف</Button></DialogContent></Dialog>
+    <Dialog open={Boolean(deleteTarget)} onOpenChange={open => { if (!open && !busy) setDeleteTarget(null); }}><DialogContent dir="rtl"><DialogHeader><DialogTitle>تأكيد الحذف</DialogTitle><DialogDescription>هل تريد حذف «{deleteTarget?.name}»؟</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" disabled={busy} onClick={() => setDeleteTarget(null)}>إلغاء</Button><Button variant="destructive" disabled={busy} onClick={remove}><Trash2 />حذف</Button></div></DialogContent></Dialog>
+  </div></Layout>;
 }
