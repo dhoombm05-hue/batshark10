@@ -1,0 +1,8 @@
+:root {
+  --document-paper: 0 0% 100%;
+  --document-paper-ink: 220 25% 12%;
+}
+.document-paper {
+  color: hsl(var(--document-paper-ink));
+  background: hsl(var(--document-paper));
+}
