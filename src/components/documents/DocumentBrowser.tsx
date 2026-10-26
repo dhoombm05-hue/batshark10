@@ -53,8 +53,8 @@ export default function DocumentBrowser(props: Props) {
       {children && <Button size="icon" variant="ghost" className="size-8 shrink-0" aria-label={`${open ? 'طي' : 'توسيع'} ${folder.name}`} onClick={() => setExpanded(current => open ? current.filter(id => id !== folder.id) : [...current, folder.id])}>{open ? <ChevronDown /> : <ChevronLeft />}</Button>}
     </div>{open && <div className="mr-4 pr-2 border-r border-border">{renderTree(folder.id, new Set([...visited, folder.id]))}</div>}</div>;
   });
-  return <div dir="rtl" className="min-w-0 space-y-6">
-    <header className="flex items-center justify-between gap-3"><div><div className="flex items-center gap-2"><FolderOpen className="size-6 text-primary" /><h1 className="font-heading font-bold text-2xl">مركز الملفات</h1></div><p className="text-sm text-muted-foreground mt-2">{docs.length} ملف <span className="mx-2">/</span> {folders.length} مجلد</p></div>
+  return <div dir="rtl" className="min-w-0 space-y-6 bg-background min-h-[calc(100dvh-3rem)] p-3 sm:p-5">
+    <header className="flex items-center justify-between gap-3"><div><div className="flex items-center gap-2 pr-9 lg:pr-0"><FolderOpen className="size-6 text-primary" /><h1 className="font-heading font-bold text-xl sm:text-2xl">مركز الملفات</h1></div><p className="text-sm text-muted-foreground mt-2">{docs.length} ملف <span className="mx-2">/</span> {folders.length} مجلد</p></div>
       <DropdownMenu dir="rtl"><DropdownMenuTrigger asChild><Button className="shrink-0"><Plus />إضافة<ChevronDown /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-52"><DropdownMenuItem onSelect={() => props.addDocument('import')}><Upload className="size-4" />استيراد ملف</DropdownMenuItem><DropdownMenuItem onSelect={() => props.addDocument('create')}><FilePlus2 className="size-4" />إنشاء مستند</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onSelect={() => props.addFolder()}><FolderPlus className="size-4" />مجلد جديد</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
     </header>
     <div className="grid lg:grid-cols-[210px_minmax(0,1fr)] gap-6 border-t border-border pt-5">
