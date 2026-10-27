@@ -74,7 +74,7 @@ export function useNews(projectId?: string) {
       const [{ data: profiles, error: profilesError }, { data: roles }, { data: employees }] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', authorIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', authorIds),
-        supabase.from('employees').select('name, avatar_url, slug, position'),
+        supabase.from('employees_public' as any).select('name, avatar_url, slug, position'),
       ]);
 
       if (profilesError) throw profilesError;
@@ -247,7 +247,7 @@ export function useNewsComments(newsId: string) {
 
       const [{ data: profiles, error: profilesError }, { data: employees }, { data: roles }] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_url, job_title').in('user_id', userIds),
-        supabase.from('employees').select('name, avatar_url, slug, position'),
+        supabase.from('employees_public' as any).select('name, avatar_url, slug, position'),
         supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
       ]);
 

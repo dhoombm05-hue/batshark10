@@ -1781,6 +1781,13 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "employee_monthly_performance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       employees: {
@@ -2612,6 +2619,13 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       project_analysis: {
@@ -3087,6 +3101,13 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "quizzes_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       report_email_settings: {
@@ -3433,7 +3454,72 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      employees_public: {
+        Row: {
+          achievements: string[] | null
+          age: number | null
+          avatar_url: string | null
+          created_at: string | null
+          department: string | null
+          experience: string | null
+          feedback: string | null
+          id: string | null
+          improvements: string[] | null
+          kpi_achievement: number | null
+          monthly_rating: number | null
+          name: string | null
+          performance: number | null
+          position: string | null
+          profit_contribution: number | null
+          projects: string[] | null
+          slug: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          achievements?: string[] | null
+          age?: number | null
+          avatar_url?: string | null
+          created_at?: string | null
+          department?: string | null
+          experience?: string | null
+          feedback?: string | null
+          id?: string | null
+          improvements?: string[] | null
+          kpi_achievement?: number | null
+          monthly_rating?: number | null
+          name?: string | null
+          performance?: number | null
+          position?: string | null
+          profit_contribution?: number | null
+          projects?: string[] | null
+          slug?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          achievements?: string[] | null
+          age?: number | null
+          avatar_url?: string | null
+          created_at?: string | null
+          department?: string | null
+          experience?: string | null
+          feedback?: string | null
+          id?: string | null
+          improvements?: string[] | null
+          kpi_achievement?: number | null
+          monthly_rating?: number | null
+          name?: string | null
+          performance?: number | null
+          position?: string | null
+          profit_contribution?: number | null
+          projects?: string[] | null
+          slug?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_role: {

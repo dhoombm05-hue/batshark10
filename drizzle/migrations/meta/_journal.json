@@ -15,6 +15,13 @@
       "when": 1793031066395,
       "tag": "0001_invoice_sales_costs",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793116893624,
+      "tag": "0002_team_visibility_and_avatar_sync",
+      "breakpoints": true
     }
   ]
 }

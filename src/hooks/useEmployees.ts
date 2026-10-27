@@ -44,8 +44,14 @@ export function useEmployees() {
         .from('employees' as any)
         .select('*')
         .order('slug');
-      if (error) throw error;
-      return data as unknown as DBEmployee[];
+      if (!error && data && data.length > 0) return data as unknown as DBEmployee[];
+      // Non-managers: read the team through the safe public view (no salary/passwords)
+      const { data: pub, error: pubErr } = await supabase
+        .from('employees_public' as any)
+        .select('*')
+        .order('slug');
+      if (pubErr) throw pubErr;
+      return (pub || []) as unknown as DBEmployee[];
     },
   });
 }
@@ -54,13 +60,19 @@ export function useEmployee(slug: string) {
   return useQuery({
     queryKey: ['employee', slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('employees' as any)
+        .select('*')
+        .eq('slug', slug)
+        .maybeSingle();
+      if (data) return data as unknown as DBEmployee;
+      const { data: pub, error } = await supabase
+        .from('employees_public' as any)
         .select('*')
         .eq('slug', slug)
         .single();
       if (error) throw error;
-      return data as unknown as DBEmployee;
+      return pub as unknown as DBEmployee;
     },
     enabled: !!slug,
   });

@@ -32,7 +32,7 @@ function useTeamDirectory() {
       const [{ data: profiles }, { data: roles }, { data: employees }] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_url, job_title'),
         supabase.from('user_roles').select('user_id, role'),
-        supabase.from('employees').select('name, avatar_url, position'),
+        supabase.from('employees_public' as any).select('name, avatar_url, position'),
       ]);
       const ceoSet = new Set((roles || []).filter((r: any) => r.role === 'ceo').map((r: any) => r.user_id));
       const empList = employees || [];
