@@ -32,8 +32,17 @@ const ROLE_COLORS: Record<AppRole, string> = {
 
 const DEPARTMENTS = [
   'الإدارة العامة', 'التسويق', 'التقنية', 'المالية', 'العمليات',
-  'الاستراتيجية', 'خدمة العملاء', 'الموارد البشرية',
+  'الاستراتيجية', 'خدمة العملاء', 'الموارد البشرية', 'التدريب', 'مستقل',
 ];
+
+const POSITION_SUGGESTIONS = ['مدرب', 'مدرب بادل', 'مستشار', 'محاسب', 'مصمم', 'مطور', 'مندوب مبيعات', 'منسق', 'مشرف', 'متدرب'];
+
+const genPassword = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const arr = new Uint32Array(10);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, n => chars[n % chars.length]).join('');
+};
 
 interface UserWithRole {
   user_id: string;
@@ -48,7 +57,7 @@ interface FormState {
   email: string;
   password: string;
   display_name: string;
-  role: AppRole;
+  role: AppRole | '';
   position: string;
   job_title: string;
   department: string;
@@ -74,6 +83,7 @@ export default function UserManagement() {
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [creating, setCreating] = useState(false);
+  const [created, setCreated] = useState<{ name: string; email: string; password: string; position: string } | null>(null);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm(f => ({ ...f, [k]: v }));
@@ -110,17 +120,20 @@ export default function UserManagement() {
     }
     setCreating(true);
     const { data, error } = await supabase.functions.invoke('manage-users', {
-      body: { action: 'create', ...form },
+      body: { action: 'create', ...form, role: form.role || null },
     });
     setCreating(false);
     if (error || data?.error) {
       toast({ title: 'خطأ', description: data?.error || error?.message || 'فشل الإنشاء', variant: 'destructive' });
     } else {
       toast({ title: '✅ تم إنشاء الموظف بالكامل', description: `${form.display_name} — حساب + ملف موظف + صلاحيات + سجل أداء` });
+      setCreated({ name: form.display_name, email: form.email, password: form.password, position: form.position || form.job_title || 'موظف' });
       setForm(EMPTY_FORM);
       fetchUsers();
     }
   };
+
+  const copy = (t: string) => { navigator.clipboard.writeText(t); toast({ title: 'تم النسخ' }); };
 
   const handleDelete = async (user_id: string, name: string) => {
     const { data, error } = await supabase.functions.invoke('manage-users', {
@@ -177,6 +190,23 @@ export default function UserManagement() {
           </div>
         </div>
 
+        {created && (
+          <div className="rounded-[20px] border-2 border-primary bg-card p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading font-bold text-foreground">✅ بيانات دخول {created.name} — {created.position}</h2>
+              <Button variant="ghost" size="sm" onClick={() => setCreated(null)}>إغلاق</Button>
+            </div>
+            {[['البريد', created.email], ['كلمة المرور', created.password]].map(([l, v]) => (
+              <div key={l} className="flex items-center gap-3 bg-secondary/40 rounded-xl p-3">
+                <span className="text-sm text-muted-foreground w-24">{l}</span>
+                <span dir="ltr" className="font-mono font-bold text-foreground flex-1">{v}</span>
+                <Button size="sm" variant="outline" onClick={() => copy(v)}>نسخ</Button>
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground">يدخل الموظف بكلمة المرور هذه فقط. يمكنك تغييرها أو حذفه في أي وقت من ملفه.</p>
+          </div>
+        )}
+
         {/* Create Employee Form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -207,7 +237,10 @@ export default function UserManagement() {
                   <Input type="email" dir="ltr" value={form.email} onChange={e => set('email', e.target.value)} placeholder="name@batshark.com" className="rounded-xl" />
                 </Field>
                 <Field label="كلمة المرور *">
-                  <Input type="password" dir="ltr" value={form.password} onChange={e => set('password', e.target.value)} placeholder="6 أحرف على الأقل" className="rounded-xl" />
+                  <div className="flex gap-2">
+                    <Input type="text" dir="ltr" value={form.password} onChange={e => set('password', e.target.value)} placeholder="6 أحرف على الأقل" className="rounded-xl" />
+                    <Button type="button" variant="outline" className="rounded-xl shrink-0" onClick={() => set('password', genPassword())}>توليد</Button>
+                  </div>
                 </Field>
                 <Field label="رابط الصورة (اختياري)">
                   <Input dir="ltr" value={form.avatar_url} onChange={e => set('avatar_url', e.target.value)} placeholder="https://..." className="rounded-xl" />
@@ -233,7 +266,15 @@ export default function UserManagement() {
                     }`}
                   >{label}</button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => set('role', '')}
+                  className={`p-3 rounded-xl border-2 text-sm font-bold transition-all ${
+                    form.role === '' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary/30 text-muted-foreground hover:border-primary/50'
+                  }`}
+                >🧑‍🏫 موظف مستقل (مدرب / مستشار / بدون إدارة)</button>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">الموظف المستقل لا يتبع أي إدارة، له دخول خاص بكلمة مروره، وأنت تتحكم فيه بالكامل من ملفه.</p>
             </section>
 
             {/* Section: Job */}
@@ -243,19 +284,15 @@ export default function UserManagement() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="المسمى الوظيفي">
-                  <Input value={form.position} onChange={e => set('position', e.target.value)} placeholder="مدير تسويق" className="rounded-xl" />
+                  <Input list="position-suggestions" value={form.position} onChange={e => set('position', e.target.value)} placeholder="اكتب أي مسمى: مدرب، مستشار..." className="rounded-xl" />
+                  <datalist id="position-suggestions">{POSITION_SUGGESTIONS.map(p => <option key={p} value={p} />)}</datalist>
                 </Field>
                 <Field label="اللقب الوظيفي">
                   <Input value={form.job_title} onChange={e => set('job_title', e.target.value)} placeholder="Director" className="rounded-xl" />
                 </Field>
                 <Field label="القسم">
-                  <select
-                    value={form.department}
-                    onChange={e => set('department', e.target.value)}
-                    className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
+                  <Input list="department-suggestions" value={form.department} onChange={e => set('department', e.target.value)} placeholder="اختر أو اكتب قسماً جديداً" className="rounded-xl" />
+                  <datalist id="department-suggestions">{DEPARTMENTS.map(d => <option key={d} value={d} />)}</datalist>
                 </Field>
                 <Field label="العمر">
                   <Input type="number" min={18} max={80} value={form.age} onChange={e => set('age', +e.target.value)} className="rounded-xl" />
